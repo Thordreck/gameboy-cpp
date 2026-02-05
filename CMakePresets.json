@@ -1,0 +1,35 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "win-64-debug",
+      "displayName": "Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON",
+        "CMAKE_VERBOSE_MAKEFILE": "ON" 
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      }
+    }
+  ],
+   "buildPresets": [
+    {
+      "name": "win-64-debug",
+      "displayName": "Debug",
+      "configurePreset": "win-64-debug",
+      "configuration": "Debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "win-64-test-all",
+      "displayName": "Test All",
+      "configurePreset": "win-64-debug"
+    }
+  ]
+}
