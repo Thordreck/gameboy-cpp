@@ -23,14 +23,13 @@ namespace cpu
 		std::uint8_t& value;
 	};
 
-	class register_16
+	export class register_16
 	{
 	public:
-		register_16(std::uint8_t& lo, std::uint8_t& hi)
+		register_16(std::uint8_t& hi, std::uint8_t& lo)
 			: lo_byte{ lo }
 			, hi_byte{ hi }
-		{
-		}
+		{}
 
 		operator std::uint16_t() const
 		{
