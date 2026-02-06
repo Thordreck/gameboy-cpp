@@ -43,3 +43,4 @@
 [Bb]uild/
 .vs/
 .vscode/
+*.hint
