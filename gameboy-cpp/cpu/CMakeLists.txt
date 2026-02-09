@@ -4,14 +4,15 @@ target_compile_features(cpu PUBLIC cxx_std_23)
 add_std_ifc_to_target(cpu)
 
 set_target_properties(cpu PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(cpu utilities)
+target_link_libraries(cpu)
 target_sources(cpu PUBLIC 
 	FILE_SET 
 		CXX_MODULES 
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/cpu.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/registers.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/instructions.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/program_counter.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -25,7 +26,6 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_sources(cpu_tests 
 		PRIVATE 
 			${CMAKE_CURRENT_SOURCE_DIR}/registers.test.cpp
-			${CMAKE_CURRENT_SOURCE_DIR}/instructions.test.cpp
 	)
 
 endif()
