@@ -50,6 +50,30 @@ namespace cpu
 		std::uint8_t& hi_byte;
 	};
 
+	export class flag_register
+	{
+	public:
+		flag_register(std::uint8_t& byte, const std::size_t index)
+			: byte_value{ byte }
+			, byte_index{ index }
+		{}
+
+		operator bool() const 
+		{
+			return ((byte_value >> byte_index) & 0b1) == 0b1;
+		}
+
+		flag_register& operator=(const bool value)
+		{
+			byte_value |= value << byte_index;
+			return *this;
+		}
+
+	private:
+		std::uint8_t& byte_value;
+		const std::size_t byte_index;
+	};
+
 	export class registers
 	{
 	public:
@@ -68,6 +92,11 @@ namespace cpu
 		register_16 bc() { return { data[1], data[2]}; }
 		register_16 de() { return { data[3], data[4]}; }
 		register_16 hl() { return { data[6], data[7]}; }
+
+		flag_register z_flag() { return { data[5], 7 }; }
+		flag_register n_flag() { return { data[5], 6 }; }
+		flag_register h_flag() { return { data[5], 5 }; }
+		flag_register c_flag() { return { data[5], 4 }; }
 
 	private:
 		std::array<std::uint8_t, 8> data {};

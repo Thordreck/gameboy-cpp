@@ -40,6 +40,16 @@ TEST_CASE("16-bit registers are zero-initialized")
 	CHECK(registers.hl() == 0);
 }
 
+TEST_CASE("flag registers are set to false on initialization")
+{
+	cpu::registers registers{};
+
+	CHECK_FALSE(registers.z_flag());
+	CHECK_FALSE(registers.n_flag());
+	CHECK_FALSE(registers.h_flag());
+	CHECK_FALSE(registers.c_flag());
+}
+
 TEST_CASE("a register updates its value properly")
 {
 	cpu::registers registers{};
@@ -250,4 +260,56 @@ TEST_CASE("hl register updates its value properly")
 	CHECK(registers.d() == 0);
 	CHECK(registers.e() == 0);
 	CHECK(registers.f() == 0);
+}
+
+TEST_CASE("zero flag register updates its value properly")
+{
+	cpu::registers registers{};
+	registers.z_flag() = true;
+
+	CHECK(registers.z_flag());
+	CHECK_FALSE(registers.n_flag());
+	CHECK_FALSE(registers.h_flag());
+	CHECK_FALSE(registers.c_flag());
+
+	CHECK_EQ(registers.f(), 0b1 << 7);
+}
+
+TEST_CASE("substraction flag register updates its value properly")
+{
+	cpu::registers registers{};
+	registers.n_flag() = true;
+
+	CHECK(registers.n_flag());
+	CHECK_FALSE(registers.z_flag());
+	CHECK_FALSE(registers.h_flag());
+	CHECK_FALSE(registers.c_flag());
+
+	CHECK_EQ(registers.f(), 0b1 << 6);
+}
+
+TEST_CASE("half-carry flag register updates its value properly")
+{
+	cpu::registers registers{};
+	registers.h_flag() = true;
+
+	CHECK(registers.h_flag());
+	CHECK_FALSE(registers.z_flag());
+	CHECK_FALSE(registers.n_flag());
+	CHECK_FALSE(registers.c_flag());
+
+	CHECK_EQ(registers.f(), 0b1 << 5);
+}
+
+TEST_CASE("carry flag register updates its value properly")
+{
+	cpu::registers registers{};
+	registers.c_flag() = true;
+
+	CHECK(registers.c_flag());
+	CHECK_FALSE(registers.z_flag());
+	CHECK_FALSE(registers.n_flag());
+	CHECK_FALSE(registers.h_flag());
+
+	CHECK_EQ(registers.f(), 0b1 << 4);
 }
