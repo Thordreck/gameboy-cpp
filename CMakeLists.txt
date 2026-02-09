@@ -12,6 +12,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest/cmake/doctest.cmake)
 endif()
 
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/utilities)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 

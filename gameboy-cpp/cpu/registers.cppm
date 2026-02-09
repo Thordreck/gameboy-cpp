@@ -7,71 +7,85 @@ namespace cpu
 	export class register_8
 	{
 	public:
-		register_8(std::uint8_t& v)
+		using type_t = std::uint8_t;
+
+		register_8(type_t& v)
 			: value{ v }
 		{}
 
-		operator std::uint8_t() const { return value; }
+		operator type_t() const { return value; }
 
-		register_8& operator=(const std::uint8_t v)
+		register_8& operator=(const type_t v)
 		{
 			value = v;
 			return *this;
 		}
 
 	private:
-		std::uint8_t& value;
+		type_t& value;
 	};
 
 	export class register_16
 	{
 	public:
-		register_16(std::uint8_t& hi, std::uint8_t& lo)
+		using type_t = std::uint16_t;
+
+		register_16(register_8::type_t& hi, register_8::type_t& lo)
 			: lo_byte{ lo }
 			, hi_byte{ hi }
 		{}
 
-		operator std::uint16_t() const
+		operator type_t() const
 		{
-			return static_cast<std::uint16_t>(hi_byte << 8)
-				| static_cast<std::uint16_t>(lo_byte);
+			return static_cast<type_t>(hi_byte << 8)
+				| static_cast<type_t>(lo_byte);
 		}
 
-		register_16& operator=(const std::uint16_t v)
+		register_16& operator=(const type_t v)
 		{
-			hi_byte = static_cast<std::uint8_t>((v >> 8) & 0xFF);
-			lo_byte = static_cast<std::uint8_t>(v & 0xFF);
+			hi_byte = static_cast<type_t>((v >> 8) & 0xFF);
+			lo_byte = static_cast<type_t>(v & 0xFF);
 
 			return *this;
 		}
 
 	private:
-		std::uint8_t& lo_byte;
-		std::uint8_t& hi_byte;
+		register_8::type_t& lo_byte;
+		register_8::type_t& hi_byte;
 	};
 
 	export class flag_register
 	{
 	public:
-		flag_register(std::uint8_t& byte, const std::size_t index)
+		using type_t = bool;
+
+		flag_register(register_8::type_t& byte, const std::size_t index)
 			: byte_value{ byte }
 			, byte_index{ index }
 		{}
 
-		operator bool() const 
+		operator type_t() const 
 		{
 			return ((byte_value >> byte_index) & 0b1) == 0b1;
 		}
 
-		flag_register& operator=(const bool value)
+		flag_register& operator=(const type_t value)
 		{
-			byte_value |= value << byte_index;
+			byte_value = (byte_value & ~(1 << byte_index)) | value << byte_index;
 			return *this;
 		}
 
 	private:
-		std::uint8_t& byte_value;
+		register_8::type_t& byte_value;
 		const std::size_t byte_index;
+	};
+
+	export struct flags
+	{
+		flag_register z;
+		flag_register n;
+		flag_register h;
+		flag_register c;
 	};
 
 	export class registers
@@ -97,6 +111,8 @@ namespace cpu
 		flag_register n_flag() { return { data[5], 6 }; }
 		flag_register h_flag() { return { data[5], 5 }; }
 		flag_register c_flag() { return { data[5], 4 }; }
+
+		flags flags() { return { z_flag(), n_flag(), h_flag(), c_flag() }; }
 
 	private:
 		std::array<std::uint8_t, 8> data {};

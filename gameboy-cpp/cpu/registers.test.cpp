@@ -3,16 +3,21 @@
 import cpu;
 import std;
 
-namespace cpu 
+namespace
 {
-	static doctest::String toString(const register_8& reg)
+	doctest::String toString(const cpu::register_8& reg)
 	{
-		return { std::format("{}", static_cast<uint8_t>(reg)).c_str() };
+		return { std::format("{}", static_cast<std::uint8_t>(reg)).c_str() };
 	}
 
-	static doctest::String toString(const register_16& reg)
+	doctest::String toString(const cpu::register_16& reg)
 	{
-		return { std::format("{}", static_cast<uint16_t>(reg)).c_str() };
+		return { std::format("{}", static_cast<std::uint16_t>(reg)).c_str() };
+	}
+
+	doctest::String toString(const cpu::flag_register& reg)
+	{
+		return { std::format("{}", static_cast<bool>(reg)).c_str() };
 	}
 }
 
