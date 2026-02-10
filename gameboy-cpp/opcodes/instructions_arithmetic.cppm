@@ -7,14 +7,19 @@ export import utilities;
 
 namespace opcodes 
 {
-	export template<auto RegFn>
+	template<auto T>
+	concept RegisterPtr = requires(cpu::registers registers)
+	{
+		{ (registers.*T)() } -> std::convertible_to<cpu::register_8>;
+	};
+
+	template<auto RegFn>
+	requires RegisterPtr<RegFn>
 	struct add_a_r8
 	{
-		static constexpr auto reg_fn = RegFn;
-
 		static void execute(cpu::cpu& cpu)
 		{
-			const cpu::register_8 r8 = (cpu.registers.*reg_fn)();
+			const cpu::register_8 r8 = (cpu.registers.*RegFn)();
 			const bool carry = utils::check_add_overflow<cpu::register_8::type_t>(cpu.registers.a(), r8);
 			const bool half_carry = utils::check_half_add_overflow(cpu.registers.a(), r8);
 
