@@ -12,6 +12,11 @@ namespace cpu
 			return data[index];
 		}
 
+		std::uint8_t& operator [](const std::uint16_t index)
+		{
+			return data[index];
+		}
+
 	private:
 		std::array<std::uint8_t, 0xFFFF> data{};
 	};

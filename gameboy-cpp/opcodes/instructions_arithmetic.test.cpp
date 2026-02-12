@@ -125,7 +125,7 @@ TEST_CASE_TEMPLATE("add_a_r8 increments program counter properly", Opcode, test_
 {
 	cpu::cpu cpu{};
 
-	const cpu::program_counter::type_t previous_pc = cpu.pc;
+	const cpu::program_counter previous_pc = cpu.pc;
 	Opcode::execute(cpu);
 	CHECK_EQ(previous_pc + 1, cpu.pc);
 }
