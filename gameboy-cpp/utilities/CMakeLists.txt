@@ -11,6 +11,7 @@ target_sources(utilities PUBLIC
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/utilities.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/arithmetic.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -24,6 +25,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_sources(utilities_tests
 		PRIVATE 
 			${CMAKE_CURRENT_SOURCE_DIR}/arithmetic.test.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/memory.test.cpp
 	)
 
 endif()
