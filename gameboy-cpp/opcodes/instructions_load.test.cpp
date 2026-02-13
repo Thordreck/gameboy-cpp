@@ -21,6 +21,17 @@ namespace
 	inline auto get_h(cpu::cpu& cpu) { return cpu.registers.h(); }
 	inline auto get_l(cpu::cpu& cpu) { return cpu.registers.l(); }
 
+    template <auto RegFn>
+    concept R16RegisterFetchFn = requires(cpu::cpu & cpu)
+    {
+        { RegFn(cpu) } -> std::convertible_to<cpu::register_16>;
+    };
+
+	inline auto get_af(cpu::cpu& cpu) { return cpu.registers.af(); }
+	inline auto get_bc(cpu::cpu& cpu) { return cpu.registers.bc(); }
+	inline auto get_de(cpu::cpu& cpu) { return cpu.registers.de(); }
+	inline auto get_hl(cpu::cpu& cpu) { return cpu.registers.hl(); }
+
 	template<opcodes::Instruction OpCode, auto LhsRegFn, auto RhsRegFn>
     requires R8RegisterFetchFn<LhsRegFn> && R8RegisterFetchFn<RhsRegFn>
 	struct ld_r8_r8_test_case
@@ -97,6 +108,19 @@ namespace
     ld_r8_n8_test_case<opcodes::ld_e_n8, get_e>, \
     ld_r8_n8_test_case<opcodes::ld_h_n8, get_h>, \
     ld_r8_n8_test_case<opcodes::ld_l_n8, get_l>
+
+	template<opcodes::Instruction OpCode, auto RegFn>
+    requires R16RegisterFetchFn<RegFn>
+	struct ld_r16_n16_test_case
+	{
+		static constexpr auto execute = OpCode::execute;
+		static cpu::register_16 reg(cpu::cpu& cpu) { return RegFn(cpu); }
+	};
+
+	#define ld_r16_n16_test_cases \
+    ld_r16_n16_test_case<opcodes::ld_bc_n16, get_bc>, \
+    ld_r16_n16_test_case<opcodes::ld_de_n16, get_de>, \
+    ld_r16_n16_test_case<opcodes::ld_hl_n16, get_hl>
 }
 
 TEST_CASE_TEMPLATE("ld_r8_r8 copies registry value and updates pc properly", Opcode, ld_r8_r8_test_cases)
@@ -108,7 +132,7 @@ TEST_CASE_TEMPLATE("ld_r8_r8 copies registry value and updates pc properly", Opc
 
 	Opcode::execute(cpu);
 	CHECK_EQ(Opcode::lhs(cpu), test_value);
-	CHECK_EQ(cpu.pc.as_bytes(), 1);
+	CHECK_EQ(cpu.pc, 1);
 }
 
 TEST_CASE_TEMPLATE("ld_r8_n8 stores value into target registry and updates pc properly", Opcode, ld_r8_n8_test_cases)
@@ -120,5 +144,18 @@ TEST_CASE_TEMPLATE("ld_r8_n8 stores value into target registry and updates pc pr
 	Opcode::execute(cpu);
 
 	CHECK_EQ(Opcode::reg(cpu), test_value);
-	CHECK_EQ(cpu.pc.as_bytes(), 2);
+	CHECK_EQ(cpu.pc, 2);
+}
+
+TEST_CASE_TEMPLATE("ld_r16_n16 stores value into target registry and updates pc properly", Opcode, ld_r16_n16_test_cases)
+{
+	constexpr cpu::register_16::type_t test_value = 0xABCD;
+
+	cpu::cpu cpu{};
+    cpu.memory[1] = static_cast<cpu::register_8::type_t>(test_value);
+    cpu.memory[2] = static_cast<cpu::register_8::type_t>(test_value >> 8);
+	Opcode::execute(cpu);
+
+	CHECK_EQ(Opcode::reg(cpu), test_value);
+	CHECK_EQ(cpu.pc, 3);
 }

@@ -3,6 +3,7 @@ export module opcodes:load;
 
 import cpu;
 import std;
+import utilities;
 import :common;
 
 namespace opcodes
@@ -87,7 +88,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			reg_provider::get(cpu) = cpu.memory[(++cpu.pc).as_bytes()];
+			reg_provider::get(cpu) = cpu.memory[++cpu.pc];
 			cpu.pc++;
 		}
 	};
@@ -99,4 +100,19 @@ namespace opcodes
 	export using ld_e_n8 = ld_r8_n8<e_register_provider>;
 	export using ld_h_n8 = ld_r8_n8<h_register_provider>;
 	export using ld_l_n8 = ld_r8_n8<l_register_provider>;
+
+	// ld r16,n16
+	template<R16RegisterProvider reg_provider>
+	struct ld_r16_n16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			reg_provider::get(cpu) = utils::read_two_byte_little_endian(cpu.memory, cpu.pc + 1);
+			cpu.pc += 3;
+		}
+	};
+
+	export using ld_bc_n16 = ld_r16_n16<bc_register_provider>;
+	export using ld_de_n16 = ld_r16_n16<de_register_provider>;
+	export using ld_hl_n16 = ld_r16_n16<hl_register_provider>;
 }

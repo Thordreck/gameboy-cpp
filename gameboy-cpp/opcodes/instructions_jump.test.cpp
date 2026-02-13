@@ -11,7 +11,7 @@ TEST_CASE("jump_n16 updates pc correctly")
 	cpu.memory[2] = 0xAA;
 
 	opcodes::jp_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 0XAAFF);
+	CHECK_EQ(cpu.pc, 0XAAFF);
 }
 
 TEST_CASE("jump_z_n16 sets expected pc when condition is met")
@@ -22,7 +22,7 @@ TEST_CASE("jump_z_n16 sets expected pc when condition is met")
 	cpu.registers.z_flag() = true;
 
 	opcodes::jp_z_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 0XAAFF);
+	CHECK_EQ(cpu.pc, 0XAAFF);
 }
 
 TEST_CASE("jump_z_n16 increments pc by three when condition is not met")
@@ -33,7 +33,7 @@ TEST_CASE("jump_z_n16 increments pc by three when condition is not met")
 	cpu.registers.z_flag() = false;
 
 	opcodes::jp_z_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 3);
+	CHECK_EQ(cpu.pc, 3);
 }
 
 TEST_CASE("jump_nz_n16 sets expected pc when condition is met")
@@ -44,7 +44,7 @@ TEST_CASE("jump_nz_n16 sets expected pc when condition is met")
 	cpu.registers.z_flag() = false;
 
 	opcodes::jp_nz_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 0XAAFF);
+	CHECK_EQ(cpu.pc, 0XAAFF);
 }
 
 TEST_CASE("jump_nz_n16 increments pc by three when condition is not met")
@@ -55,7 +55,7 @@ TEST_CASE("jump_nz_n16 increments pc by three when condition is not met")
 	cpu.registers.z_flag() = true;
 
 	opcodes::jp_nz_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 3);
+	CHECK_EQ(cpu.pc, 3);
 }
 
 TEST_CASE("jump_c_n16 sets expected pc when condition is met")
@@ -66,7 +66,7 @@ TEST_CASE("jump_c_n16 sets expected pc when condition is met")
 	cpu.registers.c_flag() = true;
 
 	opcodes::jp_c_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 0XAAFF);
+	CHECK_EQ(cpu.pc, 0XAAFF);
 }
 
 TEST_CASE("jump_c_n16 increments pc by three when condition is not met")
@@ -77,7 +77,7 @@ TEST_CASE("jump_c_n16 increments pc by three when condition is not met")
 	cpu.registers.c_flag() = false;
 
 	opcodes::jp_c_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 3);
+	CHECK_EQ(cpu.pc, 3);
 }
 
 TEST_CASE("jump_nc_n16 sets expected pc when condition is met")
@@ -88,7 +88,7 @@ TEST_CASE("jump_nc_n16 sets expected pc when condition is met")
 	cpu.registers.c_flag() = false;
 
 	opcodes::jp_nc_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 0XAAFF);
+	CHECK_EQ(cpu.pc, 0XAAFF);
 }
 
 TEST_CASE("jump_nc_n16 increments pc by three when condition is not met")
@@ -99,5 +99,5 @@ TEST_CASE("jump_nc_n16 increments pc by three when condition is not met")
 	cpu.registers.c_flag() = true;
 
 	opcodes::jp_nc_n16::execute(cpu);
-	CHECK_EQ(cpu.pc.as_bytes(), 3);
+	CHECK_EQ(cpu.pc, 3);
 }

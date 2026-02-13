@@ -87,4 +87,30 @@ namespace opcodes
 	{
 		static auto get(const cpu::cpu& cpu) { return cpu.registers.l(); }
 	};
+
+	export template<typename T>
+	concept R16RegisterProvider = requires(cpu::cpu& cpu)
+	{
+		{ T::get(cpu) } -> std::convertible_to<cpu::register_16>;
+	};
+
+	export struct af_register_provider
+	{
+		static auto get(cpu::cpu& cpu) { return cpu.registers.af(); }
+	};
+
+	export struct bc_register_provider
+	{
+		static auto get(cpu::cpu& cpu) { return cpu.registers.bc(); }
+	};
+
+	export struct de_register_provider
+	{
+		static auto get(cpu::cpu& cpu) { return cpu.registers.de(); }
+	};
+
+	export struct hl_register_provider
+	{
+		static auto get(cpu::cpu& cpu) { return cpu.registers.hl(); }
+	};
 }

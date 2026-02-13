@@ -9,8 +9,7 @@ namespace cpu
 	public:
 		using type_t = std::uint16_t;
 
-		explicit operator type_t() const { return value; }
-		type_t as_bytes() const { return value; }
+		operator type_t() const { return value; }
 
 		program_counter& operator=(const type_t new_value)
 		{
@@ -20,10 +19,9 @@ namespace cpu
 
 		program_counter& operator=(const program_counter other)
 		{
-			value = other.as_bytes();
+			value = other;
 			return *this;
 		}
-
 
 		program_counter& operator++()
 		{
@@ -38,13 +36,33 @@ namespace cpu
 			return temp;
 		}
 
+		program_counter& operator+=(const program_counter rhs)
+		{
+			value += rhs;
+			return *this;
+		}
+
 		program_counter& operator+=(const type_t rhs)
 		{
 			value += rhs;
 			return *this;
 		}
 
+		program_counter operator+(const int rhs) const
+		{
+			program_counter temp = *this;
+			temp += rhs;
+			return temp;
+		}
+
 		program_counter operator+(const type_t rhs) const
+		{
+			program_counter temp = *this;
+			temp += rhs;
+			return temp;
+		}
+
+		program_counter operator+(const program_counter rhs) const
 		{
 			program_counter temp = *this;
 			temp += rhs;
