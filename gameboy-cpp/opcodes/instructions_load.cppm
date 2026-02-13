@@ -7,6 +7,7 @@ import :common;
 
 namespace opcodes
 {
+	// ld_r8_r8
 	template<R8RegisterProvider lhs_provider, ReadOnlyR8RegisterProvider rhs_provider>
 	struct ld_r8_r8
 	{
@@ -79,4 +80,23 @@ namespace opcodes
 	export using ld_l_e = ld_r8_r8<l_register_provider, e_readonly_register_provider>;
 	export using ld_l_h = ld_r8_r8<l_register_provider, h_readonly_register_provider>;
 	export using ld_l_l = ld_r8_r8<l_register_provider, l_readonly_register_provider>;
+
+	// ld_r8_n8
+	template<R8RegisterProvider reg_provider>
+	struct ld_r8_n8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			reg_provider::get(cpu) = cpu.memory[(++cpu.pc).as_bytes()];
+			cpu.pc++;
+		}
+	};
+
+	export using ld_a_n8 = ld_r8_n8<a_register_provider>;
+	export using ld_b_n8 = ld_r8_n8<b_register_provider>;
+	export using ld_c_n8 = ld_r8_n8<c_register_provider>;
+	export using ld_d_n8 = ld_r8_n8<d_register_provider>;
+	export using ld_e_n8 = ld_r8_n8<e_register_provider>;
+	export using ld_h_n8 = ld_r8_n8<h_register_provider>;
+	export using ld_l_n8 = ld_r8_n8<l_register_provider>;
 }
