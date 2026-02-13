@@ -7,28 +7,32 @@ import opcodes;
 
 namespace
 {
+	inline auto get_b(cpu::cpu& cpu) { return cpu.registers.b(); }
+	inline auto get_c(cpu::cpu& cpu) { return cpu.registers.c(); }
+	inline auto get_d(cpu::cpu& cpu) { return cpu.registers.d(); }
+	inline auto get_e(cpu::cpu& cpu) { return cpu.registers.e(); }
+	inline auto get_h(cpu::cpu& cpu) { return cpu.registers.h(); }
+	inline auto get_l(cpu::cpu& cpu) { return cpu.registers.l(); }
+
 	template<typename OpCode, auto RegFn>
 	requires requires (cpu::cpu& cpu)
 	{
 		{ OpCode::execute(cpu) } -> std::same_as<void>;
-		{ (cpu.registers.*RegFn)() } -> std::same_as<cpu::register_8>;
+		{ RegFn(cpu) } -> std::same_as<cpu::register_8>;
 	}
 	struct test_pair
 	{
 		static constexpr auto execute = OpCode::execute;
-		static cpu::register_8 target_registry(cpu::cpu& cpu)
-		{
-			return (cpu.registers.*RegFn)();
-		}
+		static cpu::register_8 target_registry(cpu::cpu& cpu) { return RegFn(cpu); }
 	};
 
 	#define test_pairs \
-    test_pair<opcodes::add_a_b, &cpu::registers::b>, \
-    test_pair<opcodes::add_a_c, &cpu::registers::c>, \
-    test_pair<opcodes::add_a_d, &cpu::registers::d>, \
-    test_pair<opcodes::add_a_e, &cpu::registers::e>, \
-    test_pair<opcodes::add_a_h, &cpu::registers::h>, \
-    test_pair<opcodes::add_a_l, &cpu::registers::l>
+    test_pair<opcodes::add_a_b, get_b>, \
+    test_pair<opcodes::add_a_c, get_c>, \
+    test_pair<opcodes::add_a_d, get_d>, \
+    test_pair<opcodes::add_a_e, get_e>, \
+    test_pair<opcodes::add_a_h, get_h>, \
+    test_pair<opcodes::add_a_l, get_l>
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 updates a register properly", Opcode, test_pairs)

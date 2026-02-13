@@ -1,9 +1,8 @@
 
 export module opcodes:table;
 
-export import std;
-export import cpu;
-
+import std;
+import cpu;
 import :arithmetic;
 
 namespace opcodes

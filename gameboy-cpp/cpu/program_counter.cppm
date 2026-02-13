@@ -1,6 +1,6 @@
 
 export module cpu:program_counter;
-export import std;
+import std;
 
 namespace cpu
 {
@@ -17,6 +17,13 @@ namespace cpu
 			value = new_value;
 			return *this;
 		}
+
+		program_counter& operator=(const program_counter other)
+		{
+			value = other.as_bytes();
+			return *this;
+		}
+
 
 		program_counter& operator++()
 		{

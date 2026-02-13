@@ -1,65 +1,81 @@
 
 export module cpu:registers;
-export import std;
+import std;
 
 namespace cpu
 {
-	export class register_8
+	template<typename T>
+	requires std::same_as<T, std::uint8_t&> || std::same_as<T, const std::uint8_t&>
+	class register_8_t
 	{
 	public:
 		using type_t = std::uint8_t;
 
-		register_8(type_t& v)
+		register_8_t(T& v)
 			: value{ v }
 		{}
 
 		operator type_t() const { return value; }
 
-		register_8& operator=(const type_t v)
+		register_8_t& operator=(const type_t v) 
+		requires !std::is_const_v<std::remove_reference_t<T>>
 		{
 			value = v;
 			return *this;
 		}
 
 	private:
-		type_t& value;
+		T value;
 	};
 
-	export class register_16
+	export using register_8 = register_8_t<std::uint8_t&>;
+	export using readonly_register_8 = register_8_t<const std::uint8_t&>;
+
+	template<typename T>
+	requires std::same_as<T, std::uint16_t&> || std::same_as<T, const std::uint16_t&>
+	class register_16_t
 	{
+	private:
+		using internal_type_t = std::conditional_t<std::is_const_v<std::remove_reference_t<T>>, const register_8::type_t&, register_8::type_t&>;
+
 	public:
 		using type_t = std::uint16_t;
 
-		register_16(register_8::type_t& hi, register_8::type_t& lo)
+		register_16_t(internal_type_t hi, internal_type_t lo)
 			: lo_byte{ lo }
 			, hi_byte{ hi }
 		{}
 
 		operator type_t() const
 		{
-			return static_cast<type_t>(hi_byte << 8)
-				| static_cast<type_t>(lo_byte);
+			return static_cast<type_t>(hi_byte) << 8 | static_cast<type_t>(lo_byte);
 		}
 
-		register_16& operator=(const type_t v)
+		register_16_t& operator=(const type_t v)
+		requires !std::is_const_v<std::remove_reference_t<T>>
 		{
-			hi_byte = static_cast<type_t>((v >> 8) & 0xFF);
-			lo_byte = static_cast<type_t>(v & 0xFF);
+			hi_byte = static_cast<register_8::type_t>((v >> 8) & 0xFF);
+			lo_byte = static_cast<register_8::type_t>(v & 0xFF);
 
 			return *this;
 		}
 
 	private:
-		register_8::type_t& lo_byte;
-		register_8::type_t& hi_byte;
+		internal_type_t lo_byte;
+		internal_type_t hi_byte;
 	};
 
-	export class flag_register
+	export using register_16 = register_16_t<std::uint16_t&>;
+	export using readonly_register_16 = register_16_t<const std::uint16_t&>;
+
+	template<typename T>
+	requires std::same_as<T, std::uint8_t&> || std::same_as<T, const std::uint8_t&>
+	class flag_register_t
 	{
 	public:
 		using type_t = bool;
 
-		flag_register(register_8::type_t& byte, const std::size_t index)
+		flag_register_t(T byte, const std::size_t index)
 			: byte_value{ byte }
 			, byte_index{ index }
 		{}
@@ -69,16 +85,20 @@ namespace cpu
 			return ((byte_value >> byte_index) & 0b1) == 0b1;
 		}
 
-		flag_register& operator=(const type_t value)
+		flag_register_t& operator=(const type_t value)
+		requires !std::is_const_v<std::remove_reference_t<T>>
 		{
 			byte_value = (byte_value & ~(1 << byte_index)) | value << byte_index;
 			return *this;
 		}
 
 	private:
-		register_8::type_t& byte_value;
+		T byte_value;
 		const std::size_t byte_index;
 	};
+
+	export using flag_register = flag_register_t<std::uint8_t&>;
+	export using readonly_flag_register = flag_register_t<const std::uint8_t&>;
 
 	export struct flags
 	{
@@ -88,11 +108,17 @@ namespace cpu
 		flag_register c;
 	};
 
+	export struct readonly_flags
+	{
+		readonly_flag_register z;
+		readonly_flag_register n;
+		readonly_flag_register h;
+		readonly_flag_register c;
+	};
+
 	export class registers
 	{
 	public:
-		~registers() = default;
-
 		register_8 a() { return { data[0] }; }
 		register_8 b() { return { data[1] }; }
 		register_8 c() { return { data[2] }; }
@@ -102,17 +128,37 @@ namespace cpu
 		register_8 h() { return { data[6] }; }
 		register_8 l() { return { data[7] }; }
 
+		readonly_register_8 a() const { return { data[0] }; }
+		readonly_register_8 b() const { return { data[1] }; }
+		readonly_register_8 c() const { return { data[2] }; }
+		readonly_register_8 d() const { return { data[3] }; }
+		readonly_register_8 e() const { return { data[4] }; }
+		readonly_register_8 f() const { return { data[5] }; }
+		readonly_register_8 h() const { return { data[6] }; }
+		readonly_register_8 l() const { return { data[7] }; }
+
 		register_16 af() { return { data[0], data[5]}; }
 		register_16 bc() { return { data[1], data[2]}; }
 		register_16 de() { return { data[3], data[4]}; }
 		register_16 hl() { return { data[6], data[7]}; }
+
+		readonly_register_16 af() const { return { data[0], data[5]}; }
+		readonly_register_16 bc() const { return { data[1], data[2]}; }
+		readonly_register_16 de() const { return { data[3], data[4]}; }
+		readonly_register_16 hl() const { return { data[6], data[7]}; }
 
 		flag_register z_flag() { return { data[5], 7 }; }
 		flag_register n_flag() { return { data[5], 6 }; }
 		flag_register h_flag() { return { data[5], 5 }; }
 		flag_register c_flag() { return { data[5], 4 }; }
 
+		readonly_flag_register z_flag() const { return { data[5], 7 }; }
+		readonly_flag_register n_flag() const { return { data[5], 6 }; }
+		readonly_flag_register h_flag() const { return { data[5], 5 }; }
+		readonly_flag_register c_flag() const { return { data[5], 4 }; }
+
 		flags flags() { return { z_flag(), n_flag(), h_flag(), c_flag() }; }
+		readonly_flags flags() const { return { z_flag(), n_flag(), h_flag(), c_flag() }; }
 
 	private:
 		std::array<std::uint8_t, 8> data {};
