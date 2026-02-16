@@ -7,13 +7,13 @@ import :common;
 
 namespace opcodes
 {
-	void push_stack(cpu::cpu& cpu, const cpu::register_16::type_t value)
+	export void push_stack(cpu::cpu& cpu, const cpu::register_16::type_t value)
 	{
 		cpu.memory[--cpu.sp] = utils::most_significant_byte(value);
 		cpu.memory[--cpu.sp] = utils::less_significant_byte(value);
 	}
 
-	cpu::register_16::type_t pop_stack(cpu::cpu& cpu)
+	export cpu::register_16::type_t pop_stack(cpu::cpu& cpu)
 	{
 		const auto less_significant = cpu.memory[cpu.sp++];
 		const auto most_significant = cpu.memory[cpu.sp++];
