@@ -7,4 +7,5 @@ export import :arithmetic;
 export import :jump;
 export import :load;
 export import :stack;
+export import :subroutine;
 

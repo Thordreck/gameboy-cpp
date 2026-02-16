@@ -16,6 +16,7 @@ target_sources(opcodes PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_jump.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_load.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_stack.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_subroutine.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -33,6 +34,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_load.test.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_table.test.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_stack.test.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/instructions_subroutine.test.cpp
 	)
 
 endif()
