@@ -113,4 +113,30 @@ namespace opcodes
 	{
 		static auto get(cpu::cpu& cpu) { return cpu.registers.hl(); }
 	};
+
+	export template<typename T>
+	concept ReadOnlyR16RegisterProvider = requires(const cpu::cpu& cpu)
+	{
+		{ T::get(cpu) } -> std::convertible_to<cpu::readonly_register_16>;
+	};
+
+	export struct af_readonly_register_provider
+	{
+		static auto get(const cpu::cpu& cpu) { return cpu.registers.af(); }
+	};
+
+	export struct bc_readonly_register_provider
+	{
+		static auto get(const cpu::cpu& cpu) { return cpu.registers.bc(); }
+	};
+
+	export struct de_readonly_register_provider
+	{
+		static auto get(const cpu::cpu& cpu) { return cpu.registers.de(); }
+	};
+
+	export struct hl_readonly_register_provider
+	{
+		static auto get(const cpu::cpu& cpu) { return cpu.registers.hl(); }
+	};
 }

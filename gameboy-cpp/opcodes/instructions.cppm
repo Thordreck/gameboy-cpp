@@ -6,4 +6,5 @@ export import :table;
 export import :arithmetic;
 export import :jump;
 export import :load;
+export import :stack;
 

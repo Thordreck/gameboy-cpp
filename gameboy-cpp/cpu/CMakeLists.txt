@@ -13,6 +13,7 @@ target_sources(cpu PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/registers.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/program_counter.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/stack_pointer.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
