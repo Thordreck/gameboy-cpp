@@ -115,4 +115,23 @@ namespace opcodes
 	export using ld_bc_n16 = ld_r16_n16<bc_register_provider>;
 	export using ld_de_n16 = ld_r16_n16<de_register_provider>;
 	export using ld_hl_n16 = ld_r16_n16<hl_register_provider>;
+
+	// ld hl,r8
+	template<ReadOnlyR8RegisterProvider reg_provider>
+	struct ld_hl_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory[cpu.registers.hl()] = reg_provider::get(cpu);
+			cpu.pc += 2;
+		}
+	};
+
+	export using ld_hl_a = ld_hl_r8<a_readonly_register_provider>;
+	export using ld_hl_b = ld_hl_r8<b_readonly_register_provider>;
+	export using ld_hl_c = ld_hl_r8<c_readonly_register_provider>;
+	export using ld_hl_d = ld_hl_r8<d_readonly_register_provider>;
+	export using ld_hl_e = ld_hl_r8<e_readonly_register_provider>;
+	export using ld_hl_h = ld_hl_r8<h_readonly_register_provider>;
+	export using ld_hl_l = ld_hl_r8<l_readonly_register_provider>;
 }

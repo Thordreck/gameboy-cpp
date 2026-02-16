@@ -121,6 +121,25 @@ namespace
     ld_r16_n16_test_case<opcodes::ld_bc_n16, get_bc>, \
     ld_r16_n16_test_case<opcodes::ld_de_n16, get_de>, \
     ld_r16_n16_test_case<opcodes::ld_hl_n16, get_hl>
+
+	template<opcodes::Instruction OpCode, auto RegFn, cpu::register_16::type_t memory_pos, cpu::register_8::type_t target_value>
+    requires R8RegisterFetchFn<RegFn>
+	struct ld_hl_r8_test_case
+	{
+		static constexpr auto execute = OpCode::execute;
+        static constexpr auto memory_pos = memory_pos;
+        static constexpr auto target_value = target_value;
+		static cpu::register_8 reg(cpu::cpu& cpu) { return RegFn(cpu); }
+	};
+
+	#define ld_hl_r8_test_cases \
+    ld_hl_r8_test_case<opcodes::ld_hl_a, get_a, 0xABCD, 0xFA>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_b, get_b, 0xABCD, 0xFA>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_c, get_c, 0xABCD, 0xFA>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_d, get_d, 0xABCD, 0xFA>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_e, get_e, 0xABCD, 0xFA>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_h, get_h, 0xABCD, 0xAB>, \
+    ld_hl_r8_test_case<opcodes::ld_hl_l, get_l, 0xABCD, 0xCD>
 }
 
 TEST_CASE_TEMPLATE("ld_r8_r8 copies registry value and updates pc properly", Opcode, ld_r8_r8_test_cases)
@@ -158,4 +177,16 @@ TEST_CASE_TEMPLATE("ld_r16_n16 stores value into target registry and updates pc 
 
 	CHECK_EQ(Opcode::reg(cpu), test_value);
 	CHECK_EQ(cpu.pc, 3);
+}
+
+TEST_CASE_TEMPLATE("ld_hl_r8 stores value into target registry and updates pc properly", test, ld_hl_r8_test_cases)
+{
+	cpu::cpu cpu{};
+    cpu.registers.hl() = test::memory_pos;
+
+    test::reg(cpu) = test::target_value;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.memory[test::memory_pos], test::target_value);
+	CHECK_EQ(cpu.pc, 2);
 }
