@@ -37,4 +37,33 @@ namespace opcodes
 	export using call_nz_n16 = call_cc_n16<is_z_not_set>;
 	export using call_c_n16 = call_cc_n16<is_c_set>;
 	export using call_nc_n16 = call_cc_n16<is_c_not_set>;
+
+	export struct ret
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.pc = pop_stack(cpu);
+		}
+	};
+
+	template<CPUStateCondition condition>
+	struct ret_cc
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			if (condition::evaluate(cpu))
+			{
+				ret::execute(cpu);
+			}
+			else 
+			{
+				cpu.pc++;
+			}
+		}
+	};
+
+	export using ret_z = ret_cc<is_z_set>;
+	export using ret_nz = ret_cc<is_z_not_set>;
+	export using ret_c = ret_cc<is_c_set>;
+	export using ret_nc = ret_cc<is_c_not_set>;
 }
