@@ -139,4 +139,42 @@ namespace opcodes
 	{
 		static auto get(const cpu::cpu& cpu) { return cpu.registers.hl(); }
 	};
+
+	export template<typename T>
+	concept CPUStateCondition = requires(const cpu::cpu& cpu)
+	{
+		{ T::evaluate(cpu) } -> std::convertible_to<bool>;
+	};
+
+	export struct is_z_set
+	{
+		static bool evaluate(const cpu::cpu& cpu) 
+		{ 
+			return cpu.registers.z_flag(); 
+		}
+	};
+
+	export struct is_z_not_set
+	{
+		static bool evaluate(const cpu::cpu& cpu)
+		{
+			return !is_z_set::evaluate(cpu);
+		}
+	};
+
+	export struct is_c_set
+	{
+		static bool evaluate(const cpu::cpu& cpu)
+		{
+			return cpu.registers.c_flag();
+		}
+	};
+
+	export struct is_c_not_set
+	{
+		static bool evaluate(const cpu::cpu& cpu)
+		{
+			return !is_c_set::evaluate(cpu);
+		}
+	};
 }

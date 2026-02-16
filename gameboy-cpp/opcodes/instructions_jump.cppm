@@ -1,6 +1,7 @@
 
 export module opcodes:jump;
 
+import :common;
 import cpu;
 import utilities;
 import std;
@@ -15,28 +16,16 @@ namespace opcodes
 		}
 	};
 
-	template<auto T>
-	concept CPUStateCondition = requires(const cpu::cpu& cpu)
-	{
-		{ T(cpu) } -> std::convertible_to<bool>;
-	};
-
-	template <auto Condition>
-	requires CPUStateCondition<Condition>
+	template <CPUStateCondition condition>
 	struct jp_cc_n16
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc = Condition(cpu)
+			cpu.pc = condition::evaluate(cpu)
 				? utils::read_two_byte_little_endian(cpu.memory, cpu.pc + 1)
 				: cpu.pc + 3;
 		}
 	};
-
-	inline bool is_z_set(const cpu::cpu& cpu) { return cpu.registers.z_flag(); }
-	inline bool is_z_not_set(const cpu::cpu& cpu) { return !is_z_set(cpu); }
-	inline bool is_c_set(const cpu::cpu& cpu) { return cpu.registers.c_flag(); }
-	inline bool is_c_not_set(const cpu::cpu& cpu) { return !is_c_set(cpu); }
 
 	export using jp_z_n16 = jp_cc_n16<is_z_set>;
 	export using jp_nz_n16 = jp_cc_n16<is_z_not_set>;
