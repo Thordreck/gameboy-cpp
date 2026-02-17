@@ -11,7 +11,7 @@ namespace
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.registers.a() = 1;
+			cpu.reg().a() = 1;
 		}
 	};
 
@@ -19,7 +19,7 @@ namespace
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.registers.b() = 1;
+			cpu.reg().b() = 1;
 		}
 	};
 
@@ -32,10 +32,12 @@ TEST_CASE("instruction table maps existing opcodes correctly")
 {
 	const auto instruction_table = test_instruction_table_builder::build();
 
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
 	instruction_table[0x0](cpu);
 	instruction_table[0x1](cpu);
 
-	CHECK_EQ(cpu.registers.a(), 1);
-	CHECK_EQ(cpu.registers.b(), 1);
+	CHECK_EQ(cpu.reg().a(), 1);
+	CHECK_EQ(cpu.reg().b(), 1);
 }

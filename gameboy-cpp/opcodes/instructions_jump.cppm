@@ -12,7 +12,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc = utils::read_two_byte_little_endian(cpu.memory, cpu.pc + 1);
+			cpu.pc() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
 		}
 	};
 
@@ -21,9 +21,9 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc = condition::evaluate(cpu)
-				? utils::read_two_byte_little_endian(cpu.memory, cpu.pc + 1)
-				: cpu.pc + 3;
+			cpu.pc() = condition::evaluate(cpu)
+				? utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1)
+				: cpu.pc() + 3;
 		}
 	};
 

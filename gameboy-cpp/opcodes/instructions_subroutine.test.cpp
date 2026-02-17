@@ -13,8 +13,8 @@ namespace
         { FlagRegFn(cpu) } -> std::convertible_to<cpu::flag_register>;
     };
 
-	auto get_z(cpu::cpu& cpu) { return cpu.registers.z_flag(); }
-	auto get_c(cpu::cpu& cpu) { return cpu.registers.c_flag(); }
+	auto get_z(cpu::cpu& cpu) { return cpu.reg().z_flag(); }
+	auto get_c(cpu::cpu& cpu) { return cpu.reg().c_flag(); }
 
 	template <auto FlagRegFn, bool value>
 	requires FlagRegisterFetchFn<FlagRegFn>
@@ -96,17 +96,19 @@ TEST_CASE("call_n16 pushes pc into stack and jumps to direction")
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.pc = pc_start;
-	cpu.sp = stack_origin;
-	cpu.memory[pc_start + 1] = 0xFF;
-	cpu.memory[pc_start + 2] = 0xAA;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.pc() = pc_start;
+	cpu.sp() = stack_origin;
+	cpu.memory()[pc_start + 1] = 0xFF;
+	cpu.memory()[pc_start + 2] = 0xAA;
 
 	opcodes::call_n16::execute(cpu);
 
-	CHECK_EQ(cpu.pc, 0XAAFF);
-	CHECK_EQ(cpu.memory[stack_origin - 2], 0xD0);
-	CHECK_EQ(cpu.memory[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.pc(), 0XAAFF);
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xD0);
+	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
 }
 
 TEST_CASE_TEMPLATE("call_cc_n16 executes jump when condition is met", test, call_cc_n16_successful_jump_test_cases)
@@ -114,18 +116,20 @@ TEST_CASE_TEMPLATE("call_cc_n16 executes jump when condition is met", test, call
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.pc = pc_start;
-	cpu.sp = stack_origin;
-	cpu.memory[pc_start + 1] = 0xFF;
-	cpu.memory[pc_start + 2] = 0xAA;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.pc() = pc_start;
+	cpu.sp() = stack_origin;
+	cpu.memory()[pc_start + 1] = 0xFF;
+	cpu.memory()[pc_start + 2] = 0xAA;
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc, 0XAAFF);
-	CHECK_EQ(cpu.memory[stack_origin - 2], 0xD0);
-	CHECK_EQ(cpu.memory[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.pc(), 0XAAFF);
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xD0);
+	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
 }
 
 TEST_CASE_TEMPLATE("call_cc_n16 does not execute jump when condition is met", test, call_cc_n16_unsuccessful_jump_test_cases)
@@ -133,18 +137,20 @@ TEST_CASE_TEMPLATE("call_cc_n16 does not execute jump when condition is met", te
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.pc = pc_start;
-	cpu.sp = stack_origin;
-	cpu.memory[pc_start + 1] = 0xFF;
-	cpu.memory[pc_start + 2] = 0xAA;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.pc() = pc_start;
+	cpu.sp() = stack_origin;
+	cpu.memory()[pc_start + 1] = 0xFF;
+	cpu.memory()[pc_start + 2] = 0xAA;
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc, pc_start + 3);
-	CHECK_EQ(cpu.memory[stack_origin - 2], 0);
-	CHECK_EQ(cpu.memory[stack_origin - 1], 0);
+	CHECK_EQ(cpu.pc(), pc_start + 3);
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0);
+	CHECK_EQ(cpu.memory()[stack_origin - 1], 0);
 }
 
 TEST_CASE("ret updates pc with value from stack")
@@ -152,13 +158,15 @@ TEST_CASE("ret updates pc with value from stack")
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.sp = stack_origin - 2;
-	cpu.memory[stack_origin - 1] = 0xAB;
-	cpu.memory[stack_origin - 2] = 0xCD;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = stack_origin - 2;
+	cpu.memory()[stack_origin - 1] = 0xAB;
+	cpu.memory()[stack_origin - 2] = 0xCD;
 
 	opcodes::ret::execute(cpu);
-	CHECK_EQ(cpu.pc, expected_pc);
+	CHECK_EQ(cpu.pc(), expected_pc);
 }
 
 TEST_CASE_TEMPLATE("ret_cc updates pc if condition is satisfied", test, ret_cc_successful_jump_test_cases)
@@ -166,14 +174,16 @@ TEST_CASE_TEMPLATE("ret_cc updates pc if condition is satisfied", test, ret_cc_s
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.sp = stack_origin - 2;
-	cpu.memory[stack_origin - 1] = 0xAB;
-	cpu.memory[stack_origin - 2] = 0xCD;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = stack_origin - 2;
+	cpu.memory()[stack_origin - 1] = 0xAB;
+	cpu.memory()[stack_origin - 2] = 0xCD;
 
 	test::set_condition(cpu);
 	test::execute(cpu);
-	CHECK_EQ(cpu.pc, expected_pc);
+	CHECK_EQ(cpu.pc(), expected_pc);
 }
 
 TEST_CASE_TEMPLATE("ret_cc does not update pc if condition is not satisfied", test, ret_cc_unsuccessful_jump_test_cases)
@@ -181,14 +191,16 @@ TEST_CASE_TEMPLATE("ret_cc does not update pc if condition is not satisfied", te
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{};
-	cpu.sp = stack_origin - 2;
-	cpu.memory[stack_origin - 1] = 0xAB;
-	cpu.memory[stack_origin - 2] = 0xCD;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = stack_origin - 2;
+	cpu.memory()[stack_origin - 1] = 0xAB;
+	cpu.memory()[stack_origin - 2] = 0xCD;
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc, 1);
-	CHECK_EQ(cpu.sp, stack_origin - 2);
+	CHECK_EQ(cpu.pc(), 1);
+	CHECK_EQ(cpu.sp(), stack_origin - 2);
 }

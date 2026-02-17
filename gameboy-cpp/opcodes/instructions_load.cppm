@@ -15,7 +15,7 @@ namespace opcodes
 		static void execute(cpu::cpu& cpu)
 		{
 			lhs_provider::get(cpu) = rhs_provider::get(cpu);
-			cpu.pc++;
+			cpu.pc()++;
 		}
 	};
 
@@ -88,8 +88,8 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			reg_provider::get(cpu) = cpu.memory[++cpu.pc];
-			cpu.pc++;
+			reg_provider::get(cpu) = cpu.memory()[++cpu.pc()];
+			cpu.pc()++;
 		}
 	};
 
@@ -107,8 +107,8 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			reg_provider::get(cpu) = utils::read_two_byte_little_endian(cpu.memory, cpu.pc + 1);
-			cpu.pc += 3;
+			reg_provider::get(cpu) = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+			cpu.pc() += 3;
 		}
 	};
 
@@ -122,8 +122,8 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.memory[cpu.registers.hl()] = reg_provider::get(cpu);
-			cpu.pc += 2;
+			cpu.memory()[cpu.reg().hl()] = reg_provider::get(cpu);
+			cpu.pc() += 2;
 		}
 	};
 

@@ -20,72 +20,72 @@ namespace opcodes
 
 	export struct a_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.a(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().a(); }
 	};
 
 	export struct b_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.b(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().b(); }
 	};
 
 	export struct c_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.c(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().c(); }
 	};
 
 	export struct d_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.d(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().d(); }
 	};
 
 	export struct e_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.e(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().e(); }
 	};
 
 	export struct h_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.h(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().h(); }
 	};
 
 	export struct l_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.l(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().l(); }
 	};
 
 	export struct a_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.a(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().a(); }
 	};
 
 	export struct b_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.b(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().b(); }
 	};
 
 	export struct c_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.c(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().c(); }
 	};
 
 	export struct d_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.d(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().d(); }
 	};
 
 	export struct e_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.e(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().e(); }
 	};
 
 	export struct h_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.h(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().h(); }
 	};
 
 	export struct l_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.l(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().l(); }
 	};
 
 	export template<typename T>
@@ -96,22 +96,22 @@ namespace opcodes
 
 	export struct af_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.af(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().af(); }
 	};
 
 	export struct bc_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.bc(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().bc(); }
 	};
 
 	export struct de_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.de(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().de(); }
 	};
 
 	export struct hl_register_provider
 	{
-		static auto get(cpu::cpu& cpu) { return cpu.registers.hl(); }
+		static auto get(cpu::cpu& cpu) { return cpu.reg().hl(); }
 	};
 
 	export template<typename T>
@@ -122,22 +122,22 @@ namespace opcodes
 
 	export struct af_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.af(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().af(); }
 	};
 
 	export struct bc_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.bc(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().bc(); }
 	};
 
 	export struct de_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.de(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().de(); }
 	};
 
 	export struct hl_readonly_register_provider
 	{
-		static auto get(const cpu::cpu& cpu) { return cpu.registers.hl(); }
+		static auto get(const cpu::cpu& cpu) { return cpu.reg().hl(); }
 	};
 
 	export template<typename T>
@@ -150,7 +150,7 @@ namespace opcodes
 	{
 		static bool evaluate(const cpu::cpu& cpu) 
 		{ 
-			return cpu.registers.z_flag(); 
+			return cpu.reg().z_flag(); 
 		}
 	};
 
@@ -166,7 +166,7 @@ namespace opcodes
 	{
 		static bool evaluate(const cpu::cpu& cpu)
 		{
-			return cpu.registers.c_flag();
+			return cpu.reg().c_flag();
 		}
 	};
 

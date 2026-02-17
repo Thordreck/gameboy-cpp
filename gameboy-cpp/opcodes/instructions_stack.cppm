@@ -9,14 +9,14 @@ namespace opcodes
 {
 	export void push_stack(cpu::cpu& cpu, const cpu::register_16::type_t value)
 	{
-		cpu.memory[--cpu.sp] = utils::most_significant_byte(value);
-		cpu.memory[--cpu.sp] = utils::less_significant_byte(value);
+		cpu.memory()[--cpu.sp()] = utils::most_significant_byte(value);
+		cpu.memory()[--cpu.sp()] = utils::less_significant_byte(value);
 	}
 
 	export cpu::register_16::type_t pop_stack(cpu::cpu& cpu)
 	{
-		const auto less_significant = cpu.memory[cpu.sp++];
-		const auto most_significant = cpu.memory[cpu.sp++];
+		const auto less_significant = cpu.memory()[cpu.sp()++];
+		const auto most_significant = cpu.memory()[cpu.sp()++];
 
 		return utils::encode_little_endian(less_significant, most_significant);
 	}
@@ -27,7 +27,7 @@ namespace opcodes
 		static void execute(cpu::cpu& cpu)
 		{
 			register_provider::get(cpu) = pop_stack(cpu);
-			cpu.pc++;
+			cpu.pc()++;
 		}
 	};
 
@@ -42,7 +42,7 @@ namespace opcodes
 		static void execute(cpu::cpu& cpu)
 		{
 			push_stack(cpu, register_provider::get(cpu));
-			cpu.pc++;
+			cpu.pc()++;
 		}
 	};
 

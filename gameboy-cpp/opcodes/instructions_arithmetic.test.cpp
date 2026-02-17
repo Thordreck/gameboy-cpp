@@ -7,12 +7,12 @@ import opcodes;
 
 namespace
 {
-	inline auto get_b(cpu::cpu& cpu) { return cpu.registers.b(); }
-	inline auto get_c(cpu::cpu& cpu) { return cpu.registers.c(); }
-	inline auto get_d(cpu::cpu& cpu) { return cpu.registers.d(); }
-	inline auto get_e(cpu::cpu& cpu) { return cpu.registers.e(); }
-	inline auto get_h(cpu::cpu& cpu) { return cpu.registers.h(); }
-	inline auto get_l(cpu::cpu& cpu) { return cpu.registers.l(); }
+	inline auto get_b(cpu::cpu& cpu) { return cpu.reg().b(); }
+	inline auto get_c(cpu::cpu& cpu) { return cpu.reg().c(); }
+	inline auto get_d(cpu::cpu& cpu) { return cpu.reg().d(); }
+	inline auto get_e(cpu::cpu& cpu) { return cpu.reg().e(); }
+	inline auto get_h(cpu::cpu& cpu) { return cpu.reg().h(); }
+	inline auto get_l(cpu::cpu& cpu) { return cpu.reg().l(); }
 
 	template<typename OpCode, auto RegFn>
 	requires requires (cpu::cpu& cpu)
@@ -37,99 +37,105 @@ namespace
 
 TEST_CASE_TEMPLATE("add_a_r8 updates a register properly", Opcode, test_pairs)
 {
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
 	Opcode::execute(cpu);
-	CHECK_EQ(cpu.registers.a(), 0);
+	CHECK_EQ(cpu.reg().a(), 0);
 
 	Opcode::target_registry(cpu) = 5;
 	Opcode::execute(cpu);
-	CHECK_EQ(cpu.registers.a(), 5);
+	CHECK_EQ(cpu.reg().a(), 5);
 
 	Opcode::target_registry(cpu) = 125;
 	Opcode::execute(cpu);
-	CHECK_EQ(cpu.registers.a(), 130);
+	CHECK_EQ(cpu.reg().a(), 130);
 
 	Opcode::target_registry(cpu) = 127;
 	Opcode::execute(cpu);
-	CHECK_EQ(cpu.registers.a(), 1);
+	CHECK_EQ(cpu.reg().a(), 1);
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 updates zero flag properly", Opcode, test_pairs)
 {
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
 	Opcode::execute(cpu);
-	CHECK(cpu.registers.z_flag());
+	CHECK(cpu.reg().z_flag());
 
 	Opcode::target_registry(cpu) = 5;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.z_flag());
+	CHECK_FALSE(cpu.reg().z_flag());
 
 	Opcode::target_registry(cpu) = 251;
 	Opcode::execute(cpu);
-	CHECK(cpu.registers.z_flag());
+	CHECK(cpu.reg().z_flag());
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 always set substraction flag to zero", Opcode, test_pairs)
 {
-	cpu::cpu cpu {};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.n_flag());
+	CHECK_FALSE(cpu.reg().n_flag());
 
 	Opcode::target_registry(cpu) = 5;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.n_flag());
+	CHECK_FALSE(cpu.reg().n_flag());
 
 	Opcode::target_registry(cpu) = 252;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.n_flag());
+	CHECK_FALSE(cpu.reg().n_flag());
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 applies carry flag properly", Opcode, test_pairs)
 {
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.c_flag());
+	CHECK_FALSE(cpu.reg().c_flag());
 
 	Opcode::target_registry(cpu) = 255;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.c_flag());
+	CHECK_FALSE(cpu.reg().c_flag());
 
 	Opcode::target_registry(cpu) = 1;
 	Opcode::execute(cpu);
-	CHECK(cpu.registers.c_flag());
+	CHECK(cpu.reg().c_flag());
 
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.c_flag());
+	CHECK_FALSE(cpu.reg().c_flag());
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 applies half carry flag properly", Opcode, test_pairs)
 {
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.h_flag());
+	CHECK_FALSE(cpu.reg().h_flag());
 
 	Opcode::target_registry(cpu) = 0xF;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.h_flag());
+	CHECK_FALSE(cpu.reg().h_flag());
 
 	Opcode::execute(cpu);
-	CHECK(cpu.registers.h_flag());
+	CHECK(cpu.reg().h_flag());
 
 	Opcode::target_registry(cpu) = 0;
 	Opcode::execute(cpu);
-	CHECK_FALSE(cpu.registers.h_flag());
+	CHECK_FALSE(cpu.reg().h_flag());
 }
 
 TEST_CASE_TEMPLATE("add_a_r8 increments program counter properly", Opcode, test_pairs)
 {
-	cpu::cpu cpu{};
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
-	const cpu::program_counter previous_pc = cpu.pc;
+	const cpu::program_counter previous_pc = cpu.pc();
 	Opcode::execute(cpu);
-	CHECK_EQ(previous_pc + 1, cpu.pc);
+	CHECK_EQ(previous_pc + 1, cpu.pc());
 }

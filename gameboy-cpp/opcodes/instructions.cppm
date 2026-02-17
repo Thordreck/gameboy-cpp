@@ -8,4 +8,5 @@ export import :jump;
 export import :load;
 export import :stack;
 export import :subroutine;
+export import :misc;
 

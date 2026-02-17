@@ -12,7 +12,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			push_stack(cpu, cpu.pc + 3);
+			push_stack(cpu, cpu.pc() + 3);
 			jp_n16::execute(cpu);
 		}
 	};
@@ -28,7 +28,7 @@ namespace opcodes
 			}
 			else 
 			{
-				cpu.pc += 3;
+				cpu.pc() += 3;
 			}
 		}
 	};
@@ -42,7 +42,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc = pop_stack(cpu);
+			cpu.pc() = pop_stack(cpu);
 		}
 	};
 
@@ -57,7 +57,7 @@ namespace opcodes
 			}
 			else 
 			{
-				cpu.pc++;
+				cpu.pc()++;
 			}
 		}
 	};

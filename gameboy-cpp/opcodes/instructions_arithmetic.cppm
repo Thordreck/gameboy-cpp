@@ -14,15 +14,15 @@ namespace opcodes
 		static void execute(cpu::cpu& cpu)
 		{
 			const cpu::readonly_register_8 r8 = reg_provider::get(cpu);
-			const bool carry = utils::check_add_overflow<cpu::register_8::type_t>(cpu.registers.a(), r8);
-			const bool half_carry = utils::check_half_add_overflow(cpu.registers.a(), r8);
+			const bool carry = utils::check_add_overflow<cpu::register_8::type_t>(cpu.reg().a(), r8);
+			const bool half_carry = utils::check_half_add_overflow(cpu.reg().a(), r8);
 
-			cpu.registers.a() = cpu.registers.a() + r8;
-			cpu.registers.flags().z = cpu.registers.a() == 0;
-			cpu.registers.flags().n = false;
-			cpu.registers.flags().h = half_carry;
-			cpu.registers.flags().c = carry;
-			cpu.pc++;
+			cpu.reg().a() = cpu.reg().a() + r8;
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = half_carry;
+			cpu.reg().flags().c = carry;
+			cpu.pc()++;
 		}
 	};
 

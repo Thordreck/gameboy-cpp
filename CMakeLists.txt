@@ -13,8 +13,13 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/memory)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/utilities)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/opcodes)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
+
+if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)
+endif()
 
 generate_ifc_dt_files()

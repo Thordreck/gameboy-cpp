@@ -13,13 +13,13 @@ namespace
         { RegFn(cpu) } -> std::convertible_to<cpu::register_8>;
     };
 
-	inline auto get_a(cpu::cpu& cpu) { return cpu.registers.a(); }
-	inline auto get_b(cpu::cpu& cpu) { return cpu.registers.b(); }
-	inline auto get_c(cpu::cpu& cpu) { return cpu.registers.c(); }
-	inline auto get_d(cpu::cpu& cpu) { return cpu.registers.d(); }
-	inline auto get_e(cpu::cpu& cpu) { return cpu.registers.e(); }
-	inline auto get_h(cpu::cpu& cpu) { return cpu.registers.h(); }
-	inline auto get_l(cpu::cpu& cpu) { return cpu.registers.l(); }
+	inline auto get_a(cpu::cpu& cpu) { return cpu.reg().a(); }
+	inline auto get_b(cpu::cpu& cpu) { return cpu.reg().b(); }
+	inline auto get_c(cpu::cpu& cpu) { return cpu.reg().c(); }
+	inline auto get_d(cpu::cpu& cpu) { return cpu.reg().d(); }
+	inline auto get_e(cpu::cpu& cpu) { return cpu.reg().e(); }
+	inline auto get_h(cpu::cpu& cpu) { return cpu.reg().h(); }
+	inline auto get_l(cpu::cpu& cpu) { return cpu.reg().l(); }
 
     template <auto RegFn>
     concept R16RegisterFetchFn = requires(cpu::cpu & cpu)
@@ -27,10 +27,10 @@ namespace
         { RegFn(cpu) } -> std::convertible_to<cpu::register_16>;
     };
 
-	inline auto get_af(cpu::cpu& cpu) { return cpu.registers.af(); }
-	inline auto get_bc(cpu::cpu& cpu) { return cpu.registers.bc(); }
-	inline auto get_de(cpu::cpu& cpu) { return cpu.registers.de(); }
-	inline auto get_hl(cpu::cpu& cpu) { return cpu.registers.hl(); }
+	inline auto get_af(cpu::cpu& cpu) { return cpu.reg().af(); }
+	inline auto get_bc(cpu::cpu& cpu) { return cpu.reg().bc(); }
+	inline auto get_de(cpu::cpu& cpu) { return cpu.reg().de(); }
+	inline auto get_hl(cpu::cpu& cpu) { return cpu.reg().hl(); }
 
 	template<opcodes::Instruction OpCode, auto LhsRegFn, auto RhsRegFn>
     requires R8RegisterFetchFn<LhsRegFn> && R8RegisterFetchFn<RhsRegFn>
@@ -146,47 +146,55 @@ TEST_CASE_TEMPLATE("ld_r8_r8 copies registry value and updates pc properly", Opc
 {
 	constexpr cpu::register_8::type_t test_value = 0xAB;
 
-	cpu::cpu cpu{};
-	Opcode::rhs(cpu) = test_value;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
 
+	Opcode::rhs(cpu) = test_value;
 	Opcode::execute(cpu);
+
 	CHECK_EQ(Opcode::lhs(cpu), test_value);
-	CHECK_EQ(cpu.pc, 1);
+	CHECK_EQ(cpu.pc(), 1);
 }
 
 TEST_CASE_TEMPLATE("ld_r8_n8 stores value into target registry and updates pc properly", Opcode, ld_r8_n8_test_cases)
 {
 	constexpr cpu::register_8::type_t test_value = 0xAB;
 
-	cpu::cpu cpu{};
-    cpu.memory[1] = test_value;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.memory()[1] = test_value;
 	Opcode::execute(cpu);
 
 	CHECK_EQ(Opcode::reg(cpu), test_value);
-	CHECK_EQ(cpu.pc, 2);
+	CHECK_EQ(cpu.pc(), 2);
 }
 
 TEST_CASE_TEMPLATE("ld_r16_n16 stores value into target registry and updates pc properly", Opcode, ld_r16_n16_test_cases)
 {
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 
-	cpu::cpu cpu{};
-    cpu.memory[1] = static_cast<cpu::register_8::type_t>(test_value);
-    cpu.memory[2] = static_cast<cpu::register_8::type_t>(test_value >> 8);
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.memory()[1] = static_cast<cpu::register_8::type_t>(test_value);
+    cpu.memory()[2] = static_cast<cpu::register_8::type_t>(test_value >> 8);
 	Opcode::execute(cpu);
 
 	CHECK_EQ(Opcode::reg(cpu), test_value);
-	CHECK_EQ(cpu.pc, 3);
+	CHECK_EQ(cpu.pc(), 3);
 }
 
 TEST_CASE_TEMPLATE("ld_hl_r8 stores value into target registry and updates pc properly", test, ld_hl_r8_test_cases)
 {
-	cpu::cpu cpu{};
-    cpu.registers.hl() = test::memory_pos;
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.reg().hl() = test::memory_pos;
 
     test::reg(cpu) = test::target_value;
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.memory[test::memory_pos], test::target_value);
-	CHECK_EQ(cpu.pc, 2);
+	CHECK_EQ(cpu.memory()[test::memory_pos], test::target_value);
+	CHECK_EQ(cpu.pc(), 2);
 }

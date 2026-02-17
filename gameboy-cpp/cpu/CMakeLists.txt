@@ -11,7 +11,7 @@ target_sources(cpu PUBLIC
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/cpu.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/registers.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/memory_bus.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/program_counter.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/stack_pointer.cppm
 )

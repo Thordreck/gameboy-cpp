@@ -1,5 +1,5 @@
 
-export module cpu:memory;
+export module memory;
 import std;
 
 namespace cpu
