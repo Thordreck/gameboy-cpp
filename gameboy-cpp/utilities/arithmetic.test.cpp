@@ -13,6 +13,9 @@ TEST_CASE_TEMPLATE("add overflows are properly detected", T, std::uint8_t, float
 
 TEST_CASE("half add overflows are properly detected")
 {
-	CHECK_FALSE(utils::check_half_add_overflow({}, {}));
+	CHECK_FALSE(utils::check_half_add_overflow(
+		std::numeric_limits<std::uint8_t>::min(),
+		std::numeric_limits<std::uint8_t>::min()));
+
 	CHECK(utils::check_half_add_overflow(15, 1));
 }

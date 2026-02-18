@@ -24,6 +24,20 @@ namespace cpu
 			return *this;
 		}
 
+		register_8_t& operator++()
+		requires !std::is_const_v<std::remove_reference_t<T>>
+		{
+			*this = static_cast<type_t>(*this) + 1;
+			return *this;
+		}
+
+		register_8_t& operator--()
+		requires !std::is_const_v<std::remove_reference_t<T>>
+		{
+			*this = static_cast<type_t>(*this) - 1;
+			return *this;
+		}
+
 	private:
 		T value;
 	};
@@ -57,6 +71,20 @@ namespace cpu
 			hi_byte = static_cast<register_8::type_t>((v >> 8) & 0xFF);
 			lo_byte = static_cast<register_8::type_t>(v & 0xFF);
 
+			return *this;
+		}
+
+		register_16_t& operator++()
+		requires !std::is_const_v<std::remove_reference_t<T>>
+		{
+			*this = static_cast<type_t>(*this) + 1;
+			return *this;
+		}
+
+		register_16_t& operator--()
+		requires !std::is_const_v<std::remove_reference_t<T>>
+		{
+			*this = static_cast<type_t>(*this) - 1;
 			return *this;
 		}
 

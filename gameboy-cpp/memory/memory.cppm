@@ -18,6 +18,6 @@ namespace cpu
 		}
 
 	private:
-		std::array<std::uint8_t, 0xFFFF> data{};
+		std::array<std::uint8_t, 0x10000> data{};
 	};
 }

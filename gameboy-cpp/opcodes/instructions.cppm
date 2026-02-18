@@ -9,4 +9,6 @@ export import :load;
 export import :stack;
 export import :subroutine;
 export import :misc;
+export import :interrupt;
+export import :bit;
 

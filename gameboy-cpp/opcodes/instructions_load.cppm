@@ -123,7 +123,7 @@ namespace opcodes
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] = reg_provider::get(cpu);
-			cpu.pc() += 2;
+			cpu.pc()++;
 		}
 	};
 
@@ -134,4 +134,141 @@ namespace opcodes
 	export using ld_hl_e = ld_hl_r8<e_readonly_register_provider>;
 	export using ld_hl_h = ld_hl_r8<h_readonly_register_provider>;
 	export using ld_hl_l = ld_hl_r8<l_readonly_register_provider>;
+
+	// ld r8,hl
+	template<R8RegisterProvider reg_provider>
+	struct ld_r8_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			reg_provider::get(cpu) = cpu.memory()[cpu.reg().hl()];
+			cpu.pc()++;
+		}
+	};
+
+	export using ld_a_hl = ld_r8_hl<a_register_provider>;
+	export using ld_b_hl = ld_r8_hl<b_register_provider>;
+	export using ld_c_hl = ld_r8_hl<c_register_provider>;
+	export using ld_d_hl = ld_r8_hl<d_register_provider>;
+	export using ld_e_hl = ld_r8_hl<e_register_provider>;
+	export using ld_h_hl = ld_r8_hl<h_register_provider>;
+	export using ld_l_hl = ld_r8_hl<l_register_provider>;
+
+	export struct ld_a_hli
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
+			++cpu.reg().hl();
+			cpu.pc()++;
+		}
+	};
+
+	export struct ld_a_hld
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
+			--cpu.reg().hl();
+			cpu.pc()++;
+		}
+	};
+
+	export struct ld_hli_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
+			++cpu.reg().hl();
+			cpu.pc()++;
+		}
+	};
+
+	export struct ld_hld_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
+			--cpu.reg().hl();
+			cpu.pc()++;
+		}
+	};
+
+	// ld r16,a
+	template<ReadOnlyR16RegisterProvider reg_provider>
+	struct ld_r16_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[reg_provider::get(cpu)] = cpu.reg().a();
+			cpu.pc()++;
+		}
+	};
+
+	export using ld_bc_a = ld_r16_a<bc_readonly_register_provider>;
+	export using ld_de_a = ld_r16_a<de_readonly_register_provider>;
+
+	// ld n16,a
+	export struct ld_n16_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+
+			cpu.memory()[address] = cpu.reg().a();
+			cpu.pc() += 3;
+		}
+	};
+
+	// ld a,n16
+	export struct ld_a_n16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+
+			cpu.reg().a() = cpu.memory()[address];
+			cpu.pc() += 3;
+		}
+	};
+
+	// ld a,r16
+	template <ReadOnlyR16RegisterProvider reg_provider>
+	struct ld_a_r16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.memory()[reg_provider::get(cpu)];
+			cpu.pc()++;
+		}
+	};
+
+	export using ld_a_bc = ld_a_r16<bc_readonly_register_provider>;
+	export using ld_a_de = ld_a_r16<de_readonly_register_provider>;
+
+	// ldh n16,a
+	export struct ldh_n16_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			constexpr std::uint8_t high_nibble = 0xFF;
+			const std::uint16_t address = utils::encode_little_endian(cpu.memory()[cpu.pc() + 1], high_nibble);
+
+			cpu.memory()[address] = cpu.reg().a();
+			cpu.pc() += 2;
+		}
+	};
+
+	// ldh n16,a
+	export struct ldh_a_n16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			constexpr std::uint8_t high_nibble = 0xFF;
+			const std::uint16_t address = utils::encode_little_endian(cpu.memory()[cpu.pc() + 1], high_nibble);
+
+			cpu.reg().a() = cpu.memory()[address];
+			cpu.pc() += 2;
+		}
+	};
 }

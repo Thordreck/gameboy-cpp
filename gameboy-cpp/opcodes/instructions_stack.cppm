@@ -50,4 +50,13 @@ namespace opcodes
 	export using push_bc = push_r16<bc_readonly_register_provider>;
 	export using push_de = push_r16<de_readonly_register_provider>;
 	export using push_hl = push_r16<hl_readonly_register_provider>;
+
+	export struct ld_sp_n16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.sp() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+			cpu.pc() += 3;
+		}
+	};
 }
