@@ -12,6 +12,33 @@ namespace
 		std::ifstream file(filepath, std::ios::in | std::ios::binary);
 		return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 	}
+
+	opcodes::instruction_fn_t fetch_instruction(
+		const cpu::cpu& cpu, 
+		const opcodes::instruction_table& instructions,
+		const opcodes::instruction_table& prefixed_instructions)
+	{ 
+		const std::uint8_t opcode = cpu.memory()[cpu.pc()];
+
+		if (opcode != opcodes::prefix_opcode)
+		{
+			std::cout << std::format("Opcode {:x}. PC {:x}\n", 
+				opcode, 
+				static_cast<cpu::program_counter::type_t>(cpu.pc()));
+
+			REQUIRE_MESSAGE(instructions[opcode] != nullptr, std::format("Unknown opcode {:x}", opcode));
+			return instructions[opcode];
+		}
+
+		const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
+		std::cout << std::format("Prefixed opcode {:x}-{:x}. PC {:x}\n", 
+			opcodes::prefix_opcode,
+			prefixed_opcode, 
+			static_cast<cpu::program_counter::type_t>(cpu.pc()));
+
+		REQUIRE_MESSAGE(prefixed_instructions[prefixed_opcode] != nullptr, std::format("Unknown prefixed opcode {:x}", prefixed_opcode));
+		return prefixed_instructions[prefixed_opcode];
+	}
 }
 
 TEST_CASE("blargg.06-ld r,r")
@@ -28,17 +55,12 @@ TEST_CASE("blargg.06-ld r,r")
 	cpu.pc() = 0x100;
 
 	constexpr auto instruction_table = opcodes::default_instruction_table_builder::build();
+	constexpr auto prefix_instruction_table = opcodes::default_prefixed_instruction_table_builder::build();
 
-	// TODO: implemnt this properly
-	for (int i = 0; i < 200000; i++)
+	// TODO: implemnet this properly
+	for (int i = 0; i < 400000; i++)
 	{
-		const std::uint8_t opcode = cpu.memory()[cpu.pc()];
-
-		std::cout << std::format("Opcode {:x}. PC {:x}\n", opcode, static_cast<cpu::program_counter::type_t>(cpu.pc()));
-
-		REQUIRE_MESSAGE(opcode < instruction_table.size(), std::format("Unknown opcode: {:x}", opcode));
-		REQUIRE_MESSAGE(instruction_table[opcode] != nullptr, std::format("Unknown opcode {:x}", opcode));
-
-		instruction_table[opcode](cpu);
+		const auto instruction = fetch_instruction(cpu, instruction_table, prefix_instruction_table);;
+		instruction(cpu);
 	}
 }

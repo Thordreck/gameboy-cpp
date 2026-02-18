@@ -177,4 +177,18 @@ namespace opcodes
 			return !is_c_set::evaluate(cpu);
 		}
 	};
+
+}
+
+namespace opcodes::literals
+{
+	consteval std::uint8_t operator"" _u8(unsigned long long value)
+	{
+		return static_cast<std::uint8_t>(value);
+	}
+
+	consteval std::uint16_t operator"" _u16(unsigned long long value)
+	{
+		return static_cast<std::uint16_t>(value);
+	}
 }

@@ -164,3 +164,16 @@ TEST_CASE_TEMPLATE("jr_cc_n16 sets expected pc when condition is not met", test,
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 2);
 }
+
+TEST_CASE("jp_hl sets expected pc")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::jp_hl::execute(cpu);
+	CHECK_EQ(cpu.pc(), 0);
+
+	cpu.reg().hl() = 0xABCD;
+	opcodes::jp_hl::execute(cpu);
+	CHECK_EQ(cpu.pc(), 0xABCD);
+}

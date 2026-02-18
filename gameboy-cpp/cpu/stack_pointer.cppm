@@ -9,17 +9,18 @@ namespace cpu
 	public:
 		using type_t = std::uint16_t;
 
-		operator type_t() const { return value; }
+		operator type_t() const { return value(); }
+		type_t value() const { return value_; }
 
 		stack_pointer& operator=(const type_t new_value)
 		{
-			value = new_value;
+			value_ = new_value;
 			return *this;
 		}
 
 		stack_pointer& operator++()
 		{
-			value++;
+			value_++;
 			return *this;
 		}
 
@@ -32,7 +33,7 @@ namespace cpu
 
 		stack_pointer& operator--()
 		{
-			value--;
+			value_--;
 			return *this;
 		}
 
@@ -44,6 +45,6 @@ namespace cpu
 		}
 
 	private:
-		std::uint16_t value{};
+		std::uint16_t value_{};
 	};
 }

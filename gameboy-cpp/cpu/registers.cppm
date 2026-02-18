@@ -12,15 +12,17 @@ namespace cpu
 		using type_t = std::uint8_t;
 
 		register_8_t(T& v)
-			: value{ v }
+			: value_{ v }
 		{}
 
-		operator type_t() const { return value; }
+		operator type_t() const { return value(); }
+
+		type_t value() const { return value_; }
 
 		register_8_t& operator=(const type_t v) 
 		requires !std::is_const_v<std::remove_reference_t<T>>
 		{
-			value = v;
+			value_ = v;
 			return *this;
 		}
 
@@ -39,7 +41,7 @@ namespace cpu
 		}
 
 	private:
-		T value;
+		T value_;
 	};
 
 	export using register_8 = register_8_t<std::uint8_t&>;
@@ -60,9 +62,14 @@ namespace cpu
 			, hi_byte{ hi }
 		{}
 
-		operator type_t() const
+		type_t value() const
 		{
 			return static_cast<type_t>(hi_byte) << 8 | static_cast<type_t>(lo_byte);
+		}
+
+		operator type_t() const
+		{
+			return value();
 		}
 
 		register_16_t& operator=(const type_t v)
@@ -108,9 +115,14 @@ namespace cpu
 			, byte_index{ index }
 		{}
 
-		operator type_t() const 
+		type_t value() const 
 		{
 			return ((byte_value >> byte_index) & 0b1) == 0b1;
+		}
+
+		operator type_t() const 
+		{
+			return value();
 		}
 
 		flag_register_t& operator=(const type_t value)

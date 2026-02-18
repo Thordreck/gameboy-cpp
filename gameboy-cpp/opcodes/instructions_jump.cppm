@@ -66,4 +66,12 @@ namespace opcodes
 	export using jr_nz_n16 = jr_cc_n16<is_z_not_set>;
 	export using jr_c_n16 = jr_cc_n16<is_c_set>;
 	export using jr_nc_n16 = jr_cc_n16<is_c_not_set>;
+
+	export struct jp_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.pc() = cpu.reg().hl();
+		}
+	};
 }

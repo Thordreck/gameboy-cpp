@@ -4,42 +4,38 @@ import std;
 
 namespace utils
 {
-	export template <typename T>
-	concept IntegralConvertible 
-		= std::convertible_to<T, std::intmax_t> 
-		|| std::convertible_to<T, std::uintmax_t>;
+	export template<typename T>
+	concept ArithmeticOperand
+		= std::same_as<T, std::uint8_t>
+		|| std::same_as<T, std::uint16_t>;
 	
-	export template<IntegralConvertible T>
+	export template<ArithmeticOperand T>
 	bool constexpr check_add_overflow(const T lhs, const T rhs)
 	{
-		if (rhs > 0 && lhs > std::numeric_limits<T>::max() - rhs)
-		{
-			return true;
-		}
-
-		if (rhs < 0 && lhs < std::numeric_limits<T>::min() - rhs)
-		{
-			return true;
-		}
-
-		return false;
+		return static_cast<T>(lhs + rhs) < lhs;
 	}
 
-	export template<IntegralConvertible Lhs, IntegralConvertible Rhs>
-	bool constexpr check_half_add_overflow(const Lhs lhs, const Rhs rhs)
+	export template<ArithmeticOperand T>
+	bool constexpr check_half_add_overflow(const T lhs, const T rhs)
 	{
-		return (lhs & 0xF) + (rhs & 0xF) > 0xF;
+		constexpr int half_bits = sizeof(T) == 1 ? 4 : 12;
+		constexpr T mask = (static_cast<T>(1) << half_bits) - 1;
+
+		return ((lhs & mask) + (rhs & mask)) > mask;
 	}
 
-	export template<IntegralConvertible Lhs, IntegralConvertible Rhs>
-	bool constexpr check_substract_underflow(const Lhs lhs, const Rhs rhs)
+	export template<ArithmeticOperand T>
+	bool constexpr check_substract_underflow(const T lhs, const T rhs)
 	{
-		return rhs > lhs;
+		return lhs < rhs;
 	}
 
-	export template<IntegralConvertible Lhs, IntegralConvertible Rhs>
-	bool constexpr check_half_substract_underflow(const Lhs lhs, const Rhs rhs)
+	export template<ArithmeticOperand T>
+	bool constexpr check_half_substract_underflow(const T lhs, const T rhs)
 	{
-		return (lhs & 0xF) < (rhs & 0xF);
+		constexpr int half_bits = sizeof(T) == 1 ? 4 : 12;
+		constexpr T mask = (static_cast<T>(1) << half_bits) - 1;
+
+		return (lhs & mask) < (rhs & mask);
 	}
 }
