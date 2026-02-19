@@ -31,10 +31,21 @@ namespace opcodes
 		}
 	};
 
-	export using pop_af = pop_r16<af_register_provider>;
 	export using pop_bc = pop_r16<bc_register_provider>;
 	export using pop_de = pop_r16<de_register_provider>;
 	export using pop_hl = pop_r16<hl_register_provider>;
+
+	export struct pop_af
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint16_t popped_result = pop_stack(cpu);
+			cpu.reg().a() = popped_result >> 8;
+			cpu.reg().f() = popped_result & 0xF0;
+
+			cpu.pc()++;
+		}
+	};
 
 	template<ReadOnlyR16RegisterProvider register_provider>
 	struct push_r16

@@ -27,7 +27,6 @@ namespace
 	};
 
 	#define pop_r16_test_cases \
-    r16_test_case<opcodes::pop_af, get_af>, \
     r16_test_case<opcodes::pop_bc, get_bc>, \
     r16_test_case<opcodes::pop_de, get_de>, \
     r16_test_case<opcodes::pop_hl, get_hl>
@@ -215,4 +214,23 @@ TEST_CASE("ld_hl_sp_e8 updates program counter properly")
 
 	opcodes::ld_hl_sp_e8::execute(cpu);
 	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE("pop_af updates reg with correct value from stack")
+{
+	constexpr cpu::register_16::type_t test_value = 0xABCD;
+	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = stack_origin - 2;
+	cpu.memory()[stack_origin - 2] = 0xCD;
+	cpu.memory()[stack_origin - 1] = 0xAB;
+
+	opcodes::pop_af::execute(cpu);
+
+	CHECK_EQ(cpu.reg().af(), test_value & 0xFFF0);
+	CHECK_EQ(cpu.pc(), 1);
+	CHECK_EQ(cpu.sp(), stack_origin);
 }
