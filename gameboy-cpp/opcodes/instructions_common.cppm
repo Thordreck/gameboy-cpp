@@ -178,6 +178,8 @@ namespace opcodes
 		}
 	};
 
+	export template<auto T>
+	concept BitIndex = std::unsigned_integral<decltype(T)> && (T <= 7);
 }
 
 namespace opcodes::literals

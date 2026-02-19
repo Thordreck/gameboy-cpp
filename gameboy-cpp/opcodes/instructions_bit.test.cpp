@@ -29,6 +29,16 @@ namespace
 		static cpu::register_8 reg(cpu::cpu& cpu) { return RegFn(cpu); }
 	};
 
+	template<opcodes::Instruction OpCode, auto RegFn, std::uint8_t BitIndex>
+	requires R8RegisterFetchFn<RegFn> && (sizeof(BitIndex) <= 7)
+	struct r8_u3_test_case
+	{
+		static constexpr auto execute = OpCode::execute;
+		static constexpr auto bit_index = BitIndex;
+
+		static cpu::register_8 reg(cpu::cpu& cpu) { return RegFn(cpu); }
+	};
+
 	#define or_a_r8_test_cases \
     r8_test_case<opcodes::or_a_b, get_b>, \
     r8_test_case<opcodes::or_a_c, get_c>, \
@@ -62,6 +72,180 @@ namespace
     r8_test_case<opcodes::rr_e, get_e>, \
     r8_test_case<opcodes::rr_h, get_h>, \
     r8_test_case<opcodes::rr_l, get_l>
+
+	#define bit_u3_r8_test_cases \
+    r8_u3_test_case<opcodes::bit_0_a, get_a, 0>, \
+    r8_u3_test_case<opcodes::bit_1_a, get_a, 1>, \
+    r8_u3_test_case<opcodes::bit_2_a, get_a, 2>, \
+    r8_u3_test_case<opcodes::bit_3_a, get_a, 3>, \
+    r8_u3_test_case<opcodes::bit_4_a, get_a, 4>, \
+    r8_u3_test_case<opcodes::bit_5_a, get_a, 5>, \
+    r8_u3_test_case<opcodes::bit_6_a, get_a, 6>, \
+    r8_u3_test_case<opcodes::bit_7_a, get_a, 7>, \
+    r8_u3_test_case<opcodes::bit_0_b, get_b, 0>, \
+    r8_u3_test_case<opcodes::bit_1_b, get_b, 1>, \
+    r8_u3_test_case<opcodes::bit_2_b, get_b, 2>, \
+    r8_u3_test_case<opcodes::bit_3_b, get_b, 3>, \
+    r8_u3_test_case<opcodes::bit_4_b, get_b, 4>, \
+    r8_u3_test_case<opcodes::bit_5_b, get_b, 5>, \
+    r8_u3_test_case<opcodes::bit_6_b, get_b, 6>, \
+    r8_u3_test_case<opcodes::bit_7_b, get_b, 7>, \
+    r8_u3_test_case<opcodes::bit_0_c, get_c, 0>, \
+    r8_u3_test_case<opcodes::bit_1_c, get_c, 1>, \
+    r8_u3_test_case<opcodes::bit_2_c, get_c, 2>, \
+    r8_u3_test_case<opcodes::bit_3_c, get_c, 3>, \
+    r8_u3_test_case<opcodes::bit_4_c, get_c, 4>, \
+    r8_u3_test_case<opcodes::bit_5_c, get_c, 5>, \
+    r8_u3_test_case<opcodes::bit_6_c, get_c, 6>, \
+    r8_u3_test_case<opcodes::bit_7_c, get_c, 7>, \
+    r8_u3_test_case<opcodes::bit_0_d, get_d, 0>, \
+    r8_u3_test_case<opcodes::bit_1_d, get_d, 1>, \
+    r8_u3_test_case<opcodes::bit_2_d, get_d, 2>, \
+    r8_u3_test_case<opcodes::bit_3_d, get_d, 3>, \
+    r8_u3_test_case<opcodes::bit_4_d, get_d, 4>, \
+    r8_u3_test_case<opcodes::bit_5_d, get_d, 5>, \
+    r8_u3_test_case<opcodes::bit_6_d, get_d, 6>, \
+    r8_u3_test_case<opcodes::bit_7_d, get_d, 7>, \
+    r8_u3_test_case<opcodes::bit_0_e, get_e, 0>, \
+    r8_u3_test_case<opcodes::bit_1_e, get_e, 1>, \
+    r8_u3_test_case<opcodes::bit_2_e, get_e, 2>, \
+    r8_u3_test_case<opcodes::bit_3_e, get_e, 3>, \
+    r8_u3_test_case<opcodes::bit_4_e, get_e, 4>, \
+    r8_u3_test_case<opcodes::bit_5_e, get_e, 5>, \
+    r8_u3_test_case<opcodes::bit_6_e, get_e, 6>, \
+    r8_u3_test_case<opcodes::bit_7_e, get_e, 7>, \
+    r8_u3_test_case<opcodes::bit_0_h, get_h, 0>, \
+    r8_u3_test_case<opcodes::bit_1_h, get_h, 1>, \
+    r8_u3_test_case<opcodes::bit_2_h, get_h, 2>, \
+    r8_u3_test_case<opcodes::bit_3_h, get_h, 3>, \
+    r8_u3_test_case<opcodes::bit_4_h, get_h, 4>, \
+    r8_u3_test_case<opcodes::bit_5_h, get_h, 5>, \
+    r8_u3_test_case<opcodes::bit_6_h, get_h, 6>, \
+    r8_u3_test_case<opcodes::bit_7_h, get_h, 7>, \
+    r8_u3_test_case<opcodes::bit_0_l, get_l, 0>, \
+    r8_u3_test_case<opcodes::bit_1_l, get_l, 1>, \
+    r8_u3_test_case<opcodes::bit_2_l, get_l, 2>, \
+    r8_u3_test_case<opcodes::bit_3_l, get_l, 3>, \
+    r8_u3_test_case<opcodes::bit_4_l, get_l, 4>, \
+    r8_u3_test_case<opcodes::bit_5_l, get_l, 5>, \
+    r8_u3_test_case<opcodes::bit_6_l, get_l, 6>, \
+    r8_u3_test_case<opcodes::bit_7_l, get_l, 7>
+
+	#define res_u3_r8_test_cases \
+    r8_u3_test_case<opcodes::res_0_a, get_a, 0>, \
+    r8_u3_test_case<opcodes::res_1_a, get_a, 1>, \
+    r8_u3_test_case<opcodes::res_2_a, get_a, 2>, \
+    r8_u3_test_case<opcodes::res_3_a, get_a, 3>, \
+    r8_u3_test_case<opcodes::res_4_a, get_a, 4>, \
+    r8_u3_test_case<opcodes::res_5_a, get_a, 5>, \
+    r8_u3_test_case<opcodes::res_6_a, get_a, 6>, \
+    r8_u3_test_case<opcodes::res_7_a, get_a, 7>, \
+    r8_u3_test_case<opcodes::res_0_b, get_b, 0>, \
+    r8_u3_test_case<opcodes::res_1_b, get_b, 1>, \
+    r8_u3_test_case<opcodes::res_2_b, get_b, 2>, \
+    r8_u3_test_case<opcodes::res_3_b, get_b, 3>, \
+    r8_u3_test_case<opcodes::res_4_b, get_b, 4>, \
+    r8_u3_test_case<opcodes::res_5_b, get_b, 5>, \
+    r8_u3_test_case<opcodes::res_6_b, get_b, 6>, \
+    r8_u3_test_case<opcodes::res_7_b, get_b, 7>, \
+    r8_u3_test_case<opcodes::res_0_c, get_c, 0>, \
+    r8_u3_test_case<opcodes::res_1_c, get_c, 1>, \
+    r8_u3_test_case<opcodes::res_2_c, get_c, 2>, \
+    r8_u3_test_case<opcodes::res_3_c, get_c, 3>, \
+    r8_u3_test_case<opcodes::res_4_c, get_c, 4>, \
+    r8_u3_test_case<opcodes::res_5_c, get_c, 5>, \
+    r8_u3_test_case<opcodes::res_6_c, get_c, 6>, \
+    r8_u3_test_case<opcodes::res_7_c, get_c, 7>, \
+    r8_u3_test_case<opcodes::res_0_d, get_d, 0>, \
+    r8_u3_test_case<opcodes::res_1_d, get_d, 1>, \
+    r8_u3_test_case<opcodes::res_2_d, get_d, 2>, \
+    r8_u3_test_case<opcodes::res_3_d, get_d, 3>, \
+    r8_u3_test_case<opcodes::res_4_d, get_d, 4>, \
+    r8_u3_test_case<opcodes::res_5_d, get_d, 5>, \
+    r8_u3_test_case<opcodes::res_6_d, get_d, 6>, \
+    r8_u3_test_case<opcodes::res_7_d, get_d, 7>, \
+    r8_u3_test_case<opcodes::res_0_e, get_e, 0>, \
+    r8_u3_test_case<opcodes::res_1_e, get_e, 1>, \
+    r8_u3_test_case<opcodes::res_2_e, get_e, 2>, \
+    r8_u3_test_case<opcodes::res_3_e, get_e, 3>, \
+    r8_u3_test_case<opcodes::res_4_e, get_e, 4>, \
+    r8_u3_test_case<opcodes::res_5_e, get_e, 5>, \
+    r8_u3_test_case<opcodes::res_6_e, get_e, 6>, \
+    r8_u3_test_case<opcodes::res_7_e, get_e, 7>, \
+    r8_u3_test_case<opcodes::res_0_h, get_h, 0>, \
+    r8_u3_test_case<opcodes::res_1_h, get_h, 1>, \
+    r8_u3_test_case<opcodes::res_2_h, get_h, 2>, \
+    r8_u3_test_case<opcodes::res_3_h, get_h, 3>, \
+    r8_u3_test_case<opcodes::res_4_h, get_h, 4>, \
+    r8_u3_test_case<opcodes::res_5_h, get_h, 5>, \
+    r8_u3_test_case<opcodes::res_6_h, get_h, 6>, \
+    r8_u3_test_case<opcodes::res_7_h, get_h, 7>, \
+    r8_u3_test_case<opcodes::res_0_l, get_l, 0>, \
+    r8_u3_test_case<opcodes::res_1_l, get_l, 1>, \
+    r8_u3_test_case<opcodes::res_2_l, get_l, 2>, \
+    r8_u3_test_case<opcodes::res_3_l, get_l, 3>, \
+    r8_u3_test_case<opcodes::res_4_l, get_l, 4>, \
+    r8_u3_test_case<opcodes::res_5_l, get_l, 5>, \
+    r8_u3_test_case<opcodes::res_6_l, get_l, 6>, \
+    r8_u3_test_case<opcodes::res_7_l, get_l, 7>
+
+	#define set_u3_r8_test_cases \
+    r8_u3_test_case<opcodes::set_0_a, get_a, 0>, \
+    r8_u3_test_case<opcodes::set_1_a, get_a, 1>, \
+    r8_u3_test_case<opcodes::set_2_a, get_a, 2>, \
+    r8_u3_test_case<opcodes::set_3_a, get_a, 3>, \
+    r8_u3_test_case<opcodes::set_4_a, get_a, 4>, \
+    r8_u3_test_case<opcodes::set_5_a, get_a, 5>, \
+    r8_u3_test_case<opcodes::set_6_a, get_a, 6>, \
+    r8_u3_test_case<opcodes::set_7_a, get_a, 7>, \
+    r8_u3_test_case<opcodes::set_0_b, get_b, 0>, \
+    r8_u3_test_case<opcodes::set_1_b, get_b, 1>, \
+    r8_u3_test_case<opcodes::set_2_b, get_b, 2>, \
+    r8_u3_test_case<opcodes::set_3_b, get_b, 3>, \
+    r8_u3_test_case<opcodes::set_4_b, get_b, 4>, \
+    r8_u3_test_case<opcodes::set_5_b, get_b, 5>, \
+    r8_u3_test_case<opcodes::set_6_b, get_b, 6>, \
+    r8_u3_test_case<opcodes::set_7_b, get_b, 7>, \
+    r8_u3_test_case<opcodes::set_0_c, get_c, 0>, \
+    r8_u3_test_case<opcodes::set_1_c, get_c, 1>, \
+    r8_u3_test_case<opcodes::set_2_c, get_c, 2>, \
+    r8_u3_test_case<opcodes::set_3_c, get_c, 3>, \
+    r8_u3_test_case<opcodes::set_4_c, get_c, 4>, \
+    r8_u3_test_case<opcodes::set_5_c, get_c, 5>, \
+    r8_u3_test_case<opcodes::set_6_c, get_c, 6>, \
+    r8_u3_test_case<opcodes::set_7_c, get_c, 7>, \
+    r8_u3_test_case<opcodes::set_0_d, get_d, 0>, \
+    r8_u3_test_case<opcodes::set_1_d, get_d, 1>, \
+    r8_u3_test_case<opcodes::set_2_d, get_d, 2>, \
+    r8_u3_test_case<opcodes::set_3_d, get_d, 3>, \
+    r8_u3_test_case<opcodes::set_4_d, get_d, 4>, \
+    r8_u3_test_case<opcodes::set_5_d, get_d, 5>, \
+    r8_u3_test_case<opcodes::set_6_d, get_d, 6>, \
+    r8_u3_test_case<opcodes::set_7_d, get_d, 7>, \
+    r8_u3_test_case<opcodes::set_0_e, get_e, 0>, \
+    r8_u3_test_case<opcodes::set_1_e, get_e, 1>, \
+    r8_u3_test_case<opcodes::set_2_e, get_e, 2>, \
+    r8_u3_test_case<opcodes::set_3_e, get_e, 3>, \
+    r8_u3_test_case<opcodes::set_4_e, get_e, 4>, \
+    r8_u3_test_case<opcodes::set_5_e, get_e, 5>, \
+    r8_u3_test_case<opcodes::set_6_e, get_e, 6>, \
+    r8_u3_test_case<opcodes::set_7_e, get_e, 7>, \
+    r8_u3_test_case<opcodes::set_0_h, get_h, 0>, \
+    r8_u3_test_case<opcodes::set_1_h, get_h, 1>, \
+    r8_u3_test_case<opcodes::set_2_h, get_h, 2>, \
+    r8_u3_test_case<opcodes::set_3_h, get_h, 3>, \
+    r8_u3_test_case<opcodes::set_4_h, get_h, 4>, \
+    r8_u3_test_case<opcodes::set_5_h, get_h, 5>, \
+    r8_u3_test_case<opcodes::set_6_h, get_h, 6>, \
+    r8_u3_test_case<opcodes::set_7_h, get_h, 7>, \
+    r8_u3_test_case<opcodes::set_0_l, get_l, 0>, \
+    r8_u3_test_case<opcodes::set_1_l, get_l, 1>, \
+    r8_u3_test_case<opcodes::set_2_l, get_l, 2>, \
+    r8_u3_test_case<opcodes::set_3_l, get_l, 3>, \
+    r8_u3_test_case<opcodes::set_4_l, get_l, 4>, \
+    r8_u3_test_case<opcodes::set_5_l, get_l, 5>, \
+    r8_u3_test_case<opcodes::set_6_l, get_l, 6>, \
+    r8_u3_test_case<opcodes::set_7_l, get_l, 7>
 }
 
 TEST_CASE_TEMPLATE("or_a_r8 updates a register properly", test, or_a_r8_test_cases)
@@ -645,4 +829,83 @@ TEST_CASE("or_a_hl updates flags properly")
 	CHECK_EQ(cpu.reg().n_flag(), false);
 	CHECK_EQ(cpu.reg().h_flag(), false);
 	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("bit_u3_r8 set flags properly", test, bit_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+
+	test::reg(cpu) = (0x1 << test::bit_index);
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+
+	test::reg(cpu) = test::reg(cpu) ^ 0xFF;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+}
+
+TEST_CASE_TEMPLATE("bit_u3_r8 updates program counter properly", test, bit_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("res_u3_r8 updates register properly", test, res_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0x0);
+
+	test::reg(cpu) = 0xFF;
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0xFF & ~(1 << test::bit_index));
+}
+
+TEST_CASE_TEMPLATE("res_u3_r8 updates program counter properly", test, res_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("set_u3_r8 updates register properly", test, set_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 1 << test::bit_index);
+
+	test::reg(cpu) = 0xFF & ~(1 << test::bit_index);
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0xFF);
+}
+
+TEST_CASE_TEMPLATE("set_u3_r8 updates program counter properly", test, set_u3_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
 }

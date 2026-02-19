@@ -8,9 +8,15 @@ namespace utils
 	concept ByteSized = sizeof(T) == 1;
 
 	export template<typename Collection, typename Index>
-	concept ByteIndexable = requires(const Collection& collection, const Index index)
+	concept ByteIndexableReadCollection = requires(const Collection& collection, const Index index)
 	{
 		{ collection[index] } -> std::convertible_to<std::uint8_t>;
+	};
+
+	export template<typename Collection, typename Index>
+	concept ByteIndexableWriteCollection = requires(Collection& collection, const Index index)
+	{
+		{ collection[index] } -> std::convertible_to<std::uint8_t&>;
 	};
 
 	export template<typename Index>
@@ -27,9 +33,17 @@ namespace utils
 	}
 
 	export template<typename Collection, typename Index>
-	requires ByteIndexable<Collection, Index> && Incrementable<Index>
+	requires ByteIndexableReadCollection<Collection, Index> && Incrementable<Index>
 	std::uint16_t constexpr read_two_byte_little_endian(const Collection& collection, const Index index)
 	{
 		return encode_little_endian(collection[index], collection[index + 1]);
+	}
+
+	export template<typename Collection, typename Index>
+	requires ByteIndexableWriteCollection<Collection, Index> && Incrementable<Index>
+	void constexpr write_two_byte_little_endian(const std::uint16_t input, Collection& collection, const Index index)
+	{
+		collection[index] = input & 0xFF;
+		collection[index + 1] = input >> 8;
 	}
 }

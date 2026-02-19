@@ -403,3 +403,54 @@ TEST_CASE("ldh_a_n16 copies value pointed by memory into register a")
 	CHECK_EQ(cpu.reg().a(), test_value);
 	CHECK_EQ(cpu.pc(), 2);
 }
+
+TEST_CASE("ld_n16_sp updates memory position with sp value")
+{
+	constexpr cpu::memory_bus::index_t test_value = 0xABCD;
+	constexpr cpu::memory_bus::index_t memory_pos = 0xFFDE;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.sp() = test_value;
+    memory[1] = 0xDE;
+    memory[2] = 0xFF;
+
+    opcodes::ld_n16_sp::execute(cpu);
+
+	CHECK_EQ(memory[memory_pos], 0xCD);
+	CHECK_EQ(memory[memory_pos + 1], 0xAB);
+}
+
+TEST_CASE("ld_n16_sp updates program counter properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    opcodes::ld_n16_sp::execute(cpu);
+	CHECK_EQ(cpu.pc(), 3);
+}
+
+TEST_CASE("ld_sp_hl updates sp with hl value")
+{
+	constexpr cpu::memory_bus::index_t test_value = 0xABCD;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    opcodes::ld_sp_hl::execute(cpu);
+    CHECK_EQ(cpu.sp(), 0);
+
+    cpu.reg().hl() = test_value;
+    opcodes::ld_sp_hl::execute(cpu);
+    CHECK_EQ(cpu.sp(), test_value);
+}
+
+TEST_CASE("ld_sp_hl updates program counter properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    opcodes::ld_sp_hl::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}

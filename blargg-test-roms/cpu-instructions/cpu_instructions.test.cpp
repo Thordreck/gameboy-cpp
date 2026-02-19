@@ -22,13 +22,33 @@ namespace
 
 		if (opcode != opcodes::prefix_opcode)
 		{
-			REQUIRE_MESSAGE(instructions[opcode] != nullptr, std::format("Unknown opcode {:x}", opcode));
+			REQUIRE_MESSAGE(
+				instructions[opcode] != nullptr
+				, std::format("Unknown opcode {:x} at pc {:x}", opcode, cpu.pc().value()));
+
+			//std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), opcode, cpu.sp().value());
+			/*
+			std::cout << std::format(
+				"\tA: {:x}. B: {:x}. C: {:x}. D: {:x}. E: {:x}. H: {:x}. L: {:x}. F: {:x}\n", 
+				cpu.reg().a().value(), cpu.reg().b().value(), cpu.reg().c().value(), cpu.reg().d().value(), cpu.reg().e().value(), cpu.reg().h().value(), cpu.reg().l().value(), cpu.reg().f().value());
+				*/
+
 			return instructions[opcode];
 		}
 
 		const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
 
-		REQUIRE_MESSAGE(prefixed_instructions[prefixed_opcode] != nullptr, std::format("Unknown prefixed opcode {:x}", prefixed_opcode));
+		REQUIRE_MESSAGE(
+			prefixed_instructions[prefixed_opcode] != nullptr, 
+			std::format("Unknown prefixed opcode {:x} pc {:x}", prefixed_opcode, cpu.pc().value()));
+
+		/*
+		std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), prefixed_opcode, cpu.sp().value());
+			std::cout << std::format(
+				"\tA: {:x}. B: {:x}. C: {:x}. D: {:x}. E: {:x}. H: {:x}. L: {:x}. F: {:x}\n", 
+				cpu.reg().a().value(), cpu.reg().b().value(), cpu.reg().c().value(), cpu.reg().d().value(), cpu.reg().e().value(), cpu.reg().h().value(), cpu.reg().l().value(), cpu.reg().f().value());
+				*/
+
 		return prefixed_instructions[prefixed_opcode];
 	}
 
@@ -45,36 +65,57 @@ namespace
 			cpu.memory()[sc] = 0;
 		}
 	}
+
+	void run_test(
+		std::string_view rom_file_path,
+		std::string_view expected_output,
+		const size_t expected_num_instructions)
+	{
+		const std::filesystem::path rom_file{ rom_file_path };
+		REQUIRE(std::filesystem::exists(rom_file));
+
+		const std::vector<std::uint8_t> rom_data = read_rom(rom_file);
+
+		std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
+
+		cpu::cpu cpu{ memory };
+		cpu.pc() = 0x100;
+
+		constexpr auto instruction_table = opcodes::default_instruction_table_builder::build();
+		constexpr auto prefix_instruction_table = opcodes::default_prefixed_instruction_table_builder::build();
+
+		std::string result{};
+
+		for (size_t i = 0; i < expected_num_instructions; i++)
+		{
+			const auto instruction = fetch_instruction(cpu, instruction_table, prefix_instruction_table);
+			instruction(cpu);
+
+			read_io_result_output(cpu, result);
+		}
+
+		REQUIRE_EQ(expected_output, result);
+		std::cout << result;
+	}
 }
 
-TEST_CASE("blargg.06-ld r,r")
+TEST_CASE("blargg.cpu_instrs.01-special")
 {
-	const std::filesystem::path rom_file{ "06-ld r,r.gb" };
-	REQUIRE(std::filesystem::exists(rom_file));
+	run_test("01-special.gb", "06-ld r,r\n\n\nPassed\n", 487000);
+}
 
-	const std::vector<std::uint8_t> rom_data = read_rom(rom_file);
+TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
+{
+	run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 16e5);
+}
 
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
+TEST_CASE("blargg.cpu_instrs.06-ld r,r")
+{
+	run_test("06-ld r,r.gb", "06-ld r,r\n\n\nPassed\n", 30e4);
+}
 
-	cpu::cpu cpu{ memory };
-	cpu.pc() = 0x100;
-
-	constexpr auto instruction_table = opcodes::default_instruction_table_builder::build();
-	constexpr auto prefix_instruction_table = opcodes::default_prefixed_instruction_table_builder::build();
-	constexpr int expected_rom_instructions = 287000;
-	
-	std::string result{};
-
-	for (int i = 0; i < expected_rom_instructions; i++)
-	{
-		const auto instruction = fetch_instruction(cpu, instruction_table, prefix_instruction_table);;
-		instruction(cpu);
-		read_io_result_output(cpu, result);
-	}
-
-	constexpr std::string_view expected_output = "06-ld r,r\n\n\nPassed\n";
-	REQUIRE_EQ(expected_output, result);
-
-	std::cout << result;
+TEST_CASE("blargg.cpu_instrs.10-bit ops")
+{
+	run_test("10-bit ops.gb", "06-ld r,r\n\n\nPassed\n", 5087000);
 }

@@ -271,4 +271,26 @@ namespace opcodes
 			cpu.pc() += 2;
 		}
 	};
+
+	// ld n16,sp
+	export struct ld_n16_sp
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+			utils::write_two_byte_little_endian(cpu.sp().value(), cpu.memory(), address);
+
+			cpu.pc() += 3;
+		}
+	};
+
+	// ld sp,hl
+	export struct ld_sp_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.sp() = cpu.reg().hl();
+			cpu.pc()++;
+		}
+	};
 }

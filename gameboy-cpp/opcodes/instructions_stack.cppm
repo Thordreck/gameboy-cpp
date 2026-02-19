@@ -59,4 +59,48 @@ namespace opcodes
 			cpu.pc() += 3;
 		}
 	};
+
+	export struct add_sp_e8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];
+			const std::uint8_t unsigned_e8 = static_cast<std::uint8_t>(e8);
+			const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
+
+			const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
+			const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
+
+			cpu.sp() = cpu.sp() + e8;
+
+			cpu.reg().z_flag() = false;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = half_overflow;
+			cpu.reg().c_flag() = overflow;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export struct ld_hl_sp_e8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];
+			const std::uint8_t unsigned_e8 = static_cast<std::uint8_t>(e8);
+			const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
+
+			const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
+			const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
+
+			cpu.reg().hl() = cpu.sp() + e8;
+
+			cpu.reg().z_flag() = false;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = half_overflow;
+			cpu.reg().c_flag() = overflow;
+
+			cpu.pc() += 2;
+		}
+	};
 }

@@ -136,6 +136,24 @@ namespace opcodes
 	export using inc_de = inc_r16<de_register_provider>;
 	export using inc_hl = inc_r16<hl_register_provider>;
 
+	export struct inc_sp
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.sp()++;
+			cpu.pc()++;
+		}
+	};
+
+	export struct dec_sp
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.sp()--;
+			cpu.pc()++;
+		}
+	};
+
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct cp_a_r8
 	{

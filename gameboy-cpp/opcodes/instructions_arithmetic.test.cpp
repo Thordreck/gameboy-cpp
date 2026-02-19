@@ -1007,3 +1007,54 @@ TEST_CASE("add_hl_sp updates program counter properly")
 	opcodes::add_hl_sp::execute(cpu);
 	CHECK_EQ(cpu.pc(), 1);
 }
+
+TEST_CASE("inc_sp increments stack pointer properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::inc_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 1);
+
+	cpu.sp() = 0xFFFE;
+	opcodes::inc_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 0xFFFF);
+
+	opcodes::inc_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 0);
+}
+
+TEST_CASE("inc_sp updates program counter properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::inc_sp::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("dec_sp decrements stack pointer properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = 0;
+	opcodes::dec_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 0xFFFF);
+
+	opcodes::dec_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 0xFFFE);
+
+	cpu.sp() = 1;
+	opcodes::dec_sp::execute(cpu);
+	CHECK_EQ(cpu.sp(), 0);
+}
+
+TEST_CASE("dec_sp updates program counter properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::dec_sp::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
