@@ -57,10 +57,18 @@ namespace opcodes
 		}
 	};
 
-	export using push_af = push_r16<af_readonly_register_provider>;
 	export using push_bc = push_r16<bc_readonly_register_provider>;
 	export using push_de = push_r16<de_readonly_register_provider>;
 	export using push_hl = push_r16<hl_readonly_register_provider>;
+
+	struct push_af
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			push_stack(cpu, cpu.reg().af() & 0xFFF0);
+			cpu.pc()++;
+		}
+	};
 
 	export struct ld_sp_n16
 	{

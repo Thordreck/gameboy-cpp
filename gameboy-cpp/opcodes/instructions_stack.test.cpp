@@ -32,7 +32,6 @@ namespace
     r16_test_case<opcodes::pop_hl, get_hl>
 
 	#define push_r16_test_cases \
-    r16_test_case<opcodes::push_af, get_af>, \
     r16_test_case<opcodes::push_bc, get_bc>, \
     r16_test_case<opcodes::push_de, get_de>, \
     r16_test_case<opcodes::push_hl, get_hl>
@@ -233,4 +232,23 @@ TEST_CASE("pop_af updates reg with correct value from stack")
 	CHECK_EQ(cpu.reg().af(), test_value & 0xFFF0);
 	CHECK_EQ(cpu.pc(), 1);
 	CHECK_EQ(cpu.sp(), stack_origin);
+}
+
+TEST_CASE("push_af updates stack with correct value from register")
+{
+	constexpr cpu::register_16::type_t test_value = 0xABCD;
+	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = stack_origin;
+	cpu.reg().af() = test_value;
+
+	opcodes::push_af::execute(cpu);
+
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xC0);
+	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.pc(), 1);
+	CHECK_EQ(cpu.sp(), stack_origin - 2);
 }
