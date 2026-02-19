@@ -20,6 +20,7 @@ target_sources(opcodes PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_misc.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_interrupt.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_bit.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_carry.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -40,6 +41,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_subroutine.test.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_misc.test.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/instructions_bit.test.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/instructions_carry.test.cpp
 	)
 
 endif()

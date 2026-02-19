@@ -11,4 +11,5 @@ export import :subroutine;
 export import :misc;
 export import :interrupt;
 export import :bit;
+export import :carry;
 

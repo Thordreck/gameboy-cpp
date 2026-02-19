@@ -9,6 +9,7 @@ import :misc;
 import :jump;
 import :load;
 import :stack;
+import :carry;
 import :interrupt;
 import :arithmetic;
 import :subroutine;
@@ -95,11 +96,13 @@ namespace opcodes
 		instruction_definition<0x13, inc_de>,
 		instruction_definition<0x14, inc_d>,
 		instruction_definition<0x15, dec_d>,
+		instruction_definition<0x16, ld_d_n8>,
 		instruction_definition<0x18, jr_n16>,
 		instruction_definition<0x19, add_hl_de>,
 		instruction_definition<0x1A, ld_a_de>,
 		instruction_definition<0x1C, inc_e>,
 		instruction_definition<0x1D, dec_e>,
+		instruction_definition<0x1E, ld_e_n8>,
 		instruction_definition<0x1F, rra>,
 		instruction_definition<0x20, jr_nz_n16>,
 		instruction_definition<0x21, ld_hl_n16>,
@@ -108,6 +111,7 @@ namespace opcodes
 		instruction_definition<0x24, inc_h>,
 		instruction_definition<0x25, dec_h>,
 		instruction_definition<0x26, ld_h_n8>,
+		instruction_definition<0x27, daa>,
 		instruction_definition<0x28, jr_z_n16>,
 		instruction_definition<0x29, add_hl_hl>,
 		instruction_definition<0x2C, inc_l>,
@@ -119,6 +123,8 @@ namespace opcodes
 		instruction_definition<0x32, ld_hld_a>,
 		instruction_definition<0x33, inc_sp>,
 		instruction_definition<0x35, dec_hl>,
+		instruction_definition<0x36, ld_hl_n8>,
+		instruction_definition<0x37, scf>,
 		instruction_definition<0x39, add_hl_sp>,
 		instruction_definition<0x3A, ld_a_hld>,
 		instruction_definition<0x38, jr_c_n16>,
@@ -126,6 +132,7 @@ namespace opcodes
 		instruction_definition<0x3C, inc_a>,
 		instruction_definition<0x3D, dec_a>,
 		instruction_definition<0x3E, ld_a_n8>,
+		instruction_definition<0x3F, ccf>,
 		instruction_definition<0x40, ld_b_b>,
 		instruction_definition<0x41, ld_b_c>,
 		instruction_definition<0x42, ld_b_d>,
@@ -255,6 +262,7 @@ namespace opcodes
 		instruction_definition<0xF1, pop_af>,
 		instruction_definition<0xF3, di>,
 		instruction_definition<0xF5, push_af>,
+		instruction_definition<0xF6, or_a_n8>,
 		instruction_definition<0xF8, ld_hl_sp_e8>,
 		instruction_definition<0xF9, ld_sp_hl>,
 		instruction_definition<0xFA, ld_a_n16>,

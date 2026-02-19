@@ -61,7 +61,7 @@ namespace opcodes
 	export using push_de = push_r16<de_readonly_register_provider>;
 	export using push_hl = push_r16<hl_readonly_register_provider>;
 
-	struct push_af
+	export struct push_af
 	{
 		static void execute(cpu::cpu& cpu)
 		{

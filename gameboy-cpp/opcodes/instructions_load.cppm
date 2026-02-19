@@ -135,6 +135,15 @@ namespace opcodes
 	export using ld_hl_h = ld_hl_r8<h_readonly_register_provider>;
 	export using ld_hl_l = ld_hl_r8<l_readonly_register_provider>;
 
+	export struct ld_hl_n8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[cpu.reg().hl()] = cpu.memory()[cpu.pc() + 1];
+			cpu.pc() += 2;
+		}
+	};
+
 	// ld r8,hl
 	template<R8RegisterProvider reg_provider>
 	struct ld_r8_hl

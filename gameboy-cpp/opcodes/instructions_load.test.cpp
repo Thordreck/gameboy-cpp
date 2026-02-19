@@ -454,3 +454,20 @@ TEST_CASE("ld_sp_hl updates program counter properly")
     opcodes::ld_sp_hl::execute(cpu);
 	CHECK_EQ(cpu.pc(), 1);
 }
+
+TEST_CASE("ld_hl_n8 stores value into target registry and updates pc properly")
+{
+    constexpr cpu::memory_bus::type_t test_value = 0xFE;
+    constexpr cpu::memory_bus::index_t memory_pos = 0xABCD;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.reg().hl() = memory_pos;
+    memory[1] = test_value;
+
+	opcodes::ld_hl_n8::execute(cpu);
+
+	CHECK_EQ(cpu.memory()[memory_pos], test_value);
+	CHECK_EQ(cpu.pc(), 2);
+}

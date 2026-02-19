@@ -33,6 +33,21 @@ namespace opcodes
 	export using or_a_h = or_a_r8<h_readonly_register_provider>;
 	export using or_a_l = or_a_r8<l_readonly_register_provider>;
 
+	export struct or_a_n8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.pc() + 1];
+
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = false;
+			cpu.reg().flags().c = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
 	export struct or_a_hl
 	{
 		static void execute(cpu::cpu& cpu)

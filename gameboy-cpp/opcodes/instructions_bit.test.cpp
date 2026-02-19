@@ -909,3 +909,50 @@ TEST_CASE_TEMPLATE("set_u3_r8 updates program counter properly", test, set_u3_r8
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 2);
 }
+
+TEST_CASE("or_a_n8 updates a register properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0xF0;
+	memory[1] = 0x0F;
+
+	opcodes::or_a_n8::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), 0xFF);
+}
+
+TEST_CASE("or_a_n8 updates program counter properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::or_a_n8::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE("or_a_n8 updates flags properly")
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0x00;
+	memory[1] = 0x00;
+
+	opcodes::or_a_n8::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	cpu.pc() = 0;
+	memory[1] = 0x0F;
+	opcodes::or_a_n8::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}

@@ -26,8 +26,8 @@ namespace
 				instructions[opcode] != nullptr
 				, std::format("Unknown opcode {:x} at pc {:x}", opcode, cpu.pc().value()));
 
-			//std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), opcode, cpu.sp().value());
 			/*
+			std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), opcode, cpu.sp().value());
 			std::cout << std::format(
 				"\tA: {:x}. B: {:x}. C: {:x}. D: {:x}. E: {:x}. H: {:x}. L: {:x}. F: {:x}\n", 
 				cpu.reg().a().value(), cpu.reg().b().value(), cpu.reg().c().value(), cpu.reg().d().value(), cpu.reg().e().value(), cpu.reg().h().value(), cpu.reg().l().value(), cpu.reg().f().value());
@@ -102,12 +102,17 @@ namespace
 
 TEST_CASE("blargg.cpu_instrs.01-special")
 {
-	run_test("01-special.gb", "06-ld r,r\n\n\nPassed\n", 487000);
+	run_test("01-special.gb", "06-ld r,r\n\n\nPassed\n", 1087000);
 }
 
 TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
 {
 	run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 16e5);
+}
+
+TEST_CASE("blargg.cpu_instrs.04-op r,imm")
+{
+	run_test("04-op r,imm.gb", "03-op sp,hl\n\n\nPassed\n", 16e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.06-ld r,r")
