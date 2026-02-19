@@ -22,22 +22,28 @@ namespace
 
 		if (opcode != opcodes::prefix_opcode)
 		{
-			std::cout << std::format("Opcode {:x}. PC {:x}\n", 
-				opcode, 
-				static_cast<cpu::program_counter::type_t>(cpu.pc()));
-
 			REQUIRE_MESSAGE(instructions[opcode] != nullptr, std::format("Unknown opcode {:x}", opcode));
 			return instructions[opcode];
 		}
 
 		const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
-		std::cout << std::format("Prefixed opcode {:x}-{:x}. PC {:x}\n", 
-			opcodes::prefix_opcode,
-			prefixed_opcode, 
-			static_cast<cpu::program_counter::type_t>(cpu.pc()));
 
 		REQUIRE_MESSAGE(prefixed_instructions[prefixed_opcode] != nullptr, std::format("Unknown prefixed opcode {:x}", prefixed_opcode));
 		return prefixed_instructions[prefixed_opcode];
+	}
+
+	void read_io_result_output(cpu::cpu& cpu, std::string& result)
+	{
+		constexpr cpu::memory_bus::index_t sb = 0xFF01;
+		constexpr cpu::memory_bus::index_t sc = 0xFF02;
+
+		constexpr cpu::memory_bus::type_t transfer_start = 0x81;
+
+		if (cpu.memory()[sc] == transfer_start)
+		{
+			result += cpu.memory()[sb];
+			cpu.memory()[sc] = 0;
+		}
 	}
 }
 
@@ -56,11 +62,19 @@ TEST_CASE("blargg.06-ld r,r")
 
 	constexpr auto instruction_table = opcodes::default_instruction_table_builder::build();
 	constexpr auto prefix_instruction_table = opcodes::default_prefixed_instruction_table_builder::build();
+	constexpr int expected_rom_instructions = 287000;
+	
+	std::string result{};
 
-	// TODO: implemnet this properly
-	for (int i = 0; i < 400000; i++)
+	for (int i = 0; i < expected_rom_instructions; i++)
 	{
 		const auto instruction = fetch_instruction(cpu, instruction_table, prefix_instruction_table);;
 		instruction(cpu);
+		read_io_result_output(cpu, result);
 	}
+
+	constexpr std::string_view expected_output = "06-ld r,r\n\n\nPassed\n";
+	REQUIRE_EQ(expected_output, result);
+
+	std::cout << result;
 }
