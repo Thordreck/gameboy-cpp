@@ -21,6 +21,10 @@ target_sources(opcodes PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_interrupt.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_bit.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/instructions_carry.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_fetch.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_decode.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_execute.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/instructions_pipeline.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

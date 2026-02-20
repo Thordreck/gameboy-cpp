@@ -89,6 +89,24 @@ namespace
     ret_cc_test_case<opcodes::ret_nz, set_z_flag>, \
     ret_cc_test_case<opcodes::ret_c, unset_c_flag>, \
     ret_cc_test_case<opcodes::ret_nc, set_c_flag>
+
+	template<opcodes::Instruction OpCode, std::uint8_t vec>
+	requires opcodes::RSTVector<vec>
+	struct rst_vec_test_case
+	{
+		static constexpr auto execute = OpCode::execute;
+		static constexpr auto vector = vec;
+	};
+
+	#define rst_vec_test_cases \
+    rst_vec_test_case<opcodes::rst_00, 0x00>, \
+    rst_vec_test_case<opcodes::rst_08, 0x08>, \
+    rst_vec_test_case<opcodes::rst_10, 0x10>, \
+    rst_vec_test_case<opcodes::rst_18, 0x18>, \
+    rst_vec_test_case<opcodes::rst_20, 0x20>, \
+    rst_vec_test_case<opcodes::rst_28, 0x28>, \
+    rst_vec_test_case<opcodes::rst_30, 0x30>, \
+    rst_vec_test_case<opcodes::rst_38, 0x38>
 }
 
 TEST_CASE("call_n16 pushes pc into stack and jumps to direction")
@@ -203,4 +221,33 @@ TEST_CASE_TEMPLATE("ret_cc does not update pc if condition is not satisfied", te
 
 	CHECK_EQ(cpu.pc(), 1);
 	CHECK_EQ(cpu.sp(), stack_origin - 2);
+}
+
+TEST_CASE_TEMPLATE("rst_vec updates sp properly", test, rst_vec_test_cases)
+{
+	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
+	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.pc() = pc_start;
+	cpu.sp() = stack_origin;
+
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xCE);
+	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.sp(), stack_origin - 2);
+}
+
+TEST_CASE_TEMPLATE("rst_vec updates pc properly", test, rst_vec_test_cases)
+{
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.sp() = 0xFFFE;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.pc(), test::vector);
 }

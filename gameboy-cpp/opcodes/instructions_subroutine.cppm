@@ -66,4 +66,33 @@ namespace opcodes
 	export using ret_nz = ret_cc<is_z_not_set>;
 	export using ret_c = ret_cc<is_c_set>;
 	export using ret_nc = ret_cc<is_c_not_set>;
+
+	export struct reti
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.pc() = pop_stack(cpu);
+			// TODO: enable ime flag
+		}
+	};
+
+	template<std::uint8_t vec>
+	requires RSTVector<vec>
+	struct rst_vec
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			push_stack(cpu, cpu.pc() + 1);
+			cpu.pc() = vec;
+		}
+	};
+
+	export using rst_00 = rst_vec <0x00>;
+	export using rst_08 = rst_vec <0x08>;
+	export using rst_10 = rst_vec <0x10>;
+	export using rst_18 = rst_vec <0x18>;
+	export using rst_20 = rst_vec <0x20>;
+	export using rst_28 = rst_vec <0x28>;
+	export using rst_30 = rst_vec <0x30>;
+	export using rst_38 = rst_vec <0x38>;
 }

@@ -7,49 +7,40 @@ import std;
 
 namespace
 {
+	using namespace opcodes;
+
+	struct test_opcode_decoder
+	{
+		static instruction_fn_t decode(const cpu::cpu& cpu, const std::uint8_t opcode)
+		{
+			if (opcode != prefix_opcode)
+			{
+				REQUIRE_MESSAGE(
+					default_instruction_table[opcode] != nullptr
+					, std::format("Unknown opcode {:x} at pc {:x}", opcode, cpu.pc().value()));
+
+				return default_opcode_decoder::decode(cpu, opcode);
+			}
+
+			const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
+
+			REQUIRE_MESSAGE(
+				default_prefixed_instruction_table[prefixed_opcode] != nullptr, 
+				std::format("Unknown prefixed opcode {:x} pc {:x}", prefixed_opcode, cpu.pc().value()));
+
+			return default_opcode_decoder::decode(cpu, opcode);
+		}
+	};
+
+	using test_instruction_pipeline = instructions_pipeline<
+		default_opcode_fetcher,
+		test_opcode_decoder,
+		default_instruction_executor>;
+
 	std::vector<std::uint8_t> read_rom(std::filesystem::path filepath)
 	{
 		std::ifstream file(filepath, std::ios::in | std::ios::binary);
 		return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
-	}
-
-	opcodes::instruction_fn_t fetch_instruction(
-		const cpu::cpu& cpu, 
-		const opcodes::instruction_table& instructions,
-		const opcodes::instruction_table& prefixed_instructions)
-	{ 
-		const std::uint8_t opcode = cpu.memory()[cpu.pc()];
-
-		if (opcode != opcodes::prefix_opcode)
-		{
-			REQUIRE_MESSAGE(
-				instructions[opcode] != nullptr
-				, std::format("Unknown opcode {:x} at pc {:x}", opcode, cpu.pc().value()));
-
-			/*
-			std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), opcode, cpu.sp().value());
-			std::cout << std::format(
-				"\tA: {:x}. B: {:x}. C: {:x}. D: {:x}. E: {:x}. H: {:x}. L: {:x}. F: {:x}\n", 
-				cpu.reg().a().value(), cpu.reg().b().value(), cpu.reg().c().value(), cpu.reg().d().value(), cpu.reg().e().value(), cpu.reg().h().value(), cpu.reg().l().value(), cpu.reg().f().value());
-				*/
-
-			return instructions[opcode];
-		}
-
-		const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
-
-		REQUIRE_MESSAGE(
-			prefixed_instructions[prefixed_opcode] != nullptr, 
-			std::format("Unknown prefixed opcode {:x} pc {:x}", prefixed_opcode, cpu.pc().value()));
-
-		/*
-		std::cout << std::format("PC: {:x}. Op: {:x}. SP: {:x}\n", cpu.pc().value(), prefixed_opcode, cpu.sp().value());
-			std::cout << std::format(
-				"\tA: {:x}. B: {:x}. C: {:x}. D: {:x}. E: {:x}. H: {:x}. L: {:x}. F: {:x}\n", 
-				cpu.reg().a().value(), cpu.reg().b().value(), cpu.reg().c().value(), cpu.reg().d().value(), cpu.reg().e().value(), cpu.reg().h().value(), cpu.reg().l().value(), cpu.reg().f().value());
-				*/
-
-		return prefixed_instructions[prefixed_opcode];
 	}
 
 	void read_io_result_output(cpu::cpu& cpu, std::string& result)
@@ -82,16 +73,11 @@ namespace
 		cpu::cpu cpu{ memory };
 		cpu.pc() = 0x100;
 
-		constexpr auto instruction_table = opcodes::default_instruction_table_builder::build();
-		constexpr auto prefix_instruction_table = opcodes::default_prefixed_instruction_table_builder::build();
-
 		std::string result{};
 
 		for (size_t i = 0; i < max_num_instructions; i++)
 		{
-			const auto instruction = fetch_instruction(cpu, instruction_table, prefix_instruction_table);
-			instruction(cpu);
-
+			test_instruction_pipeline::step(cpu);
 			read_io_result_output(cpu, result);
 
 			if (result == expected_output)
@@ -137,7 +123,7 @@ TEST_CASE("blargg.cpu_instrs.06-ld r,r")
 
 TEST_CASE("blargg.cpu_instrs.07-jr,jp,call,ret,rst")
 {
-	run_test("07-jr,jp,call,ret,rst.gb", "07-jr,jp,call,ret,rst\n\n\nPassed\n", 30e4);
+	run_test("07-jr,jp,call,ret,rst.gb", "07-jr,jp,call,ret,rst\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.08-misc instrs")

@@ -21,27 +21,33 @@ namespace opcodes
 	export using instruction_table = std::array<instruction_fn_t, 256>;
 
 	export template<typename T>
-	concept Instruction = requires(cpu::cpu & cpu)
+		concept Instruction = requires(cpu::cpu & cpu)
 	{
 		{ T::execute(cpu) } -> std::same_as<void>;
 	};
 
+	export template<auto T>
+	concept InstructionTable = requires(const std::uint8_t opcode)
+	{
+		{ T[opcode] } -> std::convertible_to<instruction_fn_t>;
+	};
+
 	export template<opcode_t Opcode, Instruction Instr>
-	struct instruction_definition 
+		struct instruction_definition
 	{
 		static constexpr opcode_t opcode = Opcode;
 		static constexpr auto execute = &Instr::execute;
 	};
 
 	export template<typename T>
-	concept InstructionDefinitionConcept = requires()
+		concept InstructionDefinitionConcept = requires()
 	{
 		{ T::opcode } -> std::convertible_to<opcode_t>;
 		{ T::execute } -> std::convertible_to<instruction_fn_t>;
 	};
 
 	export template<InstructionDefinitionConcept... Defs>
-	struct instruction_table_builder
+		struct instruction_table_builder
 	{
 		static constexpr auto build()
 		{
@@ -53,7 +59,7 @@ namespace opcodes
 	private:
 		static consteval bool has_duplicate_opcodes()
 		{
-			constexpr opcode_t opcodes[] = {Defs::opcode...};
+			constexpr opcode_t opcodes[] = { Defs::opcode... };
 
 			for (std::size_t i = 0; i < sizeof...(Defs); ++i)
 			{
@@ -76,7 +82,7 @@ namespace opcodes
 #pragma diag_suppress 28
 #pragma diag_suppress 3160
 #endif
-	export using default_instruction_table_builder = instruction_table_builder<
+	export using default_instruction_table_builder = instruction_table_builder <
 
 		instruction_definition<0x00, nop>,
 		instruction_definition<0x01, ld_bc_n16>,
@@ -275,44 +281,54 @@ namespace opcodes
 		instruction_definition<0xC4, call_nz_n16>,
 		instruction_definition<0xC5, push_bc>,
 		instruction_definition<0xC6, add_a_n8>,
+		instruction_definition<0xC7, rst_00>,
 		instruction_definition<0xC8, ret_z>,
 		instruction_definition<0xC9, ret>,
 		instruction_definition<0xCA, jp_z_n16>,
 		instruction_definition<0xCC, call_z_n16>,
 		instruction_definition<0xCD, call_n16>,
 		instruction_definition<0xCE, adc_a_n8>,
+		instruction_definition<0xCF, rst_08>,
 		instruction_definition<0xD0, ret_nc>,
 		instruction_definition<0xD1, pop_de>,
 		instruction_definition<0xD2, jp_nc_n16>,
 		instruction_definition<0xD4, call_nc_n16>,
 		instruction_definition<0xD5, push_de>,
 		instruction_definition<0xD6, sub_a_n8>,
+		instruction_definition<0xD7, rst_10>,
 		instruction_definition<0xD8, ret_c>,
+		instruction_definition<0xD9, reti>,
 		instruction_definition<0xDA, jp_c_n16>,
 		instruction_definition<0xDC, call_c_n16>,
 		instruction_definition<0xDE, sbc_a_n8>,
+		instruction_definition<0xDF, rst_18>,
 		instruction_definition<0xE0, ldh_n16_a>,
 		instruction_definition<0xE1, pop_hl>,
 		instruction_definition<0xE2, ldh_c_a>,
 		instruction_definition<0xE5, push_hl>,
 		instruction_definition<0xE6, and_a_n8>,
+		instruction_definition<0xE7, rst_20>,
 		instruction_definition<0xE8, add_sp_e8>,
 		instruction_definition<0xE9, jp_hl>,
 		instruction_definition<0xEA, ld_n16_a>,
 		instruction_definition<0xEE, xor_a_n8>,
+		instruction_definition<0xEF, rst_28>,
 		instruction_definition<0xF0, ldh_a_n16>,
 		instruction_definition<0xF1, pop_af>,
 		instruction_definition<0xF2, ldh_a_c>,
 		instruction_definition<0xF3, di>,
 		instruction_definition<0xF5, push_af>,
 		instruction_definition<0xF6, or_a_n8>,
+		instruction_definition<0xF7, rst_30>,
 		instruction_definition<0xF8, ld_hl_sp_e8>,
 		instruction_definition<0xF9, ld_sp_hl>,
 		instruction_definition<0xFA, ld_a_n16>,
-		instruction_definition<0xFE, cp_a_n8>
+		instruction_definition<0xFB, ei>,
+		instruction_definition<0xFE, cp_a_n8>,
+		instruction_definition<0xFF, rst_38>
 	> ;
 
-	export using default_prefixed_instruction_table_builder = instruction_table_builder<
+	export using default_prefixed_instruction_table_builder = instruction_table_builder <
 		instruction_definition<0x00, prefix_rlc_b>,
 		instruction_definition<0x01, prefix_rlc_c>,
 		instruction_definition<0x02, prefix_rlc_d>,
@@ -569,5 +585,8 @@ namespace opcodes
 		instruction_definition<0xFD, set_7_l>,
 		instruction_definition<0xFE, set_7_hl>,
 		instruction_definition<0xFF, set_7_a>
-	>;
+	> ;
+
+	export constexpr auto default_instruction_table = default_instruction_table_builder::build();
+	export constexpr auto default_prefixed_instruction_table = default_prefixed_instruction_table_builder::build();
 }

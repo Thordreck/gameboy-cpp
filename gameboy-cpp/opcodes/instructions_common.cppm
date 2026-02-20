@@ -180,6 +180,13 @@ namespace opcodes
 
 	export template<auto T>
 	concept BitIndex = std::unsigned_integral<decltype(T)> && (T <= 7);
+
+	export template<std::uint8_t Vec>
+	concept RSTVector =
+		Vec == 0x00 || Vec == 0x08 ||
+		Vec == 0x10 || Vec == 0x18 ||
+		Vec == 0x20 || Vec == 0x28 ||
+		Vec == 0x30 || Vec == 0x38;
 }
 
 namespace opcodes::literals

@@ -12,4 +12,8 @@ export import :misc;
 export import :interrupt;
 export import :bit;
 export import :carry;
+export import :fetch;
+export import :decode;
+export import :execute;
+export import :pipeline;
 
