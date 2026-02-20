@@ -9,7 +9,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			// TODO: implement ime flag in cpu
+			cpu.ime_flag().request();
 			cpu.pc()++;
 		}
 	};
@@ -18,7 +18,7 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			// TODO: implement ime flag in cpu
+			cpu.ime_flag().disable();
 			cpu.pc()++;
 		}
 	};

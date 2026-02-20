@@ -71,8 +71,8 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
+			cpu.ime_flag().enable();
 			cpu.pc() = pop_stack(cpu);
-			// TODO: enable ime flag
 		}
 	};
 

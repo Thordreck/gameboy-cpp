@@ -1,0 +1,54 @@
+
+export module interrupts;
+
+import std;
+
+namespace interrupts
+{
+	template<typename T>
+	concept InterruptDescriptor = requires()
+	{
+		{ T::ie_flag } -> std::convertible_to<std::uint8_t>;
+		{ T::if_flag } -> std::convertible_to<std::uint8_t>;
+		{ T::handler_address } -> std::convertible_to<std::uint16_t>;
+	};
+
+	template<std::uint8_t T>
+	concept InterruptFlag = T == 1 << 0 || T == 1 << 1 || T == 1 << 2 || T == 1 << 3 || T == 1 << 4;
+
+	template<std::uint16_t T>
+	concept InterruptAddress = T == 0x40 || T == 0x48 || T == 0x50 || T == 0x58 || T == 0x60;
+
+	export template<std::uint8_t ie_flag, std::uint8_t if_flag, std::uint16_t handler_address>
+	requires InterruptFlag<ie_flag> && InterruptFlag<if_flag> && InterruptAddress<handler_address>
+	struct interrupt
+	{
+		static constexpr auto ie_flag = ie_flag;
+		static constexpr auto if_flag = if_flag;
+		static constexpr auto handler_address = handler_address;
+	};
+
+	export constexpr std::uint8_t vblank_ie_flag = 1 << 0;
+	export constexpr std::uint8_t lcd_ie_flag = 1 << 1;
+	export constexpr std::uint8_t timer_ie_flag = 1 << 2;
+	export constexpr std::uint8_t serial_ie_flag = 1 << 3;
+	export constexpr std::uint8_t joypad_ie_flag = 1 << 4;
+
+	export constexpr std::uint8_t vblank_if_flag = 1 << 0;
+	export constexpr std::uint8_t lcd_if_flag = 1 << 1;
+	export constexpr std::uint8_t timer_if_flag = 1 << 2;
+	export constexpr std::uint8_t serial_if_flag = 1 << 3;
+	export constexpr std::uint8_t joypad_if_flag = 1 << 4;
+
+	export constexpr std::uint16_t vblank_handler_address = 0x40;
+	export constexpr std::uint16_t lcd_handler_address = 0x48;
+	export constexpr std::uint16_t timer_handler_address = 0x50;
+	export constexpr std::uint16_t serial_handler_address = 0x58;
+	export constexpr std::uint16_t joypad_handler_address = 0x60;
+
+	export using vblank_interrupt = interrupt<vblank_ie_flag, vblank_if_flag, vblank_handler_address>;
+	export using lcd_interrupt = interrupt<lcd_ie_flag, lcd_if_flag, lcd_handler_address>;
+	export using timer_interrupt = interrupt<timer_ie_flag, timer_if_flag, timer_handler_address>;
+	export using serial_interrupt = interrupt<serial_ie_flag, serial_if_flag, serial_handler_address>;
+	export using joypad_interrupt = interrupt<joypad_ie_flag, joypad_if_flag, joypad_handler_address>;
+}
