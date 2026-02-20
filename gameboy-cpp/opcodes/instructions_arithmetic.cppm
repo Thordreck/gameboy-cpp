@@ -44,6 +44,7 @@ namespace opcodes
 		}
 	};
 
+	export using add_a_a = add_a_r8<a_readonly_register_provider>;
 	export using add_a_b = add_a_r8<b_readonly_register_provider>;
 	export using add_a_c = add_a_r8<c_readonly_register_provider>;
 	export using add_a_d = add_a_r8<d_readonly_register_provider>;
@@ -104,7 +105,7 @@ namespace opcodes
 	export using dec_h = dec_r8<h_register_provider>;
 	export using dec_l = dec_r8<l_register_provider>;
 
-	export struct dec_hl
+	export struct dec_ind_hl
 	{
 		static void execute(cpu::cpu& cpu)
 		{
@@ -201,6 +202,33 @@ namespace opcodes
 		}
 	};
 
+	template<ReadOnlyR8RegisterProvider reg_provider>
+	struct sub_a_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const bool underflow = utils::check_substract_underflow(cpu.reg().a().value(), r8);
+			const bool half_underflow = utils::check_half_substract_underflow(cpu.reg().a().value(), r8);
+
+			cpu.reg().a() = cpu.reg().a() - r8;
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().h = half_underflow;
+			cpu.reg().flags().c = underflow;
+
+			cpu.pc()++;
+		}
+	};
+
+	export using sub_a_a = sub_a_r8<a_readonly_register_provider>;
+	export using sub_a_b = sub_a_r8<b_readonly_register_provider>;
+	export using sub_a_c = sub_a_r8<c_readonly_register_provider>;
+	export using sub_a_d = sub_a_r8<d_readonly_register_provider>;
+	export using sub_a_e = sub_a_r8<e_readonly_register_provider>;
+	export using sub_a_h = sub_a_r8<h_readonly_register_provider>;
+	export using sub_a_l = sub_a_r8<l_readonly_register_provider>;
+
 	export struct sub_a_n8
 	{
 		static void execute(cpu::cpu& cpu)
@@ -224,17 +252,20 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu::register_8 a = cpu.reg().a();
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const cpu::register_8::type_t rhs = reg_provider::get(cpu) + cpu.reg().c_flag();
-			const bool overflow = utils::check_add_overflow(a.value(), rhs);
-			const bool half_overflow = utils::check_half_add_overflow(a.value(), rhs);
+			const uint16_t result 
+				= static_cast<uint16_t>(a)
+				+ static_cast<uint16_t>(r8)
+				+ carry;
 
-			a = a + rhs;
-			cpu.reg().flags().z = a == 0;
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
 			cpu.reg().flags().n = false;
-			cpu.reg().flags().c = overflow;
-			cpu.reg().flags().h = half_overflow;
+			cpu.reg().flags().h = ((a & 0xF) + (r8 & 0xF) + carry) > 0xF;
+			cpu.reg().flags().c = (result > 0xFF);
 
 			cpu.pc()++;
 		}
@@ -252,18 +283,20 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu::register_8 a = cpu.reg().a();
-			const cpu::memory_bus::type_t n8 = cpu.memory()[cpu.pc() + 1];
-			const cpu::memory_bus::type_t rhs = n8 + cpu.reg().c_flag();
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const bool overflow = utils::check_add_overflow(a.value(), rhs);
-			const bool half_overflow = utils::check_half_add_overflow(a.value(), rhs);
+			const uint16_t result 
+				= static_cast<uint16_t>(a)
+				+ static_cast<uint16_t>(n8)
+				+ carry;
 
-			a = a + rhs;
-			cpu.reg().flags().z = a == 0;
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
 			cpu.reg().flags().n = false;
-			cpu.reg().flags().c = overflow;
-			cpu.reg().flags().h = half_overflow;
+			cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
+			cpu.reg().flags().c = (result > 0xFF);
 
 			cpu.pc() += 2;
 		}
@@ -305,4 +338,73 @@ namespace opcodes
 			cpu.pc()++;
 		}
 	};
+
+	template<ReadOnlyR8RegisterProvider reg_provider>
+	struct sbc_a_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+
+			const std::uint16_t result
+				= static_cast<std::uint16_t>(a)
+				- static_cast<std::uint16_t>(r8)
+				- static_cast<std::uint16_t>(carry);
+
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
+			cpu.reg().flags().c = (result > 0xFF);
+
+			cpu.pc()++;
+		}
+	};
+
+	export using sbc_a_a = sbc_a_r8<a_readonly_register_provider>;
+	export using sbc_a_b = sbc_a_r8<b_readonly_register_provider>;
+	export using sbc_a_c = sbc_a_r8<c_readonly_register_provider>;
+	export using sbc_a_d = sbc_a_r8<d_readonly_register_provider>;
+	export using sbc_a_e = sbc_a_r8<e_readonly_register_provider>;
+	export using sbc_a_h = sbc_a_r8<h_readonly_register_provider>;
+	export using sbc_a_l = sbc_a_r8<l_readonly_register_provider>;
+
+	export struct sbc_a_n8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t r8 = cpu.memory()[cpu.pc() + 1];
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+
+			const std::uint16_t result
+				= static_cast<std::uint16_t>(a)
+				- static_cast<std::uint16_t>(r8)
+				- static_cast<std::uint16_t>(carry);
+
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
+			cpu.reg().flags().c = (result > 0xFF);
+
+			cpu.pc() += 2;
+		}
+	};
+
+	template<R16RegisterProvider reg_provider>
+	struct dec_r16
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			--reg_provider::get(cpu);
+			cpu.pc()++;
+		}
+	};
+
+	export using dec_bc = dec_r16<bc_register_provider>;
+	export using dec_de = dec_r16<de_register_provider>;
+	export using dec_hl = dec_r16<hl_register_provider>;
 }

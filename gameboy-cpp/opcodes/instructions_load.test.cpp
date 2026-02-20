@@ -471,3 +471,35 @@ TEST_CASE("ld_hl_n8 stores value into target registry and updates pc properly")
 	CHECK_EQ(cpu.memory()[memory_pos], test_value);
 	CHECK_EQ(cpu.pc(), 2);
 }
+
+TEST_CASE("ldh_c_a stores value into target memory and updates pc properly")
+{
+    constexpr cpu::memory_bus::type_t test_value = 0xFE;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.reg().a() = test_value;
+    cpu.reg().c() = 0xBD;
+
+	opcodes::ldh_c_a::execute(cpu);
+
+	CHECK_EQ(memory[0xFFBD], test_value);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("ldh_a_c stores value into register a and updates pc properly")
+{
+    constexpr cpu::memory_bus::type_t test_value = 0xFE;
+
+	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+    cpu.reg().c() = 0xBD;
+    memory[0xFFBD] = test_value;
+
+	opcodes::ldh_a_c::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), test_value);
+	CHECK_EQ(cpu.pc(), 1);
+}

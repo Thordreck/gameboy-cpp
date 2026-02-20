@@ -302,4 +302,32 @@ namespace opcodes
 			cpu.pc()++;
 		}
 	};
+
+	// ldh a,[c]
+	export struct ldh_a_c
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const cpu::memory_bus::index_t memory_pos = 0xFF00_u16 + cpu.reg().c();
+			cpu.reg().a() = cpu.memory()[memory_pos];
+
+			cpu.pc()++;
+		}
+	};
+
+	// ldh [c],a
+	export struct ldh_c_a
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const cpu::memory_bus::index_t memory_pos = 0xFF00_u16 + cpu.reg().c();
+			cpu.memory()[memory_pos] = cpu.reg().a();
+
+			cpu.pc()++;
+		}
+	};
 }

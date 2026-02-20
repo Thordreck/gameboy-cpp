@@ -63,6 +63,30 @@ namespace opcodes
 		}
 	};
 
+	template<ReadOnlyR8RegisterProvider reg_provider>
+	struct and_a_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.reg().a() & reg_provider::get(cpu);
+
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = true;
+			cpu.reg().flags().c = false;
+
+			cpu.pc()++;
+		}
+	};
+
+	export using and_a_a = and_a_r8<a_readonly_register_provider>;
+	export using and_a_b = and_a_r8<b_readonly_register_provider>;
+	export using and_a_c = and_a_r8<c_readonly_register_provider>;
+	export using and_a_d = and_a_r8<d_readonly_register_provider>;
+	export using and_a_e = and_a_r8<e_readonly_register_provider>;
+	export using and_a_h = and_a_r8<h_readonly_register_provider>;
+	export using and_a_l = and_a_r8<l_readonly_register_provider>;
+
 	export struct and_a_n8
 	{
 		static void execute(cpu::cpu& cpu)
@@ -422,4 +446,249 @@ namespace opcodes
 	export using set_5_l = set_u3_r8<5, l_register_provider>;
 	export using set_6_l = set_u3_r8<6, l_register_provider>;
 	export using set_7_l = set_u3_r8<7, l_register_provider>;
+
+	template<R8RegisterProvider reg_provider>
+	struct swap_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			auto r8 = reg_provider::get(cpu);
+			r8 = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
+
+			cpu.reg().z_flag() = (r8 == 0);
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+			cpu.reg().c_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using swap_a = swap_r8<a_register_provider>;
+	export using swap_b = swap_r8<b_register_provider>;
+	export using swap_c = swap_r8<c_register_provider>;
+	export using swap_d = swap_r8<d_register_provider>;
+	export using swap_e = swap_r8<e_register_provider>;
+	export using swap_h = swap_r8<h_register_provider>;
+	export using swap_l = swap_r8<l_register_provider>;
+
+	export struct swap_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu::memory_bus::type_t& n8 = cpu.memory()[cpu.reg().hl()];
+			n8 = ((n8 & 0x0F) << 4) | ((n8 & 0xF0) >> 4);
+
+			cpu.reg().z_flag() = (n8 == 0);
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+			cpu.reg().c_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export struct cpl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = ~cpu.reg().a();
+			cpu.reg().n_flag() = true;
+			cpu.reg().h_flag() = true;
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct rlca
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t shifted_bit = (a >> 7) & 0x01;
+
+			cpu.reg().a() = (a << 1) | shifted_bit;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = false;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct rla
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+			const std::uint8_t shifted_bit = (a >> 7) & 0x01;
+
+			cpu.reg().a() = (a << 1) | c;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = false;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct rrca
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t shifted_bit = a & 0x01;
+
+			cpu.reg().a() = (a >> 1) | (shifted_bit << 7);
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = false;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc()++;
+		}
+	};
+
+	template<R8RegisterProvider reg_provider>
+	struct prefix_rlc_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+
+			reg_provider::get(cpu) = (r8 << 1) | shifted_bit;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using prefix_rlc_a = prefix_rlc_r8<a_register_provider>;
+	export using prefix_rlc_b = prefix_rlc_r8<b_register_provider>;
+	export using prefix_rlc_c = prefix_rlc_r8<c_register_provider>;
+	export using prefix_rlc_d = prefix_rlc_r8<d_register_provider>;
+	export using prefix_rlc_e = prefix_rlc_r8<e_register_provider>;
+	export using prefix_rlc_h = prefix_rlc_r8<h_register_provider>;
+	export using prefix_rlc_l = prefix_rlc_r8<l_register_provider>;
+
+	template<R8RegisterProvider reg_provider>
+	struct prefix_rrc_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t shifted_bit = r8 & 0x01;
+
+			reg_provider::get(cpu) = (r8 >> 1) | (shifted_bit << 7);
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using prefix_rrc_a = prefix_rrc_r8<a_register_provider>;
+	export using prefix_rrc_b = prefix_rrc_r8<b_register_provider>;
+	export using prefix_rrc_c = prefix_rrc_r8<c_register_provider>;
+	export using prefix_rrc_d = prefix_rrc_r8<d_register_provider>;
+	export using prefix_rrc_e = prefix_rrc_r8<e_register_provider>;
+	export using prefix_rrc_h = prefix_rrc_r8<h_register_provider>;
+	export using prefix_rrc_l = prefix_rrc_r8<l_register_provider>;
+
+	template<R8RegisterProvider reg_provider>
+	struct prefix_rl_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+
+			reg_provider::get(cpu) = (r8 << 1) | c;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using prefix_rl_a = prefix_rl_r8<a_register_provider>;
+	export using prefix_rl_b = prefix_rl_r8<b_register_provider>;
+	export using prefix_rl_c = prefix_rl_r8<c_register_provider>;
+	export using prefix_rl_d = prefix_rl_r8<d_register_provider>;
+	export using prefix_rl_e = prefix_rl_r8<e_register_provider>;
+	export using prefix_rl_h = prefix_rl_r8<h_register_provider>;
+	export using prefix_rl_l = prefix_rl_r8<l_register_provider>;
+
+	template<R8RegisterProvider reg_provider>
+	struct sla_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+
+			reg_provider::get(cpu) = (r8 << 1);
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using sla_a = sla_r8<a_register_provider>;
+	export using sla_b = sla_r8<b_register_provider>;
+	export using sla_c = sla_r8<c_register_provider>;
+	export using sla_d = sla_r8<d_register_provider>;
+	export using sla_e = sla_r8<e_register_provider>;
+	export using sla_h = sla_r8<h_register_provider>;
+	export using sla_l = sla_r8<l_register_provider>;
+
+	template<R8RegisterProvider reg_provider>
+	struct sra_r8
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t r8 = reg_provider::get(cpu);
+			const std::uint8_t r8_7 = r8 & 0x80;
+			const std::uint8_t r8_0 = r8 & 0x01;
+
+			reg_provider::get(cpu) = (r8 >> 1) | r8_7;
+			cpu.reg().c_flag() = r8_0 == 1;
+			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using sra_a = sra_r8<a_register_provider>;
+	export using sra_b = sra_r8<b_register_provider>;
+	export using sra_c = sra_r8<c_register_provider>;
+	export using sra_d = sra_r8<d_register_provider>;
+	export using sra_e = sra_r8<e_register_provider>;
+	export using sra_h = sra_r8<h_register_provider>;
+	export using sra_l = sra_r8<l_register_provider>;
 }

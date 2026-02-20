@@ -246,6 +246,68 @@ namespace
     r8_u3_test_case<opcodes::set_5_l, get_l, 5>, \
     r8_u3_test_case<opcodes::set_6_l, get_l, 6>, \
     r8_u3_test_case<opcodes::set_7_l, get_l, 7>
+
+	#define swap_r8_test_cases \
+    r8_test_case<opcodes::swap_a, get_a>, \
+    r8_test_case<opcodes::swap_b, get_b>, \
+    r8_test_case<opcodes::swap_c, get_c>, \
+    r8_test_case<opcodes::swap_d, get_d>, \
+    r8_test_case<opcodes::swap_e, get_e>, \
+    r8_test_case<opcodes::swap_h, get_h>, \
+    r8_test_case<opcodes::swap_l, get_l>
+
+	#define and_a_r8_test_cases \
+    r8_test_case<opcodes::and_a_b, get_b>, \
+    r8_test_case<opcodes::and_a_c, get_c>, \
+    r8_test_case<opcodes::and_a_d, get_d>, \
+    r8_test_case<opcodes::and_a_e, get_e>, \
+    r8_test_case<opcodes::and_a_h, get_h>, \
+    r8_test_case<opcodes::and_a_l, get_l>
+
+	#define prefix_rlc_r8_test_cases \
+    r8_test_case<opcodes::prefix_rlc_a, get_a>, \
+    r8_test_case<opcodes::prefix_rlc_b, get_b>, \
+    r8_test_case<opcodes::prefix_rlc_c, get_c>, \
+    r8_test_case<opcodes::prefix_rlc_d, get_d>, \
+    r8_test_case<opcodes::prefix_rlc_e, get_e>, \
+    r8_test_case<opcodes::prefix_rlc_h, get_h>, \
+    r8_test_case<opcodes::prefix_rlc_l, get_l>
+
+	#define prefix_rrc_r8_test_cases \
+    r8_test_case<opcodes::prefix_rrc_a, get_a>, \
+    r8_test_case<opcodes::prefix_rrc_b, get_b>, \
+    r8_test_case<opcodes::prefix_rrc_c, get_c>, \
+    r8_test_case<opcodes::prefix_rrc_d, get_d>, \
+    r8_test_case<opcodes::prefix_rrc_e, get_e>, \
+    r8_test_case<opcodes::prefix_rrc_h, get_h>, \
+    r8_test_case<opcodes::prefix_rrc_l, get_l>
+
+	#define prefix_rl_r8_test_cases \
+    r8_test_case<opcodes::prefix_rl_a, get_a>, \
+    r8_test_case<opcodes::prefix_rl_b, get_b>, \
+    r8_test_case<opcodes::prefix_rl_c, get_c>, \
+    r8_test_case<opcodes::prefix_rl_d, get_d>, \
+    r8_test_case<opcodes::prefix_rl_e, get_e>, \
+    r8_test_case<opcodes::prefix_rl_h, get_h>, \
+    r8_test_case<opcodes::prefix_rl_l, get_l>
+
+	#define sla_r8_test_cases \
+    r8_test_case<opcodes::sla_a, get_a>, \
+    r8_test_case<opcodes::sla_b, get_b>, \
+    r8_test_case<opcodes::sla_c, get_c>, \
+    r8_test_case<opcodes::sla_d, get_d>, \
+    r8_test_case<opcodes::sla_e, get_e>, \
+    r8_test_case<opcodes::sla_h, get_h>, \
+    r8_test_case<opcodes::sla_l, get_l>
+
+	#define sra_r8_test_cases \
+    r8_test_case<opcodes::sra_a, get_a>, \
+    r8_test_case<opcodes::sra_b, get_b>, \
+    r8_test_case<opcodes::sra_c, get_c>, \
+    r8_test_case<opcodes::sra_d, get_d>, \
+    r8_test_case<opcodes::sra_e, get_e>, \
+    r8_test_case<opcodes::sra_h, get_h>, \
+    r8_test_case<opcodes::sra_l, get_l>
 }
 
 TEST_CASE_TEMPLATE("or_a_r8 updates a register properly", test, or_a_r8_test_cases)
@@ -952,6 +1014,854 @@ TEST_CASE("or_a_n8 updates flags properly")
 	opcodes::or_a_n8::execute(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("swap_r8 updates register properly", test, swap_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0xAB;
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0xBA);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0xAB);
+}
+
+TEST_CASE_TEMPLATE("swap_r8 updates flags properly", test, swap_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().z_flag() = true;
+	cpu.reg().n_flag() = true;
+	cpu.reg().h_flag() = true;
+	cpu.reg().c_flag() = true;
+
+	test::reg(cpu) = 0xAB;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::reg(cpu) = 0x0;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("swap_r8 updates program counter properly", test, swap_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE("swap_hl updates register properly")
+{
+	constexpr cpu::memory_bus::index_t memory_pos = 0xABCD;
+
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().hl() = memory_pos;
+	memory[memory_pos] = 0xFE;
+
+	opcodes::swap_hl::execute(cpu);
+	CHECK_EQ(memory[memory_pos], 0xEF);
+
+	opcodes::swap_hl::execute(cpu);
+	CHECK_EQ(memory[memory_pos], 0xFE);
+}
+
+TEST_CASE("swap_hl updates flags properly")
+{
+	constexpr cpu::memory_bus::index_t memory_pos = 0xABCD;
+
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().z_flag() = true;
+	cpu.reg().n_flag() = true;
+	cpu.reg().h_flag() = true;
+	cpu.reg().c_flag() = true;
+
+	cpu.reg().hl() = memory_pos;
+	memory[memory_pos] = 0xFE;
+
+	opcodes::swap_hl::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	memory[memory_pos] = 0x0;
+
+	opcodes::swap_hl::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE("swap_hl updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::swap_hl::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE("cpl updates register a properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0;
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0xFF);
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0x0);
+
+	cpu.reg().a() = 0xF0;
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0x0F);
+}
+
+TEST_CASE("cpl updates flags properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().n_flag() = false;
+	cpu.reg().h_flag() = false;
+	cpu.reg().z_flag() = false;
+	cpu.reg().c_flag() = false;
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.reg().n_flag(), true);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.reg().n_flag(), true);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE("cpl updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::cpl::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE_TEMPLATE("and_a_r8 updates program counter properly", test, and_a_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE_TEMPLATE("and_a_r8 updates register a properly", test, and_a_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0x00;
+	test::reg(cpu) = 0x01;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), 0);
+
+	cpu.reg().a() = 0xFF;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), 0x01);
+}
+
+TEST_CASE_TEMPLATE("and_a_r8 updates flags properly", test, and_a_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0x00;
+	test::reg(cpu) = 0x01;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	cpu.reg().a() = 0xFF;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE("and_a_a updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::and_a_a::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("and_a_a updates register a properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0x00;
+	opcodes::and_a_a::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), 0);
+
+	cpu.reg().a() = 0xFB;
+	opcodes::and_a_a::execute(cpu);
+
+	CHECK_EQ(cpu.reg().a(), 0xFB);
+}
+
+TEST_CASE("and_a_a updates flags properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0x00;
+	opcodes::and_a_a::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	cpu.reg().a() = 0xFF;
+	opcodes::and_a_a::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), true);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE("rlca updates register a properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00010000);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00100000);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b01000000);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b10000000);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000001);
+}
+
+TEST_CASE("rlca updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("rlca updates register flags properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rlca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+}
+
+TEST_CASE("rla updates register a properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00010000);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00100000);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b01000000);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b10000000);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000000);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000001);
+}
+
+TEST_CASE("rla updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("rla updates register flags properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	opcodes::rla::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE("rrca updates register a properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000100);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000010);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b00000001);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().a(), 0b10000000);
+}
+
+TEST_CASE("rrca updates program counter properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.pc(), 1);
+}
+
+TEST_CASE("rrca updates register flags properly")
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	cpu.reg().a() = 0b00001000;
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	opcodes::rrca::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+}
+
+TEST_CASE_TEMPLATE("prefix rlc_r8 updates register properly", test, prefix_rlc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00010000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00100000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b01000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b10000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000001);
+}
+
+TEST_CASE_TEMPLATE("prefix rlc_r8 updates program counter properly", test, prefix_rlc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("prefix rlc_r8 updates register flags properly", test, prefix_rlc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	test::reg(cpu) = 0x0;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("prefix rrc_r8 updates register a properly", test, prefix_rrc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000100);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000010);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000001);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b10000000);
+}
+
+TEST_CASE_TEMPLATE("prefix rrc_r8 updates program counter properly", test, prefix_rrc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("prefix rrc_r8 updates register flags properly", test, prefix_rrc_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	test::reg(cpu) = 0x0;
+	test::execute(cpu);
+
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("prefix rl_r8 updates register properly", test, prefix_rl_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00010000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00100000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b01000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b10000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000001);
+}
+
+TEST_CASE_TEMPLATE("prefix rl_r8 updates program counter properly", test, prefix_rl_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("prefix rl_r8 updates register flags properly", test, prefix_rl_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("sla_r8 updates register properly", test, sla_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00010000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00100000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b01000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b10000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b00000000);
+}
+
+TEST_CASE_TEMPLATE("sla_r8 updates program counter properly", test, sla_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("sla_r8 updates register flags properly", test, sla_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+}
+
+TEST_CASE_TEMPLATE("sra_r8 updates register properly", test, sra_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b10001000;
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11000100);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11100010);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11110001);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11111000);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11111100);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11111110);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11111111);
+
+	test::execute(cpu);
+	CHECK_EQ(test::reg(cpu), 0b11111111);
+}
+
+TEST_CASE_TEMPLATE("sra_r8 updates program counter properly", test, sra_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.pc(), 2);
+}
+
+TEST_CASE_TEMPLATE("sra_r8 updates register flags properly", test, sra_r8_test_cases)
+{
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+
+	test::reg(cpu) = 0b00001000;
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), false);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), false);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), true);
+	CHECK_EQ(cpu.reg().n_flag(), false);
+	CHECK_EQ(cpu.reg().h_flag(), false);
+	CHECK_EQ(cpu.reg().c_flag(), true);
+
+	test::execute(cpu);
+	CHECK_EQ(cpu.reg().z_flag(), true);
 	CHECK_EQ(cpu.reg().n_flag(), false);
 	CHECK_EQ(cpu.reg().h_flag(), false);
 	CHECK_EQ(cpu.reg().c_flag(), false);
