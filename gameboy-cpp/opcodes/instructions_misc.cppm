@@ -16,45 +16,32 @@ namespace opcodes
 	{
 		static void execute(cpu::cpu& cpu)
 		{
-			bool carry = false;
+			bool should_carry = false;
+			std::uint8_t adjustment = 0x0;
+			
+			const std::uint8_t a = cpu.reg().a();
+			const bool half_carry = cpu.reg().h_flag();
+			const bool carry = cpu.reg().c_flag();
+			const bool substract = cpu.reg().n_flag();
 
-			if (cpu.reg().n_flag())
+			if ((!substract && (a & 0xF) > 0x09) || half_carry)
 			{
-				cpu::register_8::type_t adjustment {};
-
-				if (cpu.reg().h_flag())
-				{
-					adjustment |= 0x06;
-				}
-
-				if (cpu.reg().c_flag())
-				{
-					adjustment |= 0x60;
-				}
-
-				cpu.reg().a() = cpu.reg().a() - adjustment;
+				adjustment |= 0x06;
 			}
-			else 
+
+			if ((!substract && a > 0x99) || carry)
 			{
-				cpu::register_8::type_t adjustment {};
-
-				if (cpu.reg().h_flag() || ((cpu.reg().a() & 0x0F) > 0x09))
-				{
-					adjustment |= 0x06;
-				}
-
-				if (cpu.reg().c_flag() || cpu.reg().a() > 0x99)
-				{
-					adjustment |= 0x60;
-					carry = true;
-				}
-
-				cpu.reg().a() = cpu.reg().a() + adjustment;
+				adjustment |= 0x60;
+				should_carry = true;
 			}
+
+			cpu.reg().a() = substract
+				? cpu.reg().a() - adjustment
+				: cpu.reg().a() + adjustment;
 
 			cpu.reg().z_flag() = cpu.reg().a() == 0;
 			cpu.reg().h_flag() = false;
-			cpu.reg().c_flag() = carry;
+			cpu.reg().c_flag() = should_carry;
 
 			cpu.pc()++;
 		}
