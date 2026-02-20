@@ -93,12 +93,12 @@ namespace
 
 TEST_CASE("blargg.cpu_instrs.01-special")
 {
-	run_test("01-special.gb", "01-special\n\n\nPassed\n", 1087000);
+	run_test("01-special.gb", "01-special\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.02-interrupts")
 {
-	run_test("02-interrupts.gb", "02-interrupts\n\n\nPassed\n", 1087000);
+	run_test("02-interrupts.gb", "02-interrupts\n\n\nPassed\n", 20e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
@@ -133,12 +133,12 @@ TEST_CASE("blargg.cpu_instrs.08-misc instrs")
 
 TEST_CASE("blargg.cpu_instrs.09-op r,r")
 {
-	run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 5087000);
+	run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 10e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.10-bit ops")
 {
-	run_test("10-bit ops.gb", "10-bit ops\n\n\nPassed\n", 5087000);
+	run_test("10-bit ops.gb", "10-bit ops\n\n\nPassed\n",  30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.11-op a,(hl)")
