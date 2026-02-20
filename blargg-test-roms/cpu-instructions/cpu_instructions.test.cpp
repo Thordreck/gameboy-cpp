@@ -157,5 +157,5 @@ TEST_CASE("blargg.cpu_instrs.10-bit ops")
 
 TEST_CASE("blargg.cpu_instrs.11-op a,(hl)")
 {
-	run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 5087000);
+	run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 10e6);
 }

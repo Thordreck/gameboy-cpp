@@ -407,4 +407,125 @@ namespace opcodes
 	export using dec_bc = dec_r16<bc_register_provider>;
 	export using dec_de = dec_r16<de_register_provider>;
 	export using dec_hl = dec_r16<hl_register_provider>;
+
+	export struct cp_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+
+			const bool underflow = utils::check_substract_underflow(a, n8);
+			const bool half_underflow = utils::check_half_substract_underflow(a, n8);
+
+			cpu.reg().flags().z = (a - n8) == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().c = underflow;
+			cpu.reg().flags().h = half_underflow;
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct add_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+
+			const bool carry = utils::check_add_overflow(a, n8);
+			const bool half_carry = utils::check_half_add_overflow(a, n8);
+
+			cpu.reg().a() = a + n8;
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = half_carry;
+			cpu.reg().flags().c = carry;
+			cpu.pc()++;
+		}
+	};
+
+	export struct adc_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+
+			const uint16_t result 
+				= static_cast<uint16_t>(a)
+				+ static_cast<uint16_t>(n8)
+				+ carry;
+
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
+			cpu.reg().flags().c = (result > 0xFF);
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct sub_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+
+			const bool underflow = utils::check_substract_underflow(a, n8);
+			const bool half_underflow = utils::check_half_substract_underflow(a, n8);
+
+			cpu.reg().a() = a - n8;
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().h = half_underflow;
+			cpu.reg().flags().c = underflow;
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct sbc_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t a = cpu.reg().a();
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+
+			const std::uint16_t result
+				= static_cast<std::uint16_t>(a)
+				- static_cast<std::uint16_t>(n8)
+				- static_cast<std::uint16_t>(carry);
+
+			cpu.reg().a() = static_cast<std::uint8_t>(result);
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = true;
+			cpu.reg().flags().h = ((a & 0xF) < ((n8 & 0xF) + carry));
+			cpu.reg().flags().c = (result > 0xFF);
+
+			cpu.pc()++;
+		}
+	};
+
+	export struct inc_indirect_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			std::uint8_t& n8 = cpu.memory()[cpu.reg().hl()];
+			const bool half_carry = utils::check_half_add_overflow(n8, 1_u8);
+
+			n8++;
+			cpu.reg().flags().z = n8 == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = half_carry;
+			cpu.pc()++;
+		}
+	};
 }

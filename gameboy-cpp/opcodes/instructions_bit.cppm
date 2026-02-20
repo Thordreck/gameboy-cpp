@@ -181,6 +181,22 @@ namespace opcodes
 	export using srl_h = srl_r8<h_register_provider>;
 	export using srl_l = srl_r8<l_register_provider>;
 
+	export struct srl_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
+			cpu.memory()[cpu.reg().hl()] = cpu.memory()[cpu.reg().hl()] >> 1;
+
+			cpu.reg().flags().z = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = false;
+			cpu.reg().flags().c = shifted_bit;
+
+			cpu.pc() += 2;
+		}
+	};
+
 	template<R8RegisterProvider reg_provider>
 	struct rr_r8
 	{
@@ -190,6 +206,22 @@ namespace opcodes
 			reg_provider::get(cpu) = (reg_provider::get(cpu) >> 1) | (cpu.reg().c_flag() << 7);
 
 			cpu.reg().flags().z = reg_provider::get(cpu) == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = false;
+			cpu.reg().flags().c = shifted_bit;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export struct rr_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
+			cpu.memory()[cpu.reg().hl()] = (cpu.memory()[cpu.reg().hl()] >> 1) | (cpu.reg().c_flag() << 7);
+
+			cpu.reg().flags().z = cpu.memory()[cpu.reg().hl()] == 0;
 			cpu.reg().flags().n = false;
 			cpu.reg().flags().h = false;
 			cpu.reg().flags().c = shifted_bit;
@@ -582,6 +614,23 @@ namespace opcodes
 	export using prefix_rlc_h = prefix_rlc_r8<h_register_provider>;
 	export using prefix_rlc_l = prefix_rlc_r8<l_register_provider>;
 
+	export struct prefix_rlc_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+
+			cpu.memory()[cpu.reg().hl()] = (n8 << 1) | shifted_bit;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rrc_r8
 	{
@@ -609,6 +658,25 @@ namespace opcodes
 	export using prefix_rrc_e = prefix_rrc_r8<e_register_provider>;
 	export using prefix_rrc_h = prefix_rrc_r8<h_register_provider>;
 	export using prefix_rrc_l = prefix_rrc_r8<l_register_provider>;
+
+	export struct prefix_rrc_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t shifted_bit = n8 & 0x01;
+
+			cpu.memory()[cpu.reg().hl()] = (n8 >> 1) | (shifted_bit << 7);
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
 
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rl_r8
@@ -639,6 +707,26 @@ namespace opcodes
 	export using prefix_rl_h = prefix_rl_r8<h_register_provider>;
 	export using prefix_rl_l = prefix_rl_r8<l_register_provider>;
 
+	export struct prefix_rl_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			using namespace literals;
+
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+
+			cpu.memory()[cpu.reg().hl()] = (n8 << 1) | c;
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
 	template<R8RegisterProvider reg_provider>
 	struct sla_r8
 	{
@@ -664,6 +752,24 @@ namespace opcodes
 	export using sla_e = sla_r8<e_register_provider>;
 	export using sla_h = sla_r8<h_register_provider>;
 	export using sla_l = sla_r8<l_register_provider>;
+
+	export struct sla_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+
+			cpu.memory()[cpu.reg().hl()] = (n8 << 1);
+			cpu.reg().c_flag() = shifted_bit == 1;
+			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
 
 	template<R8RegisterProvider reg_provider>
 	struct sra_r8
@@ -691,4 +797,102 @@ namespace opcodes
 	export using sra_e = sra_r8<e_register_provider>;
 	export using sra_h = sra_r8<h_register_provider>;
 	export using sra_l = sra_r8<l_register_provider>;
+
+	export struct sra_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			const std::uint8_t n8_7 = n8 & 0x80;
+			const std::uint8_t n8_0 = n8 & 0x01;
+
+			cpu.memory()[cpu.reg().hl()] = (n8 >> 1) | n8_7;
+			cpu.reg().c_flag() = n8_0 == 1;
+			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = false;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export struct and_a_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.reg().a() = cpu.reg().a() & cpu.memory()[cpu.reg().hl()];
+
+			cpu.reg().flags().z = cpu.reg().a() == 0;
+			cpu.reg().flags().n = false;
+			cpu.reg().flags().h = true;
+			cpu.reg().flags().c = false;
+
+			cpu.pc()++;
+		}
+	};
+
+	template<std::uint8_t index>
+	requires BitIndex<index>
+	struct bit_u3_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+
+			cpu.reg().z_flag() = !utils::is_bit_set<index>(n8);
+			cpu.reg().n_flag() = false;
+			cpu.reg().h_flag() = true;
+
+			cpu.pc() += 2;
+		}
+	};
+
+	export using bit_0_hl = bit_u3_hl<0>;
+	export using bit_1_hl = bit_u3_hl<1>;
+	export using bit_2_hl = bit_u3_hl<2>;
+	export using bit_3_hl = bit_u3_hl<3>;
+	export using bit_4_hl = bit_u3_hl<4>;
+	export using bit_5_hl = bit_u3_hl<5>;
+	export using bit_6_hl = bit_u3_hl<6>;
+	export using bit_7_hl = bit_u3_hl<7>;
+
+	template<std::uint8_t index>
+	requires BitIndex<index>
+	struct res_u3_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[cpu.reg().hl()] &= ~(0x1 << index);
+			cpu.pc() += 2;
+		}
+	};
+
+	export using res_0_hl = res_u3_hl<0>;
+	export using res_1_hl = res_u3_hl<1>;
+	export using res_2_hl = res_u3_hl<2>;
+	export using res_3_hl = res_u3_hl<3>;
+	export using res_4_hl = res_u3_hl<4>;
+	export using res_5_hl = res_u3_hl<5>;
+	export using res_6_hl = res_u3_hl<6>;
+	export using res_7_hl = res_u3_hl<7>;
+
+	template<std::uint8_t index>
+	requires BitIndex<index>
+	struct set_u3_hl
+	{
+		static void execute(cpu::cpu& cpu)
+		{
+			cpu.memory()[cpu.reg().hl()] |= (0x1 << index);
+			cpu.pc() += 2;
+		}
+	};
+
+	export using set_0_hl = set_u3_hl<0>;
+	export using set_1_hl = set_u3_hl<1>;
+	export using set_2_hl = set_u3_hl<2>;
+	export using set_3_hl = set_u3_hl<3>;
+	export using set_4_hl = set_u3_hl<4>;
+	export using set_5_hl = set_u3_hl<5>;
+	export using set_6_hl = set_u3_hl<6>;
+	export using set_7_hl = set_u3_hl<7>;
 }
