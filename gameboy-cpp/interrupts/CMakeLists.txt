@@ -15,6 +15,7 @@ target_sources(interrupts PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_enable.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_dispatch.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_service.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_processor.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

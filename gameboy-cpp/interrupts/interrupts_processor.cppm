@@ -1,0 +1,15 @@
+export module interrupts:processor;
+
+import cpu;
+import :service;
+
+namespace interrupts
+{
+	export void process(cpu::cpu& cpu)
+	{
+		if (cpu.ime_flag().is_enabled() && is_any_interrupt_pending(cpu))
+		{
+			service_first_pending_interrupt(cpu);
+		}
+	}
+}

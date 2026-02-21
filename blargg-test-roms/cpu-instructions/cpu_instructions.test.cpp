@@ -1,9 +1,10 @@
 
 #include "doctest.h"
 
+import std;
 import cpu;
 import opcodes;
-import std;
+import interrupts;
 
 namespace
 {
@@ -72,12 +73,26 @@ namespace
 
 		cpu::cpu cpu{ memory };
 		cpu.pc() = 0x100;
+		cpu.sp() = 0xFFFE;
 
 		std::string result{};
 
 		for (size_t i = 0; i < max_num_instructions; i++)
 		{
-			test_instruction_pipeline::step(cpu);
+			if (cpu.ime_flag().is_enabled() && interrupts::is_any_interrupt_pending(cpu))
+			{
+				interrupts::service_first_pending_interrupt(cpu);
+			}
+			else 
+			{
+				if (cpu.ime_flag().is_requested())
+				{
+					cpu.ime_flag().enable();
+				}
+
+				test_instruction_pipeline::step(cpu);
+			}
+
 			read_io_result_output(cpu, result);
 
 			if (result == expected_output)

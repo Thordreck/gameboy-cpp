@@ -6,3 +6,4 @@ export import :dispatch;
 export import :enable;
 export import :request;
 export import :service;
+export import :processor;
