@@ -8,8 +8,12 @@ import std;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	export struct jp_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.pc() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -19,6 +23,11 @@ namespace opcodes
 	template <CPUStateCondition condition>
 	struct jp_cc_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu& cpu) 
+		{ 
+			return condition::evaluate(cpu) ? 4_m_cycle : 3_m_cycle; 
+		}
+
 		static void execute(cpu::cpu& cpu)
 		{
 			if (condition::evaluate(cpu))
@@ -39,6 +48,8 @@ namespace opcodes
 
 	export struct jr_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t raw_offset = cpu.memory()[cpu.pc() + 1];
@@ -49,6 +60,11 @@ namespace opcodes
 	template <CPUStateCondition condition>
 	struct jr_cc_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu& cpu) 
+		{ 
+			return condition::evaluate(cpu) ? 3_m_cycle : 2_m_cycle; 
+		}
+
 		static void execute(cpu::cpu& cpu)
 		{
 			if (condition::evaluate(cpu))
@@ -69,6 +85,8 @@ namespace opcodes
 
 	export struct jp_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.pc() = cpu.reg().hl();

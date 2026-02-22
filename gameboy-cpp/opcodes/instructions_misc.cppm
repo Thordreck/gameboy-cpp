@@ -4,8 +4,12 @@ import cpu;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	export struct nop
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.pc()++;
@@ -14,6 +18,8 @@ namespace opcodes
 
 	export struct daa
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			bool should_carry = false;

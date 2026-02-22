@@ -7,7 +7,7 @@ import std;
 TEST_CASE("Cycle default constructor initializes all at zero")
 {
 	using namespace cpu::literals;
-	cpu::cycle cycle{};
+	cpu::cpu_cycle cycle{};
 
 	CHECK_EQ(cycle.m_cycle(), 0_m_cycle);
 	CHECK_EQ(cycle.t_cycle(), 0_t_cycle);
@@ -16,7 +16,7 @@ TEST_CASE("Cycle default constructor initializes all at zero")
 TEST_CASE("Cycle increments t_cycle and m_cycle properly")
 {
 	using namespace cpu::literals;
-	cpu::cycle cycle{};
+	cpu::cpu_cycle cycle{};
 
 	CHECK_EQ(cycle.m_cycle(), 0_m_cycle);
 	CHECK_EQ(cycle.t_cycle(), 0_t_cycle);
@@ -41,7 +41,7 @@ TEST_CASE("Cycle increments t_cycle and m_cycle properly")
 TEST_CASE("Cycle reports end of m_cycles properly")
 {
 	using namespace cpu::literals;
-	cpu::cycle cycle{};
+	cpu::cpu_cycle cycle{};
 
 	cycle++;
 	cycle++;

@@ -7,6 +7,8 @@ import :common;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	export void push_stack(cpu::cpu& cpu, const cpu::register_16::type_t value)
 	{
 		cpu.memory()[--cpu.sp()] = utils::most_significant_byte(value);
@@ -24,6 +26,8 @@ namespace opcodes
 	template<R16RegisterProvider register_provider>
 	struct pop_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			register_provider::get(cpu) = pop_stack(cpu);
@@ -37,6 +41,8 @@ namespace opcodes
 
 	export struct pop_af
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint16_t popped_result = pop_stack(cpu);
@@ -50,6 +56,8 @@ namespace opcodes
 	template<ReadOnlyR16RegisterProvider register_provider>
 	struct push_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			push_stack(cpu, register_provider::get(cpu));
@@ -63,6 +71,8 @@ namespace opcodes
 
 	export struct push_af
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			push_stack(cpu, cpu.reg().af() & 0xFFF0);
@@ -72,6 +82,8 @@ namespace opcodes
 
 	export struct ld_sp_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.sp() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -81,6 +93,8 @@ namespace opcodes
 
 	export struct add_sp_e8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];
@@ -103,6 +117,8 @@ namespace opcodes
 
 	export struct ld_hl_sp_e8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];

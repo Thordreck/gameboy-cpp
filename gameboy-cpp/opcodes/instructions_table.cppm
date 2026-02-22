@@ -24,6 +24,7 @@ namespace opcodes
 		concept Instruction = requires(cpu::cpu & cpu)
 	{
 		{ T::execute(cpu) } -> std::same_as<void>;
+		{ T::num_cycles(cpu) } -> std::convertible_to<cpu::machine_cycle>;
 	};
 
 	export template<auto T>
@@ -139,9 +140,9 @@ namespace opcodes
 		instruction_definition<0x35, dec_ind_hl>,
 		instruction_definition<0x36, ld_hl_n8>,
 		instruction_definition<0x37, scf>,
+		instruction_definition<0x38, jr_c_n16>,
 		instruction_definition<0x39, add_hl_sp>,
 		instruction_definition<0x3A, ld_a_hld>,
-		instruction_definition<0x38, jr_c_n16>,
 		instruction_definition<0x3B, dec_sp>,
 		instruction_definition<0x3C, inc_a>,
 		instruction_definition<0x3D, dec_a>,

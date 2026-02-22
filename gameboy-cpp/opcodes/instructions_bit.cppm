@@ -8,10 +8,14 @@ import :common;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	// or_a_r8
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct or_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() | reg_provider::get(cpu);
@@ -35,6 +39,8 @@ namespace opcodes
 
 	export struct or_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.pc() + 1];
@@ -50,6 +56,8 @@ namespace opcodes
 
 	export struct or_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.reg().hl()];
@@ -66,6 +74,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct and_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() & reg_provider::get(cpu);
@@ -89,6 +99,8 @@ namespace opcodes
 
 	export struct and_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() & cpu.memory()[cpu.pc() + 1];
@@ -105,6 +117,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct xor_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() ^ reg_provider::get(cpu);
@@ -128,6 +142,8 @@ namespace opcodes
 
 	export struct xor_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.pc() + 1];
@@ -143,6 +159,8 @@ namespace opcodes
 
 	export struct xor_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.reg().hl()];
@@ -159,6 +177,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct srl_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool shifted_bit = reg_provider::get(cpu) & 0x01;
@@ -183,6 +203,8 @@ namespace opcodes
 
 	export struct srl_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
@@ -200,6 +222,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct rr_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool shifted_bit = reg_provider::get(cpu) & 0x01;
@@ -216,6 +240,8 @@ namespace opcodes
 
 	export struct rr_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
@@ -240,6 +266,8 @@ namespace opcodes
 
 	export struct rra
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool shifted_bit = cpu.reg().a() & 0x01;
@@ -258,6 +286,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct bit_u3_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().z_flag() = !utils::is_bit_set<index>(reg_provider::get(cpu).value());
@@ -335,6 +365,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct res_u3_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			reg_provider::get(cpu) = reg_provider::get(cpu) & ~(0x1 << index);
@@ -409,6 +441,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct set_u3_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			reg_provider::get(cpu) = reg_provider::get(cpu) | (0x1 << index);
@@ -482,6 +516,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct swap_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			auto r8 = reg_provider::get(cpu);
@@ -506,6 +542,8 @@ namespace opcodes
 
 	export struct swap_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu::memory_bus::type_t& n8 = cpu.memory()[cpu.reg().hl()];
@@ -522,6 +560,8 @@ namespace opcodes
 
 	export struct cpl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = ~cpu.reg().a();
@@ -534,6 +574,8 @@ namespace opcodes
 
 	export struct rlca
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -551,6 +593,8 @@ namespace opcodes
 
 	export struct rla
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -571,6 +615,8 @@ namespace opcodes
 
 	export struct rrca
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -591,6 +637,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rlc_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t r8 = reg_provider::get(cpu);
@@ -616,6 +664,8 @@ namespace opcodes
 
 	export struct prefix_rlc_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
@@ -634,6 +684,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rrc_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -661,6 +713,8 @@ namespace opcodes
 
 	export struct prefix_rrc_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -681,6 +735,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rl_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -709,6 +765,8 @@ namespace opcodes
 
 	export struct prefix_rl_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -730,6 +788,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct sla_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t r8 = reg_provider::get(cpu);
@@ -755,6 +815,8 @@ namespace opcodes
 
 	export struct sla_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
@@ -774,6 +836,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct sra_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t r8 = reg_provider::get(cpu);
@@ -800,6 +864,8 @@ namespace opcodes
 
 	export struct sra_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
@@ -818,6 +884,8 @@ namespace opcodes
 
 	export struct and_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.reg().a() & cpu.memory()[cpu.reg().hl()];
@@ -835,6 +903,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct bit_u3_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
@@ -860,6 +930,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct res_u3_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] &= ~(0x1 << index);
@@ -880,6 +952,8 @@ namespace opcodes
 	requires BitIndex<index>
 	struct set_u3_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] |= (0x1 << index);

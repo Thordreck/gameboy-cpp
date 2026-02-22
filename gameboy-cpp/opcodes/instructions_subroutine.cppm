@@ -8,8 +8,12 @@ import :stack;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	export struct call_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 6_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			push_stack(cpu, cpu.pc() + 3);
@@ -20,6 +24,11 @@ namespace opcodes
 	template<CPUStateCondition condition>
 	struct call_cc_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu& cpu) 
+		{
+			return condition::evaluate(cpu) ? 6_m_cycle : 3_m_cycle; 
+		}
+
 		static void execute(cpu::cpu& cpu)
 		{
 			if (condition::evaluate(cpu))
@@ -40,6 +49,8 @@ namespace opcodes
 
 	export struct ret
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.pc() = pop_stack(cpu);
@@ -49,6 +60,11 @@ namespace opcodes
 	template<CPUStateCondition condition>
 	struct ret_cc
 	{
+		static constexpr auto num_cycles(const cpu::cpu& cpu) 
+		{ 
+			return condition::evaluate(cpu) ? 5_m_cycle : 2_m_cycle; 
+		}
+
 		static void execute(cpu::cpu& cpu)
 		{
 			if (condition::evaluate(cpu))
@@ -69,6 +85,8 @@ namespace opcodes
 
 	export struct reti
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.ime_flag().enable();
@@ -80,6 +98,8 @@ namespace opcodes
 	requires RSTVector<vec>
 	struct rst_vec
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			push_stack(cpu, cpu.pc() + 1);

@@ -8,10 +8,14 @@ import :common;
 
 namespace opcodes
 {
+	using namespace cpu::literals;
+
 	// ld_r8_r8
 	template<R8RegisterProvider lhs_provider, ReadOnlyR8RegisterProvider rhs_provider>
 	struct ld_r8_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			lhs_provider::get(cpu) = rhs_provider::get(cpu);
@@ -86,6 +90,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct ld_r8_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			reg_provider::get(cpu) = cpu.memory()[++cpu.pc()];
@@ -105,6 +111,8 @@ namespace opcodes
 	template<R16RegisterProvider reg_provider>
 	struct ld_r16_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			reg_provider::get(cpu) = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -120,6 +128,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct ld_hl_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] = reg_provider::get(cpu);
@@ -137,6 +147,8 @@ namespace opcodes
 
 	export struct ld_hl_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] = cpu.memory()[cpu.pc() + 1];
@@ -148,6 +160,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct ld_r8_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			reg_provider::get(cpu) = cpu.memory()[cpu.reg().hl()];
@@ -165,6 +179,8 @@ namespace opcodes
 
 	export struct ld_a_hli
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
@@ -175,6 +191,8 @@ namespace opcodes
 
 	export struct ld_a_hld
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
@@ -185,6 +203,8 @@ namespace opcodes
 
 	export struct ld_hli_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
@@ -195,6 +215,8 @@ namespace opcodes
 
 	export struct ld_hld_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
@@ -207,6 +229,8 @@ namespace opcodes
 	template<ReadOnlyR16RegisterProvider reg_provider>
 	struct ld_r16_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.memory()[reg_provider::get(cpu)] = cpu.reg().a();
@@ -220,6 +244,8 @@ namespace opcodes
 	// ld n16,a
 	export struct ld_n16_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -232,6 +258,8 @@ namespace opcodes
 	// ld a,n16
 	export struct ld_a_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -245,6 +273,8 @@ namespace opcodes
 	template <ReadOnlyR16RegisterProvider reg_provider>
 	struct ld_a_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = cpu.memory()[reg_provider::get(cpu)];
@@ -258,6 +288,8 @@ namespace opcodes
 	// ldh n16,a
 	export struct ldh_n16_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			constexpr std::uint8_t high_nibble = 0xFF;
@@ -271,6 +303,8 @@ namespace opcodes
 	// ldh n16,a
 	export struct ldh_a_n16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			constexpr std::uint8_t high_nibble = 0xFF;
@@ -284,6 +318,8 @@ namespace opcodes
 	// ld n16,sp
 	export struct ld_n16_sp
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 5_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint16_t address = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
@@ -296,6 +332,8 @@ namespace opcodes
 	// ld sp,hl
 	export struct ld_sp_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.sp() = cpu.reg().hl();
@@ -306,6 +344,8 @@ namespace opcodes
 	// ldh a,[c]
 	export struct ldh_a_c
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -320,6 +360,8 @@ namespace opcodes
 	// ldh [c],a
 	export struct ldh_c_a
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;

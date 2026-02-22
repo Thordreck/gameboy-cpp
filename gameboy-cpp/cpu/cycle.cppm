@@ -10,14 +10,14 @@ namespace cpu
 		using type_t = std::uint8_t;
 
 	public:
-		machine_cycle(type_t value)
+		constexpr machine_cycle(type_t value)
 			: value_{ value }
 		{}
 
-		machine_cycle() = default;
+		constexpr machine_cycle() = default;
 
-		operator type_t() const { return value(); }
-		type_t value() const { return value_; }
+		constexpr operator type_t() const { return value(); }
+		constexpr type_t value() const { return value_; }
 
 		machine_cycle& operator=(const machine_cycle other)
 		{
@@ -38,7 +38,7 @@ namespace cpu
 			return temp;
 		}
 
-		auto operator<=>(const machine_cycle&) const = default;
+		constexpr auto operator<=>(const machine_cycle&) const = default;
 
 	private:
 		std::uint8_t value_{};
@@ -50,14 +50,14 @@ namespace cpu
 		using type_t = std::uint8_t;
 
 	public:
-		tick_cycle(type_t value)
+		constexpr tick_cycle(type_t value)
 			: value_{ value }
 		{}
 
-		tick_cycle() = default;
+		constexpr tick_cycle() = default;
 
-		operator type_t() const { return value(); }
-		type_t value() const { return value_; }
+		constexpr operator type_t() const { return value(); }
+		constexpr type_t value() const { return value_; }
 
 		tick_cycle& operator=(const tick_cycle other)
 		{
@@ -78,28 +78,28 @@ namespace cpu
 			return temp;
 		}
 
-		auto operator<=>(const tick_cycle&) const = default;
+		constexpr auto operator<=>(const tick_cycle&) const = default;
 
 	private:
 		std::uint8_t value_{};
 	};
 
-	export class cycle
+	export class cpu_cycle
 	{
 	public:
-		cycle(machine_cycle::type_t m_cycle, tick_cycle::type_t t_cycle)
+		cpu_cycle(machine_cycle::type_t m_cycle, tick_cycle::type_t t_cycle)
 			: m_cycle_{ m_cycle }
 			, t_cycle_{ t_cycle }
 		{}
 
-		cycle() = default;
+		cpu_cycle() = default;
 
 		machine_cycle m_cycle() const { return m_cycle_; }
 		tick_cycle t_cycle() const { return t_cycle_; }
 
 		bool end_of_m_cycle() const { return t_cycle_.value() == 3; }
 
-		cycle& operator++()
+		cpu_cycle& operator++()
 		{
 			t_cycle_++;
 
@@ -112,14 +112,14 @@ namespace cpu
 			return *this;
 		}
 
-		cycle operator++(int)
+		cpu_cycle operator++(int)
 		{
-			cycle temp = *this;
+			cpu_cycle temp = *this;
 			++(*this);
 			return temp;
 		}
 		
-		auto operator<=>(const cycle&) const = default;
+		auto operator<=>(const cpu_cycle&) const = default;
 
 	private:
 		machine_cycle m_cycle_{};
@@ -129,12 +129,12 @@ namespace cpu
 
 namespace cpu::literals
 {
-	export machine_cycle operator"" _m_cycle(unsigned long long value)
+	export constexpr machine_cycle operator"" _m_cycle(unsigned long long value)
 	{
 		return static_cast<std::uint8_t>(value);
 	}
 
-	export tick_cycle operator"" _t_cycle(unsigned long long value)
+	export constexpr tick_cycle operator"" _t_cycle(unsigned long long value)
 	{
 		return static_cast<std::uint8_t>(value);
 	}

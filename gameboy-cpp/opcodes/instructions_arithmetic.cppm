@@ -8,8 +8,12 @@ import :common;
 
 namespace opcodes 
 {
+	using namespace cpu::literals;
+
 	export struct add_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
@@ -29,6 +33,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct add_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const cpu::readonly_register_8 r8 = reg_provider::get(cpu);
@@ -56,6 +62,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct inc_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -82,6 +90,8 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct dec_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -107,6 +117,8 @@ namespace opcodes
 
 	export struct dec_ind_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;
@@ -126,6 +138,8 @@ namespace opcodes
 	template<R16RegisterProvider reg_provider>
 	struct inc_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			++reg_provider::get(cpu);
@@ -139,6 +153,8 @@ namespace opcodes
 
 	export struct inc_sp
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.sp()++;
@@ -148,6 +164,8 @@ namespace opcodes
 
 	export struct dec_sp
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.sp()--;
@@ -158,6 +176,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct cp_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const auto a = cpu.reg().a();
@@ -185,6 +205,8 @@ namespace opcodes
 
 	export struct cp_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const auto a = cpu.reg().a();
@@ -205,6 +227,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct sub_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t r8 = reg_provider::get(cpu);
@@ -231,6 +255,8 @@ namespace opcodes
 
 	export struct sub_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
@@ -250,6 +276,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct adc_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -281,6 +309,8 @@ namespace opcodes
 
 	export struct adc_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -305,6 +335,8 @@ namespace opcodes
 	template<ReadOnlyR16RegisterProvider reg_provider>
 	struct add_hl_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool overflow = utils::check_add_overflow(cpu.reg().hl().value(), reg_provider::get(cpu).value());
@@ -325,6 +357,8 @@ namespace opcodes
 
 	export struct add_hl_sp
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const bool overflow = utils::check_add_overflow(cpu.reg().hl().value(), cpu.sp().value());
@@ -342,6 +376,8 @@ namespace opcodes
 	template<ReadOnlyR8RegisterProvider reg_provider>
 	struct sbc_a_r8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -373,6 +409,8 @@ namespace opcodes
 
 	export struct sbc_a_n8
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -397,6 +435,8 @@ namespace opcodes
 	template<R16RegisterProvider reg_provider>
 	struct dec_r16
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			--reg_provider::get(cpu);
@@ -410,6 +450,8 @@ namespace opcodes
 
 	export struct cp_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -429,6 +471,8 @@ namespace opcodes
 
 	export struct add_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -448,6 +492,8 @@ namespace opcodes
 
 	export struct adc_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -471,6 +517,8 @@ namespace opcodes
 
 	export struct sub_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -491,6 +539,8 @@ namespace opcodes
 
 	export struct sbc_a_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			const std::uint8_t a = cpu.reg().a();
@@ -514,6 +564,8 @@ namespace opcodes
 
 	export struct inc_indirect_hl
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			using namespace literals;

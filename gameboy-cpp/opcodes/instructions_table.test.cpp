@@ -7,8 +7,12 @@ import opcodes;
 
 namespace
 {
+	using namespace cpu::literals;
+
 	struct fake_instruction_0
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().a() = 1;
@@ -17,6 +21,8 @@ namespace
 
 	struct fake_instruction_1
 	{
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+
 		static void execute(cpu::cpu& cpu)
 		{
 			cpu.reg().b() = 1;
