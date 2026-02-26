@@ -8,6 +8,5 @@ export import :memory_bus;
 export import :ime;
 export import :cycle;
 export import :temp_cache;
-export import :runner;
 export import :common;
 

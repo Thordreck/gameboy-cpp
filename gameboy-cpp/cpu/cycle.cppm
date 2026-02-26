@@ -160,5 +160,10 @@ namespace cpu
 		return is_machine_cycle<Cycle>(cycle.m_cycle())
 			&& is_last_tick_cycle(cycle.t_cycle());
 	}
+
+	export bool is_end_of_any_machine_cycle(const cpu_cycle& cycle)
+	{
+		return is_last_tick_cycle(cycle.t_cycle());
+	}
 }
 
