@@ -3,25 +3,17 @@
 
 import cpu;
 import std;
+import tests;
 import interrupts;
 
 namespace
 {
-	using namespace interrupts;
-
-	template<InterruptDescriptor interrupt, std::uint8_t flag>
-	struct interrupt_test_case
-	{
-		using interrupt_t = interrupt;
-		static constexpr std::uint8_t ie_flag = flag;
-	};
-
 	#define enable_test_cases \
-		interrupt_test_case<vblank_interrupt, 0b00000001>, \
-		interrupt_test_case<lcd_interrupt, 0b00000010>, \
-		interrupt_test_case<timer_interrupt, 0b00000100>, \
-		interrupt_test_case<serial_interrupt, 0b00001000>, \
-		interrupt_test_case<joypad_interrupt, 0b00010000>
+		tests::vblank_interrupt_test_case, \
+		tests::lcd_interrupt_test_case, \
+		tests::timer_interrupt_test_case, \
+		tests::serial_interrupt_test_case, \
+		tests::joypad_interrupt_test_case
 }
 
 TEST_CASE_TEMPLATE("interrupts.Enabled interrupts have their ie flag set", test, enable_test_cases)

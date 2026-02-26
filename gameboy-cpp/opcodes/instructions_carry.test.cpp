@@ -1,11 +1,12 @@
 
 #include "doctest.h"
 
-import opcodes;
 import std;
 import cpu;
+import opcodes;
+import tests;
 
-TEST_CASE("scf set flags properly")
+TEST_CASE("carry.scf set flags properly")
 {
 	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
 	cpu::cpu cpu{ memory };
@@ -14,23 +15,23 @@ TEST_CASE("scf set flags properly")
 	cpu.reg().h_flag() = true;
 	cpu.reg().c_flag() = false;
 
-	opcodes::scf::execute(cpu);
+	tests::execute_all_machine_cycles<opcodes::scf>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
 	CHECK_FALSE(cpu.reg().h_flag());
 	CHECK(cpu.reg().c_flag());
 }
 
-TEST_CASE("scf increments program counter properly")
+TEST_CASE("carry.scf does not increment program counter")
 {
 	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
 	cpu::cpu cpu{ memory };
 
-	opcodes::scf::execute(cpu);
-	CHECK_EQ(cpu.pc(), 1);
+	tests::execute_all_machine_cycles<opcodes::scf>(cpu);
+	CHECK_EQ(cpu.pc(), 0);
 }
 
-TEST_CASE("ccf set flags properly")
+TEST_CASE("carry.ccf set flags properly")
 {
 	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
 	cpu::cpu cpu{ memory };
@@ -39,24 +40,24 @@ TEST_CASE("ccf set flags properly")
 	cpu.reg().h_flag() = true;
 	cpu.reg().c_flag() = false;
 
-	opcodes::ccf::execute(cpu);
+	tests::execute_all_machine_cycles<opcodes::ccf>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
 	CHECK_FALSE(cpu.reg().h_flag());
 	CHECK(cpu.reg().c_flag());
 
-	opcodes::ccf::execute(cpu);
+	tests::execute_all_machine_cycles<opcodes::ccf>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
 	CHECK_FALSE(cpu.reg().h_flag());
 	CHECK_FALSE(cpu.reg().c_flag());
 }
 
-TEST_CASE("ccf increments program counter properly")
+TEST_CASE("carry.ccf does not increment program counter")
 {
 	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
 	cpu::cpu cpu{ memory };
 
-	opcodes::ccf::execute(cpu);
-	CHECK_EQ(cpu.pc(), 1);
+	tests::execute_all_machine_cycles<opcodes::ccf>(cpu);
+	CHECK_EQ(cpu.pc(), 0);
 }

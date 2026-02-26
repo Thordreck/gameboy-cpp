@@ -4,24 +4,17 @@
 
 import cpu;
 import std;
+import tests;
 import interrupts;
 
 namespace
 {
-	using namespace interrupts;
-
-	template<InterruptDescriptor interrupt>
-	struct interrupt_test_case
-	{
-		using interrupt_t = interrupt;
-	};
-
 	#define interrupt_test_cases \
-		interrupt_test_case<vblank_interrupt>, \
-		interrupt_test_case<lcd_interrupt>, \
-		interrupt_test_case<timer_interrupt>, \
-		interrupt_test_case<serial_interrupt>, \
-		interrupt_test_case<joypad_interrupt>
+		tests::vblank_interrupt_test_case, \
+		tests::lcd_interrupt_test_case, \
+		tests::timer_interrupt_test_case, \
+		tests::serial_interrupt_test_case, \
+		tests::joypad_interrupt_test_case
 }
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when enabled but not requested", test, interrupt_test_cases)

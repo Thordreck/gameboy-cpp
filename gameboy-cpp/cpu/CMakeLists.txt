@@ -16,6 +16,8 @@ target_sources(cpu PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/stack_pointer.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/ime.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/cycle.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/temp_cache.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

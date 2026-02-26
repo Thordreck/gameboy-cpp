@@ -14,11 +14,12 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-			cpu.reg().c_flag() = !cpu.reg().c_flag();
-
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = !cpu.reg().c_flag();
+			}
 		}
 	};
 
@@ -28,11 +29,12 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-			cpu.reg().c_flag() = true;
-
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = true;
+			}
 		}
 	};
 }

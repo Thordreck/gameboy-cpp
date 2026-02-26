@@ -9,20 +9,6 @@ namespace opcodes
 {
 	using namespace cpu::literals;
 
-	export void push_stack(cpu::cpu& cpu, const cpu::register_16::type_t value)
-	{
-		cpu.memory()[--cpu.sp()] = utils::most_significant_byte(value);
-		cpu.memory()[--cpu.sp()] = utils::less_significant_byte(value);
-	}
-
-	export cpu::register_16::type_t pop_stack(cpu::cpu& cpu)
-	{
-		const auto less_significant = cpu.memory()[cpu.sp()++];
-		const auto most_significant = cpu.memory()[cpu.sp()++];
-
-		return utils::encode_little_endian(less_significant, most_significant);
-	}
-
 	template<R16RegisterProvider register_provider>
 	struct pop_r16
 	{
@@ -30,8 +16,17 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			register_provider::get(cpu) = pop_stack(cpu);
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t low_byte = cpu.cache().r8;
+				const std::uint8_t high_byte = cpu.memory()[cpu.sp()++];
+
+				register_provider::get(cpu) = utils::encode_little_endian(low_byte, high_byte);
+			}
 		}
 	};
 
@@ -45,11 +40,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint16_t popped_result = pop_stack(cpu);
-			cpu.reg().a() = popped_result >> 8;
-			cpu.reg().f() = popped_result & 0xF0;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t low_byte = cpu.cache().r8;
+				const std::uint8_t high_byte = cpu.memory()[cpu.sp()++];
+				const std::uint16_t popped_result = utils::encode_little_endian(low_byte, high_byte);
 
-			cpu.pc()++;
+				cpu.reg().a() = popped_result >> 8;
+				cpu.reg().f() = popped_result & 0xF0;
+			}
 		}
 	};
 
@@ -60,8 +63,18 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			push_stack(cpu, register_provider::get(cpu));
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r16 = register_provider::get(cpu);
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.cache().r16);
+			}
 		}
 	};
 
@@ -75,8 +88,20 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			push_stack(cpu, cpu.reg().af() & 0xFFF0);
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r16 = cpu.reg().af() & 0xFFF0;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint16_t value = cpu.cache().r16;
+				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(value);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				const std::uint16_t value = cpu.cache().r16;
+				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(value);
+			}
 		}
 	};
 
@@ -86,8 +111,17 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.sp() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
-			cpu.pc() += 3;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t low_byte = cpu.cache().r8;
+				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+
+				cpu.sp() = utils::encode_little_endian(low_byte, high_byte);
+			}
 		}
 	};
 
@@ -97,21 +131,28 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];
-			const std::uint8_t unsigned_e8 = static_cast<std::uint8_t>(e8);
-			const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t unsigned_e8 = cpu.cache().r8;
+				const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
 
-			const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
-			const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
+				const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
+				const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
 
-			cpu.sp() = cpu.sp() + e8;
-
-			cpu.reg().z_flag() = false;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = half_overflow;
-			cpu.reg().c_flag() = overflow;
-
-			cpu.pc() += 2;
+				cpu.reg().z_flag() = false;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = half_overflow;
+				cpu.reg().c_flag() = overflow;
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				const std::int8_t e8 = static_cast<int8_t>(cpu.cache().r8);
+				cpu.sp() = cpu.sp() + e8;
+			}
 		}
 	};
 
@@ -121,21 +162,26 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::int8_t e8 = cpu.memory()[cpu.pc() + 1];
-			const std::uint8_t unsigned_e8 = static_cast<std::uint8_t>(e8);
-			const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t unsigned_e8 = cpu.cache().r8;
+				const std::int8_t e8 = static_cast<std::int8_t>(unsigned_e8);
+				const std::uint8_t sp_lower_byte = cpu.sp() & 0xFF;
 
-			const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
-			const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
+				const bool half_overflow = utils::check_half_add_overflow(sp_lower_byte, unsigned_e8);
+				const bool overflow = utils::check_add_overflow(sp_lower_byte, unsigned_e8);
 
-			cpu.reg().hl() = cpu.sp() + e8;
+				cpu.reg().hl() = cpu.sp() + e8;
 
-			cpu.reg().z_flag() = false;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = half_overflow;
-			cpu.reg().c_flag() = overflow;
-
-			cpu.pc() += 2;
+				cpu.reg().z_flag() = false;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = half_overflow;
+				cpu.reg().c_flag() = overflow;
+			}
 		}
 	};
 }

@@ -16,16 +16,26 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
-			const bool carry = utils::check_add_overflow(cpu.reg().a().value(), n8);
-			const bool half_carry = utils::check_half_add_overflow(cpu.reg().a().value(), n8);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t result = a + n8;
 
-			cpu.reg().a() = cpu.reg().a() + n8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_carry;
-			cpu.reg().flags().c = carry;
-			cpu.pc() += 2;
+				const bool carry = utils::check_add_overflow(a, n8);
+				const bool half_carry = utils::check_half_add_overflow(a, n8);
+
+				cpu.reg().flags().z = result == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_carry;
+				cpu.reg().flags().c = carry;
+
+				cpu.reg().a() = result;
+			}
 		}
 	};
 
@@ -37,16 +47,18 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const cpu::readonly_register_8 r8 = reg_provider::get(cpu);
-			const bool carry = utils::check_add_overflow(cpu.reg().a().value(), r8.value());
-			const bool half_carry = utils::check_half_add_overflow(cpu.reg().a().value(), r8.value());
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const cpu::readonly_register_8 r8 = reg_provider::get(cpu);
+				const bool carry = utils::check_add_overflow(cpu.reg().a().value(), r8.value());
+				const bool half_carry = utils::check_half_add_overflow(cpu.reg().a().value(), r8.value());
 
-			cpu.reg().a() = cpu.reg().a() + r8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_carry;
-			cpu.reg().flags().c = carry;
-			cpu.pc()++;
+				cpu.reg().a() = cpu.reg().a() + r8;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_carry;
+				cpu.reg().flags().c = carry;
+			}
 		}
 	};
 
@@ -66,16 +78,18 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			cpu::register_8 r8 = reg_provider::get(cpu);
-			const bool half_carry = utils::check_half_add_overflow(r8.value(), 1_u8);
+				cpu::register_8 r8 = reg_provider::get(cpu);
+				const bool half_carry = utils::check_half_add_overflow(r8.value(), 1_u8);
 
-			++r8;
-			cpu.reg().flags().z = r8 == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_carry;
-			cpu.pc()++;
+				++r8;
+				cpu.reg().flags().z = r8 == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_carry;
+			}
 		}
 	};
 
@@ -94,16 +108,18 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			cpu::register_8 r8 = reg_provider::get(cpu);
-			const bool half_underflow = utils::check_half_substract_underflow(r8.value(), 1_u8);
+				cpu::register_8 r8 = reg_provider::get(cpu);
+				const bool half_underflow = utils::check_half_substract_underflow(r8.value(), 1_u8);
 
-			--r8;
-			cpu.reg().flags().z = r8 == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = half_underflow;
-			cpu.pc()++;
+				--r8;
+				cpu.reg().flags().z = r8 == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = half_underflow;
+			}
 		}
 	};
 
@@ -121,16 +137,24 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			cpu::memory_bus::type_t& n8 = cpu.memory()[cpu.reg().hl()];
-			const bool half_underflow = utils::check_half_substract_underflow(n8, 1_u8);
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t result = n8 - 1;
+				const bool half_underflow = utils::check_half_substract_underflow(n8, 1_u8);
 
-			--n8;
-			cpu.reg().flags().z = n8 == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = half_underflow;
-			cpu.pc()++;
+				cpu.reg().flags().z = result == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = half_underflow;
+
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
@@ -142,8 +166,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			++reg_provider::get(cpu);
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				++reg_provider::get(cpu);
+			}
 		}
 	};
 
@@ -157,8 +183,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.sp()++;
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.sp()++;
+			}
 		}
 	};
 
@@ -168,8 +196,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.sp()--;
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.sp()--;
+			}
 		}
 	};
 
@@ -180,18 +210,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const auto a = cpu.reg().a();
-			const auto r8 = reg_provider::get(cpu);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const auto a = cpu.reg().a();
+				const auto r8 = reg_provider::get(cpu);
 
-			const bool underflow = utils::check_substract_underflow(a.value(), r8.value());
-			const bool half_underflow = utils::check_half_substract_underflow(a.value(), r8.value());
+				const bool underflow = utils::check_substract_underflow(a.value(), r8.value());
+				const bool half_underflow = utils::check_half_substract_underflow(a.value(), r8.value());
 
-			cpu.reg().flags().z = (a - r8) == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().c = underflow;
-			cpu.reg().flags().h = half_underflow;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = (a - r8) == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().c = underflow;
+				cpu.reg().flags().h = half_underflow;
+			}
 		}
 	};
 
@@ -209,18 +240,23 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const auto a = cpu.reg().a();
-			const auto n8 = cpu.memory()[cpu.pc() + 1];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.cache().r8;
 
-			const bool underflow = utils::check_substract_underflow(a.value(), n8);
-			const bool half_underflow = utils::check_half_substract_underflow(a.value(), n8);
+				const bool underflow = utils::check_substract_underflow(a, n8);
+				const bool half_underflow = utils::check_half_substract_underflow(a, n8);
 
-			cpu.reg().flags().z = (a - n8) == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().c = underflow;
-			cpu.reg().flags().h = half_underflow;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = (a - n8) == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().c = underflow;
+				cpu.reg().flags().h = half_underflow;
+			}
 		}
 	};
 
@@ -231,17 +267,18 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const bool underflow = utils::check_substract_underflow(cpu.reg().a().value(), r8);
-			const bool half_underflow = utils::check_half_substract_underflow(cpu.reg().a().value(), r8);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const bool underflow = utils::check_substract_underflow(cpu.reg().a().value(), r8);
+				const bool half_underflow = utils::check_half_substract_underflow(cpu.reg().a().value(), r8);
 
-			cpu.reg().a() = cpu.reg().a() - r8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = half_underflow;
-			cpu.reg().flags().c = underflow;
-
-			cpu.pc()++;
+				cpu.reg().a() = cpu.reg().a() - r8;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = half_underflow;
+				cpu.reg().flags().c = underflow;
+			}
 		}
 	};
 
@@ -259,17 +296,22 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
-			const bool underflow = utils::check_substract_underflow(cpu.reg().a().value(), n8);
-			const bool half_underflow = utils::check_half_substract_underflow(cpu.reg().a().value(), n8);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
+				const bool underflow = utils::check_substract_underflow(cpu.reg().a().value(), n8);
+				const bool half_underflow = utils::check_half_substract_underflow(cpu.reg().a().value(), n8);
 
-			cpu.reg().a() = cpu.reg().a() - n8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = half_underflow;
-			cpu.reg().flags().c = underflow;
-
-			cpu.pc() += 2;
+				cpu.reg().a() = cpu.reg().a() - n8;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = half_underflow;
+				cpu.reg().flags().c = underflow;
+			}
 		}
 	};
 
@@ -280,22 +322,23 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const uint16_t result 
-				= static_cast<uint16_t>(a)
-				+ static_cast<uint16_t>(r8)
-				+ carry;
+				const uint16_t result 
+					= static_cast<uint16_t>(a)
+					+ static_cast<uint16_t>(r8)
+					+ carry;
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = ((a & 0xF) + (r8 & 0xF) + carry) > 0xF;
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc()++;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = ((a & 0xF) + (r8 & 0xF) + carry) > 0xF;
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -313,22 +356,27 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.pc() + 1];
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const uint16_t result 
-				= static_cast<uint16_t>(a)
-				+ static_cast<uint16_t>(n8)
-				+ carry;
+				const uint16_t result 
+					= static_cast<uint16_t>(a)
+					+ static_cast<uint16_t>(n8)
+					+ carry;
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc() += 2;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -339,15 +387,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool overflow = utils::check_add_overflow(cpu.reg().hl().value(), reg_provider::get(cpu).value());
-			const bool half_overflow = utils::check_half_add_overflow(cpu.reg().hl().value(), reg_provider::get(cpu).value());
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const cpu::register_16::type_t hl = cpu.reg().hl();
+				const cpu::register_16::type_t r16 = reg_provider::get(cpu);
 
-			cpu.reg().hl() = cpu.reg().hl() + reg_provider::get(cpu);
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_overflow;
-			cpu.reg().flags().c = overflow;
+				const bool overflow = utils::check_add_overflow(hl, r16);
+				const bool half_overflow = utils::check_half_add_overflow(hl, r16);
 
-			cpu.pc()++;
+				cpu.reg().hl() = hl + r16;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_overflow;
+				cpu.reg().flags().c = overflow;
+			}
 		}
 	};
 
@@ -361,15 +413,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool overflow = utils::check_add_overflow(cpu.reg().hl().value(), cpu.sp().value());
-			const bool half_overflow = utils::check_half_add_overflow(cpu.reg().hl().value(), cpu.sp().value());
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint16_t hl = cpu.reg().hl();
+				const std::uint16_t sp = cpu.sp();
 
-			cpu.reg().hl() = cpu.reg().hl() + cpu.sp();
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_overflow;
-			cpu.reg().flags().c = overflow;
+				const bool overflow = utils::check_add_overflow(hl, sp);
+				const bool half_overflow = utils::check_half_add_overflow(hl, sp);
 
-			cpu.pc()++;
+				cpu.reg().hl() = hl + sp;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_overflow;
+				cpu.reg().flags().c = overflow;
+			}
 		}
 	};
 
@@ -380,22 +436,23 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const std::uint16_t result
-				= static_cast<std::uint16_t>(a)
-				- static_cast<std::uint16_t>(r8)
-				- static_cast<std::uint16_t>(carry);
+				const std::uint16_t result
+					= static_cast<std::uint16_t>(a)
+					- static_cast<std::uint16_t>(r8)
+					- static_cast<std::uint16_t>(carry);
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc()++;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -413,22 +470,27 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t r8 = cpu.memory()[cpu.pc() + 1];
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = cpu.cache().r8;
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const std::uint16_t result
-				= static_cast<std::uint16_t>(a)
-				- static_cast<std::uint16_t>(r8)
-				- static_cast<std::uint16_t>(carry);
+				const std::uint16_t result
+					= static_cast<std::uint16_t>(a)
+					- static_cast<std::uint16_t>(r8)
+					- static_cast<std::uint16_t>(carry);
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc() += 2;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = ((a & 0xF) < ((r8 & 0xF) + carry));
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -439,8 +501,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			--reg_provider::get(cpu);
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				--reg_provider::get(cpu);
+			}
 		}
 	};
 
@@ -454,18 +518,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
 
-			const bool underflow = utils::check_substract_underflow(a, n8);
-			const bool half_underflow = utils::check_half_substract_underflow(a, n8);
+				const bool underflow = utils::check_substract_underflow(a, n8);
+				const bool half_underflow = utils::check_half_substract_underflow(a, n8);
 
-			cpu.reg().flags().z = (a - n8) == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().c = underflow;
-			cpu.reg().flags().h = half_underflow;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = (a - n8) == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().c = underflow;
+				cpu.reg().flags().h = half_underflow;
+			}
 		}
 	};
 
@@ -475,18 +540,20 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
 
-			const bool carry = utils::check_add_overflow(a, n8);
-			const bool half_carry = utils::check_half_add_overflow(a, n8);
+				const bool carry = utils::check_add_overflow(a, n8);
+				const bool half_carry = utils::check_half_add_overflow(a, n8);
 
-			cpu.reg().a() = a + n8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_carry;
-			cpu.reg().flags().c = carry;
-			cpu.pc()++;
+				cpu.reg().a() = a + n8;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_carry;
+				cpu.reg().flags().c = carry;
+			}
 		}
 	};
 
@@ -496,22 +563,23 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const uint16_t result 
-				= static_cast<uint16_t>(a)
-				+ static_cast<uint16_t>(n8)
-				+ carry;
+				const uint16_t result 
+					= static_cast<uint16_t>(a)
+					+ static_cast<uint16_t>(n8)
+					+ carry;
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc()++;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = ((a & 0xF) + (n8 & 0xF) + carry) > 0xF;
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -521,19 +589,20 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
 
-			const bool underflow = utils::check_substract_underflow(a, n8);
-			const bool half_underflow = utils::check_half_substract_underflow(a, n8);
+				const bool underflow = utils::check_substract_underflow(a, n8);
+				const bool half_underflow = utils::check_half_substract_underflow(a, n8);
 
-			cpu.reg().a() = a - n8;
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = half_underflow;
-			cpu.reg().flags().c = underflow;
-
-			cpu.pc()++;
+				cpu.reg().a() = a - n8;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = half_underflow;
+				cpu.reg().flags().c = underflow;
+			}
 		}
 	};
 
@@ -543,22 +612,23 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
-			const std::uint16_t result
-				= static_cast<std::uint16_t>(a)
-				- static_cast<std::uint16_t>(n8)
-				- static_cast<std::uint16_t>(carry);
+				const std::uint16_t result
+					= static_cast<std::uint16_t>(a)
+					- static_cast<std::uint16_t>(n8)
+					- static_cast<std::uint16_t>(carry);
 
-			cpu.reg().a() = static_cast<std::uint8_t>(result);
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = true;
-			cpu.reg().flags().h = ((a & 0xF) < ((n8 & 0xF) + carry));
-			cpu.reg().flags().c = (result > 0xFF);
-
-			cpu.pc()++;
+				cpu.reg().a() = static_cast<std::uint8_t>(result);
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = true;
+				cpu.reg().flags().h = ((a & 0xF) < ((n8 & 0xF) + carry));
+				cpu.reg().flags().c = (result > 0xFF);
+			}
 		}
 	};
 
@@ -568,16 +638,24 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if(cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			std::uint8_t& n8 = cpu.memory()[cpu.reg().hl()];
-			const bool half_carry = utils::check_half_add_overflow(n8, 1_u8);
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t result = n8 + 1;
+				const bool half_carry = utils::check_half_add_overflow(n8, 1_u8);
 
-			n8++;
-			cpu.reg().flags().z = n8 == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = half_carry;
-			cpu.pc()++;
+				cpu.reg().flags().z = result == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = half_carry;
+
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 }

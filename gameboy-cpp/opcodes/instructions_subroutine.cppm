@@ -2,6 +2,8 @@ export module opcodes:subroutine;
 
 import std;
 import cpu;
+import utilities;
+
 import :common;
 import :jump;
 import :stack;
@@ -16,8 +18,32 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			push_stack(cpu, cpu.pc() + 3);
-			jp_n16::execute(cpu);
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				using namespace literals;
+				cpu.cache().r16 = cpu.pc() + 2_u16;
+
+				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.cache().r16);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<4>(cpu.cycle()))
+			{
+				const std::uint8_t low_byte = cpu.cache().r8;
+				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+
+				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
+			}
+			else if (cpu::is_end_of_machine_cycle<5>(cpu.cycle()))
+			{
+				cpu.pc() = cpu.cache().r16;
+			}
 		}
 	};
 
@@ -35,9 +61,9 @@ namespace opcodes
 			{
 				call_n16::execute(cpu);
 			}
-			else 
+			else if(cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.pc() += 3;
+				cpu.pc() += 2;
 			}
 		}
 	};
@@ -53,7 +79,21 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc() = pop_stack(cpu);
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t less_significant = cpu.cache().r8;
+				const std::uint8_t most_significant = cpu.memory()[cpu.sp()++];
+
+				cpu.cache().r16 = utils::encode_little_endian(less_significant, most_significant);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				cpu.pc() = cpu.cache().r16;
+			}
 		}
 	};
 
@@ -71,10 +111,6 @@ namespace opcodes
 			{
 				ret::execute(cpu);
 			}
-			else 
-			{
-				cpu.pc()++;
-			}
 		}
 	};
 
@@ -89,8 +125,21 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.ime_flag().enable();
-			cpu.pc() = pop_stack(cpu);
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.ime_flag().enable();
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				const std::uint8_t less_significant = cpu.cache().r8;
+				const std::uint8_t most_significant = cpu.memory()[cpu.sp()++];
+
+				cpu.pc() = utils::encode_little_endian(less_significant, most_significant);
+			}
 		}
 	};
 
@@ -102,8 +151,21 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			push_stack(cpu, cpu.pc() + 1);
-			cpu.pc() = vec;
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				using namespace literals;
+
+				cpu.cache().r16 = cpu.pc() + 1_u16;
+				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.cache().r16);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				cpu.pc() = vec;
+			}
 		}
 	};
 

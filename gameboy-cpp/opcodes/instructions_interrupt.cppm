@@ -13,8 +13,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.ime_flag().request();
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.ime_flag().request();
+			}
 		}
 	};
 
@@ -24,8 +26,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.ime_flag().disable();
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.ime_flag().disable();
+			}
 		}
 	};
 }

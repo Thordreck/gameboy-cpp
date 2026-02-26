@@ -18,14 +18,15 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() | reg_provider::get(cpu);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() | reg_provider::get(cpu);
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -43,14 +44,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.pc() + 1];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() | cpu.cache().r8;
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -60,14 +66,15 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.reg().hl()];
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -78,14 +85,15 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() & reg_provider::get(cpu);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() & reg_provider::get(cpu);
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = true;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = true;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -103,14 +111,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() & cpu.memory()[cpu.pc() + 1];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() & cpu.cache().r8;
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = true;
-			cpu.reg().flags().c = false;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = true;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -121,14 +134,15 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() ^ reg_provider::get(cpu);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() ^ reg_provider::get(cpu);
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -146,14 +160,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.pc() + 1];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() ^ cpu.cache().r8;
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -163,33 +182,35 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.reg().hl()];
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct srl_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool shifted_bit = reg_provider::get(cpu) & 0x01;
-			reg_provider::get(cpu) = reg_provider::get(cpu) >> 1;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const bool shifted_bit = reg_provider::get(cpu) & 0x01;
+				reg_provider::get(cpu) = reg_provider::get(cpu) >> 1;
 
-			cpu.reg().flags().z = reg_provider::get(cpu) == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = shifted_bit;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = reg_provider::get(cpu) == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = shifted_bit;
+			}
 		}
 	};
 
@@ -203,56 +224,73 @@ namespace opcodes
 
 	export struct srl_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
-			cpu.memory()[cpu.reg().hl()] = cpu.memory()[cpu.reg().hl()] >> 1;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = cpu.cache().r8;
+				const bool shifted_bit = r8 & 0x01;
+				const std::uint8_t result = r8 >> 1;
 
-			cpu.reg().flags().z = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = shifted_bit;
+				cpu.reg().flags().z = result == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = shifted_bit;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct rr_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool shifted_bit = reg_provider::get(cpu) & 0x01;
-			reg_provider::get(cpu) = (reg_provider::get(cpu) >> 1) | (cpu.reg().c_flag() << 7);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const bool shifted_bit = reg_provider::get(cpu) & 0x01;
+				reg_provider::get(cpu) = (reg_provider::get(cpu) >> 1) | (cpu.reg().c_flag() << 7);
 
-			cpu.reg().flags().z = reg_provider::get(cpu) == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = shifted_bit;
-
-			cpu.pc() += 2;
+				cpu.reg().flags().z = reg_provider::get(cpu) == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = shifted_bit;
+			}
 		}
 	};
 
 	export struct rr_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool shifted_bit = cpu.memory()[cpu.reg().hl()] & 0x01;
-			cpu.memory()[cpu.reg().hl()] = (cpu.memory()[cpu.reg().hl()] >> 1) | (cpu.reg().c_flag() << 7);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = cpu.cache().r8;
+				const bool shifted_bit = r8 & 0x01;
+				const std::uint8_t result = (r8 >> 1) | (cpu.reg().c_flag() << 7);
 
-			cpu.reg().flags().z = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = shifted_bit;
+				cpu.reg().flags().z = result == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = shifted_bit;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
@@ -270,15 +308,16 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const bool shifted_bit = cpu.reg().a() & 0x01;
-			cpu.reg().a() = (cpu.reg().a() >> 1) | (cpu.reg().c_flag() << 7);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const bool shifted_bit = cpu.reg().a() & 0x01;
+				cpu.reg().a() = (cpu.reg().a() >> 1) | (cpu.reg().c_flag() << 7);
 
-			cpu.reg().flags().z = false;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = false;
-			cpu.reg().flags().c = shifted_bit;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = false;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = false;
+				cpu.reg().flags().c = shifted_bit;
+			}
 		}
 	};
 
@@ -286,15 +325,16 @@ namespace opcodes
 	requires BitIndex<index>
 	struct bit_u3_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().z_flag() = !utils::is_bit_set<index>(reg_provider::get(cpu).value());
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = true;
-
-			cpu.pc() += 2;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().z_flag() = !utils::is_bit_set<index>(reg_provider::get(cpu).value());
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = true;
+			}
 		}
 	};
 
@@ -365,12 +405,14 @@ namespace opcodes
 	requires BitIndex<index>
 	struct res_u3_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			reg_provider::get(cpu) = reg_provider::get(cpu) & ~(0x1 << index);
-			cpu.pc() += 2;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				reg_provider::get(cpu) = reg_provider::get(cpu) & ~(0x1 << index);
+			}
 		}
 	};
 
@@ -441,12 +483,14 @@ namespace opcodes
 	requires BitIndex<index>
 	struct set_u3_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			reg_provider::get(cpu) = reg_provider::get(cpu) | (0x1 << index);
-			cpu.pc() += 2;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				reg_provider::get(cpu) = reg_provider::get(cpu) | (0x1 << index);
+			}
 		}
 	};
 
@@ -516,19 +560,20 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct swap_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			auto r8 = reg_provider::get(cpu);
-			r8 = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				auto r8 = reg_provider::get(cpu);
+				r8 = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
 
-			cpu.reg().z_flag() = (r8 == 0);
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-			cpu.reg().c_flag() = false;
-
-			cpu.pc() += 2;
+				cpu.reg().z_flag() = (r8 == 0);
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = false;
+			}
 		}
 	};
 
@@ -542,19 +587,26 @@ namespace opcodes
 
 	export struct swap_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu::memory_bus::type_t& n8 = cpu.memory()[cpu.reg().hl()];
-			n8 = ((n8 & 0x0F) << 4) | ((n8 & 0xF0) >> 4);
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = cpu.cache().r8;
+				const std::uint8_t result = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
 
-			cpu.reg().z_flag() = (n8 == 0);
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-			cpu.reg().c_flag() = false;
+				cpu.reg().z_flag() = (result == 0);
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = false;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
@@ -564,11 +616,12 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = ~cpu.reg().a();
-			cpu.reg().n_flag() = true;
-			cpu.reg().h_flag() = true;
-
-			cpu.pc()++;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.reg().a() = ~cpu.reg().a();
+				cpu.reg().n_flag() = true;
+				cpu.reg().h_flag() = true;
+			}
 		}
 	};
 
@@ -578,16 +631,17 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t shifted_bit = (a >> 7) & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t shifted_bit = (a >> 7) & 0x01;
 
-			cpu.reg().a() = (a << 1) | shifted_bit;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = false;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc()++;
+				cpu.reg().a() = (a << 1) | shifted_bit;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = false;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -597,19 +651,20 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
-			const std::uint8_t shifted_bit = (a >> 7) & 0x01;
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+				const std::uint8_t shifted_bit = (a >> 7) & 0x01;
 
-			cpu.reg().a() = (a << 1) | c;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = false;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc()++;
+				cpu.reg().a() = (a << 1) | c;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = false;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -619,38 +674,42 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			const std::uint8_t a = cpu.reg().a();
-			const std::uint8_t shifted_bit = a & 0x01;
+				const std::uint8_t a = cpu.reg().a();
+				const std::uint8_t shifted_bit = a & 0x01;
 
-			cpu.reg().a() = (a >> 1) | (shifted_bit << 7);
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = false;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc()++;
+				cpu.reg().a() = (a >> 1) | (shifted_bit << 7);
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = false;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rlc_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+				const std::uint8_t result = (r8 << 1) | shifted_bit;
 
-			reg_provider::get(cpu) = (r8 << 1) | shifted_bit;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.pc() += 2;
+				reg_provider::get(cpu) = result;
+			}
 		}
 	};
 
@@ -664,42 +723,50 @@ namespace opcodes
 
 	export struct prefix_rlc_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+				const std::uint8_t result = (n8 << 1) | shifted_bit;
 
-			cpu.memory()[cpu.reg().hl()] = (n8 << 1) | shifted_bit;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rrc_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t shifted_bit = r8 & 0x01;
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t shifted_bit = r8 & 0x01;
 
-			reg_provider::get(cpu) = (r8 >> 1) | (shifted_bit << 7);
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc() += 2;
+				reg_provider::get(cpu) = (r8 >> 1) | (shifted_bit << 7);
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -713,45 +780,51 @@ namespace opcodes
 
 	export struct prefix_rrc_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t shifted_bit = n8 & 0x01;
+				const std::uint8_t result = (n8 >> 1) | (shifted_bit << 7);
 
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t shifted_bit = n8 & 0x01;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.memory()[cpu.reg().hl()] = (n8 >> 1) | (shifted_bit << 7);
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct prefix_rl_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
-			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+				const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
 
-			reg_provider::get(cpu) = (r8 << 1) | c;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc() += 2;
+				reg_provider::get(cpu) = (r8 << 1) | c;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -765,43 +838,51 @@ namespace opcodes
 
 	export struct prefix_rl_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			using namespace literals;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				using namespace literals;
 
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
-			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
+				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+				const std::uint8_t result = (n8 << 1) | c;
 
-			cpu.memory()[cpu.reg().hl()] = (n8 << 1) | c;
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
 	template<R8RegisterProvider reg_provider>
 	struct sla_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;
 
-			reg_provider::get(cpu) = (r8 << 1);
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc() += 2;
+				reg_provider::get(cpu) = (r8 << 1);
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -815,20 +896,27 @@ namespace opcodes
 
 	export struct sla_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
+				const std::uint8_t result = (n8 << 1);
 
-			cpu.memory()[cpu.reg().hl()] = (n8 << 1);
-			cpu.reg().c_flag() = shifted_bit == 1;
-			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = shifted_bit == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
@@ -836,21 +924,22 @@ namespace opcodes
 	template<R8RegisterProvider reg_provider>
 	struct sra_r8
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t r8 = reg_provider::get(cpu);
-			const std::uint8_t r8_7 = r8 & 0x80;
-			const std::uint8_t r8_0 = r8 & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				const std::uint8_t r8 = reg_provider::get(cpu);
+				const std::uint8_t r8_7 = r8 & 0x80;
+				const std::uint8_t r8_0 = r8 & 0x01;
 
-			reg_provider::get(cpu) = (r8 >> 1) | r8_7;
-			cpu.reg().c_flag() = r8_0 == 1;
-			cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
-
-			cpu.pc() += 2;
+				reg_provider::get(cpu) = (r8 >> 1) | r8_7;
+				cpu.reg().c_flag() = r8_0 == 1;
+				cpu.reg().z_flag() = reg_provider::get(cpu) == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
+			}
 		}
 	};
 
@@ -864,21 +953,28 @@ namespace opcodes
 
 	export struct sra_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
-			const std::uint8_t n8_7 = n8 & 0x80;
-			const std::uint8_t n8_0 = n8 & 0x01;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8_7 = n8 & 0x80;
+				const std::uint8_t n8_0 = n8 & 0x01;
+				const std::uint8_t result = (n8 >> 1) | n8_7;
 
-			cpu.memory()[cpu.reg().hl()] = (n8 >> 1) | n8_7;
-			cpu.reg().c_flag() = n8_0 == 1;
-			cpu.reg().z_flag() = cpu.memory()[cpu.reg().hl()] == 0;
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = false;
+				cpu.reg().c_flag() = n8_0 == 1;
+				cpu.reg().z_flag() = result == 0;
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = false;
 
-			cpu.pc() += 2;
+				cpu.memory()[cpu.reg().hl()] = result;
+			}
 		}
 	};
 
@@ -888,14 +984,19 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.reg().a() = cpu.reg().a() & cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.reg().a() = cpu.reg().a() & cpu.cache().r8;
 
-			cpu.reg().flags().z = cpu.reg().a() == 0;
-			cpu.reg().flags().n = false;
-			cpu.reg().flags().h = true;
-			cpu.reg().flags().c = false;
-
-			cpu.pc()++;
+				cpu.reg().flags().z = cpu.reg().a() == 0;
+				cpu.reg().flags().n = false;
+				cpu.reg().flags().h = true;
+				cpu.reg().flags().c = false;
+			}
 		}
 	};
 
@@ -903,17 +1004,22 @@ namespace opcodes
 	requires BitIndex<index>
 	struct bit_u3_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				const std::uint8_t n8 = cpu.cache().r8;
 
-			cpu.reg().z_flag() = !utils::is_bit_set<index>(n8);
-			cpu.reg().n_flag() = false;
-			cpu.reg().h_flag() = true;
-
-			cpu.pc() += 2;
+				cpu.reg().z_flag() = !utils::is_bit_set<index>(n8);
+				cpu.reg().n_flag() = false;
+				cpu.reg().h_flag() = true;
+			}
 		}
 	};
 
@@ -930,12 +1036,18 @@ namespace opcodes
 	requires BitIndex<index>
 	struct res_u3_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.memory()[cpu.reg().hl()] &= ~(0x1 << index);
-			cpu.pc() += 2;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.memory()[cpu.reg().hl()] = cpu.cache().r8 & ~(0x1 << index);
+			}
 		}
 	};
 
@@ -952,12 +1064,18 @@ namespace opcodes
 	requires BitIndex<index>
 	struct set_u3_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 4_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.memory()[cpu.reg().hl()] |= (0x1 << index);
-			cpu.pc() += 2;
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.memory()[cpu.reg().hl()] = cpu.cache().r8 | (0x1 << index);
+			}
 		}
 	};
 

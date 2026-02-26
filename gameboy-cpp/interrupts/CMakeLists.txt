@@ -19,9 +19,22 @@ target_sources(interrupts PUBLIC
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+	add_library(interrupts_test_utilities)
+	target_compile_features(interrupts_test_utilities PUBLIC cxx_std_23)
+	add_std_ifc_to_target(interrupts_test_utilities)
+
+	set_target_properties(interrupts_test_utilities PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+	target_link_libraries(interrupts_test_utilities interrupts)
+	target_sources(interrupts_test_utilities PUBLIC 
+		FILE_SET 
+			CXX_MODULES 
+		FILES 
+			${CMAKE_CURRENT_SOURCE_DIR}/interrupts_tests.cppm
+	)
+
 	add_executable(interrupts_tests)
 	target_compile_features(interrupts_tests PUBLIC cxx_std_23)
-	target_link_libraries(interrupts_tests PRIVATE interrupts cpu doctest::doctest_with_main)
+	target_link_libraries(interrupts_tests PRIVATE interrupts cpu interrupts_test_utilities doctest::doctest_with_main)
 	set_target_properties(interrupts_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 	doctest_discover_tests(interrupts_tests)
 	add_std_ifc_to_target(interrupts_tests)

@@ -21,7 +21,7 @@ namespace
 	}
 }
 
-TEST_CASE("8-bit registers are zero-initialized")
+TEST_CASE("registers.8-bit registers are zero-initialized")
 {
 	cpu::registers registers{};
 
@@ -35,7 +35,7 @@ TEST_CASE("8-bit registers are zero-initialized")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("16-bit registers are zero-initialized")
+TEST_CASE("registers.16-bit registers are zero-initialized")
 {
 	cpu::registers registers{};
 
@@ -45,7 +45,7 @@ TEST_CASE("16-bit registers are zero-initialized")
 	CHECK(registers.hl() == 0);
 }
 
-TEST_CASE("flag registers are set to false on initialization")
+TEST_CASE("registers.flag registers are set to false on initialization")
 {
 	cpu::registers registers{};
 
@@ -55,7 +55,7 @@ TEST_CASE("flag registers are set to false on initialization")
 	CHECK_FALSE(registers.c_flag());
 }
 
-TEST_CASE("a register updates its value properly")
+TEST_CASE("registers.a register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -72,7 +72,7 @@ TEST_CASE("a register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("b register updates its value properly")
+TEST_CASE("registers.b register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -89,7 +89,7 @@ TEST_CASE("b register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("c register updates its value properly")
+TEST_CASE("registers.c register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -106,7 +106,7 @@ TEST_CASE("c register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("d register updates its value properly")
+TEST_CASE("registers.d register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -123,7 +123,7 @@ TEST_CASE("d register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("e register updates its value properly")
+TEST_CASE("registers.e register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -140,7 +140,7 @@ TEST_CASE("e register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("f register updates its value properly")
+TEST_CASE("registers.f register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -157,7 +157,7 @@ TEST_CASE("f register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("h register updates its value properly")
+TEST_CASE("registers.h register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -174,7 +174,7 @@ TEST_CASE("h register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("l register updates its value properly")
+TEST_CASE("registers.l register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -191,7 +191,7 @@ TEST_CASE("l register updates its value properly")
 	CHECK(registers.l() == test_value);
 }
 
-TEST_CASE("af register updates its value properly")
+TEST_CASE("registers.af register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -210,7 +210,7 @@ TEST_CASE("af register updates its value properly")
 	CHECK_EQ(registers.l(), 0);
 }
 
-TEST_CASE("bc register updates its value properly")
+TEST_CASE("registers.bc register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -229,7 +229,7 @@ TEST_CASE("bc register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("de register updates its value properly")
+TEST_CASE("registers.de register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -248,7 +248,7 @@ TEST_CASE("de register updates its value properly")
 	CHECK(registers.l() == 0);
 }
 
-TEST_CASE("hl register updates its value properly")
+TEST_CASE("registers.hl register updates its value properly")
 {
 	cpu::registers registers{};
 
@@ -267,7 +267,7 @@ TEST_CASE("hl register updates its value properly")
 	CHECK(registers.f() == 0);
 }
 
-TEST_CASE("zero flag register updates its value properly")
+TEST_CASE("registers.zero flag register updates its value properly")
 {
 	cpu::registers registers{};
 	registers.z_flag() = true;
@@ -280,7 +280,7 @@ TEST_CASE("zero flag register updates its value properly")
 	CHECK_EQ(registers.f(), 0b1 << 7);
 }
 
-TEST_CASE("substraction flag register updates its value properly")
+TEST_CASE("registers.substraction flag register updates its value properly")
 {
 	cpu::registers registers{};
 	registers.n_flag() = true;
@@ -293,7 +293,7 @@ TEST_CASE("substraction flag register updates its value properly")
 	CHECK_EQ(registers.f(), 0b1 << 6);
 }
 
-TEST_CASE("half-carry flag register updates its value properly")
+TEST_CASE("registers.half-carry flag register updates its value properly")
 {
 	cpu::registers registers{};
 	registers.h_flag() = true;
@@ -306,7 +306,7 @@ TEST_CASE("half-carry flag register updates its value properly")
 	CHECK_EQ(registers.f(), 0b1 << 5);
 }
 
-TEST_CASE("carry flag register updates its value properly")
+TEST_CASE("registers.carry flag register updates its value properly")
 {
 	cpu::registers registers{};
 	registers.c_flag() = true;

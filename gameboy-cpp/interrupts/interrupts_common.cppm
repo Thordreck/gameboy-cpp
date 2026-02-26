@@ -18,10 +18,10 @@ namespace interrupts
 		{ T::handler_address } -> std::convertible_to<std::uint16_t>;
 	};
 
-	template<std::uint8_t T>
+	export template<std::uint8_t T>
 	concept InterruptFlag = T == 1 << 0 || T == 1 << 1 || T == 1 << 2 || T == 1 << 3 || T == 1 << 4;
 
-	template<std::uint16_t T>
+	export template<std::uint16_t T>
 	concept InterruptAddress = T == 0x40 || T == 0x48 || T == 0x50 || T == 0x58 || T == 0x60;
 
 	export template<std::uint8_t ie_flag, std::uint8_t if_flag, std::uint16_t handler_address>

@@ -3,26 +3,17 @@
 
 import cpu;
 import std;
+import tests;
 import interrupts;
 
 namespace
 {
-	using namespace interrupts;
-
-	template<InterruptDescriptor interrupt, std::uint16_t handler_address, std::uint8_t if_flag>
-	struct dispatch_test_case
-	{
-		using interrupt_t = interrupt;
-		static constexpr auto handler = handler_address;
-		static constexpr auto if_flag = if_flag;
-	};
-
 	#define dispatch_test_cases \
-		dispatch_test_case<vblank_interrupt, 0x40, 0b00000001>, \
-		dispatch_test_case<lcd_interrupt, 0x48, 0b00000010>, \
-		dispatch_test_case<timer_interrupt, 0x50, 0b00000100>, \
-		dispatch_test_case<serial_interrupt, 0x58, 0b00001000>, \
-		dispatch_test_case<joypad_interrupt, 0x60, 0b00010000>
+		tests::vblank_interrupt_test_case, \
+		tests::lcd_interrupt_test_case, \
+		tests::timer_interrupt_test_case, \
+		tests::serial_interrupt_test_case, \
+		tests::joypad_interrupt_test_case
 }
 
 TEST_CASE_TEMPLATE("interrupts.IME flag is disabled when interrupt is dispatched", test, dispatch_test_cases)

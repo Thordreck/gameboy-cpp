@@ -17,8 +17,16 @@ import :subroutine;
 namespace opcodes
 {
 	export using opcode_t = std::uint8_t;
-	export using instruction_fn_t = void(*)(cpu::cpu&);
-	export using instruction_table = std::array<instruction_fn_t, 256>;
+	export using instruction_execute_fn_t = void(*)(cpu::cpu&);
+	export using instruction_cycles_fn_t = cpu::machine_cycle(*)(const cpu::cpu&);
+
+	export struct instruction
+	{
+		instruction_execute_fn_t execute;
+		instruction_cycles_fn_t num_cycles;
+	};
+
+	export using instruction_table = std::array<instruction, 256>;
 
 	export template<typename T>
 		concept Instruction = requires(cpu::cpu & cpu)
@@ -30,7 +38,7 @@ namespace opcodes
 	export template<auto T>
 	concept InstructionTable = requires(const std::uint8_t opcode)
 	{
-		{ T[opcode] } -> std::convertible_to<instruction_fn_t>;
+		{ T[opcode] } -> std::convertible_to<instruction&>;
 	};
 
 	export template<opcode_t Opcode, Instruction Instr>
@@ -38,13 +46,15 @@ namespace opcodes
 	{
 		static constexpr opcode_t opcode = Opcode;
 		static constexpr auto execute = &Instr::execute;
+		static constexpr auto num_cycles = &Instr::num_cycles;
 	};
 
 	export template<typename T>
 		concept InstructionDefinitionConcept = requires()
 	{
 		{ T::opcode } -> std::convertible_to<opcode_t>;
-		{ T::execute } -> std::convertible_to<instruction_fn_t>;
+		{ T::execute } -> std::convertible_to<instruction_execute_fn_t>;
+		{ T::num_cycles } -> std::convertible_to<instruction_cycles_fn_t>;
 	};
 
 	export template<InstructionDefinitionConcept... Defs>
@@ -53,7 +63,7 @@ namespace opcodes
 		static constexpr auto build()
 		{
 			instruction_table table{};
-			((table[Defs::opcode] = Defs::execute), ...);
+			((table[Defs::opcode] = { Defs::execute, Defs::num_cycles }), ...);
 			return table;
 		}
 
@@ -101,6 +111,7 @@ namespace opcodes
 		instruction_definition<0x0D, dec_c>,
 		instruction_definition<0x0E, ld_c_n8>,
 		instruction_definition<0x0F, rrca>,
+		instruction_definition<0x10, stop_n8>,
 		instruction_definition<0x11, ld_de_n16>,
 		instruction_definition<0x12, ld_de_a>,
 		instruction_definition<0x13, inc_de>,
@@ -202,6 +213,7 @@ namespace opcodes
 		instruction_definition<0x73, ld_hl_e>,
 		instruction_definition<0x74, ld_hl_h>,
 		instruction_definition<0x75, ld_hl_l>,
+		instruction_definition<0x76, halt>,
 		instruction_definition<0x77, ld_hl_a>,
 		instruction_definition<0x78, ld_a_b>,
 		instruction_definition<0x79, ld_a_c>,

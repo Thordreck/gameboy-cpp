@@ -4,12 +4,13 @@
 import cpu;
 import std;
 import opcodes;
+import tests;
 
-TEST_CASE("nop increments program counter properly")
+TEST_CASE("misc.nop does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
 	cpu::cpu cpu{ memory };
 
-	opcodes::nop::execute(cpu);
-	CHECK_EQ(cpu.pc(), 1);
+	tests::execute_all_machine_cycles<opcodes::nop>(cpu);
+	CHECK_EQ(cpu.pc(), 0);
 }

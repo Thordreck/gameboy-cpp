@@ -10,6 +10,8 @@ namespace
 {
 	using namespace opcodes;
 
+	// TODO: re-implement
+	/*
 	struct test_opcode_decoder
 	{
 		static instruction_fn_t decode(const cpu::cpu& cpu, const std::uint8_t opcode)
@@ -37,6 +39,8 @@ namespace
 		default_opcode_fetcher,
 		test_opcode_decoder,
 		default_instruction_executor>;
+
+		*/
 
 	std::vector<std::uint8_t> read_rom(std::filesystem::path filepath)
 	{
@@ -90,7 +94,8 @@ namespace
 					cpu.ime_flag().enable();
 				}
 
-				test_instruction_pipeline::step(cpu);
+				// TODO: reimplement
+				//test_instruction_pipeline::step(cpu);
 			}
 
 			read_io_result_output(cpu, result);

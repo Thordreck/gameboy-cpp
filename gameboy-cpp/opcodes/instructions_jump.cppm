@@ -16,7 +16,21 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc() = utils::read_two_byte_little_endian(cpu.memory(), cpu.pc() + 1);
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t low_byte = cpu.cache().r8;
+				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+
+				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
+			}
+			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
+			{
+				cpu.pc() = cpu.cache().r16;
+			}
 		}
 	};
 
@@ -34,9 +48,9 @@ namespace opcodes
 			{
 				jp_n16::execute(cpu);
 			}
-			else 
+			else if(cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.pc() += 3;
+				cpu.pc() += 2;
 			}
 		}
 	};
@@ -52,8 +66,15 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			const std::uint8_t raw_offset = cpu.memory()[cpu.pc() + 1];
-			cpu.pc() += 2 + static_cast<std::int8_t>(raw_offset);
+			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
+				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				const std::uint8_t raw_offset = cpu.cache().r8;
+				cpu.pc() += static_cast<std::int8_t>(raw_offset);
+			}
 		}
 	};
 
@@ -71,9 +92,9 @@ namespace opcodes
 			{
 				jr_n16::execute(cpu);
 			}
-			else 
+			else if(cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.pc() += 2;
+				cpu.pc()++;
 			}
 		}
 	};
@@ -89,7 +110,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			cpu.pc() = cpu.reg().hl();
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
+			{
+				cpu.pc() = cpu.reg().hl();
+			}
 		}
 	};
 }

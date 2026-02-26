@@ -97,8 +97,6 @@ namespace cpu
 		machine_cycle m_cycle() const { return m_cycle_; }
 		tick_cycle t_cycle() const { return t_cycle_; }
 
-		bool end_of_m_cycle() const { return t_cycle_.value() == 3; }
-
 		cpu_cycle& operator++()
 		{
 			t_cycle_++;
@@ -125,17 +123,42 @@ namespace cpu
 		machine_cycle m_cycle_{};
 		tick_cycle t_cycle_{};
 	};
-}
 
-namespace cpu::literals
-{
-	export constexpr machine_cycle operator"" _m_cycle(unsigned long long value)
+	namespace literals
 	{
-		return static_cast<std::uint8_t>(value);
+		export constexpr machine_cycle operator"" _m_cycle(unsigned long long value)
+		{
+			return static_cast<std::uint8_t>(value);
+		}
+
+		export constexpr tick_cycle operator"" _t_cycle(unsigned long long value)
+		{
+			return static_cast<std::uint8_t>(value);
+		}
 	}
 
-	export constexpr tick_cycle operator"" _t_cycle(unsigned long long value)
+	export template<std::uint8_t Cycle>
+	bool is_tick_cycle(const tick_cycle& cycle)
 	{
-		return static_cast<std::uint8_t>(value);
+		return cycle.value() == Cycle;
+	}
+
+	export bool is_last_tick_cycle(const tick_cycle& cycle)
+	{
+		return is_tick_cycle<3>(cycle);
+	}
+
+	export template<std::uint8_t Cycle>
+	bool is_machine_cycle(const machine_cycle& cycle)
+	{
+		return cycle.value() == Cycle;
+	}
+
+	export template<std::uint8_t Cycle>
+	bool is_end_of_machine_cycle(const cpu_cycle& cycle)
+	{
+		return is_machine_cycle<Cycle>(cycle.m_cycle())
+			&& is_last_tick_cycle(cycle.t_cycle());
 	}
 }
+
