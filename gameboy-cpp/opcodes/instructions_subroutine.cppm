@@ -151,11 +151,13 @@ namespace opcodes
 
 		static void execute(cpu::cpu& cpu)
 		{
-			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
 				using namespace literals;
-
-				cpu.cache().r16 = cpu.pc() + 1_u16;
+				cpu.cache().r16 = cpu.pc();
+			}
+			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
+			{
 				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))

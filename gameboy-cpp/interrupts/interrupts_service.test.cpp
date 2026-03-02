@@ -85,20 +85,46 @@ TEST_CASE("interrupts.Interrupts are serviced in order by priority")
 	request<serial_interrupt>(cpu);
 	request<joypad_interrupt>(cpu);
 
-	service_first_pending_interrupt(cpu);
+	// Vblank
+	cpu.cycle() = {};
+	std::optional<interrupt_dispatcher> vblank_dispatcher = service_first_pending_interrupt(cpu);
+	REQUIRE(vblank_dispatcher.has_value());
+
+	tests::execute_complete_dispatch(vblank_dispatcher.value(), cpu);
 	CHECK_EQ(cpu.pc().value(), vblank_interrupt::handler_address);
 
-	service_first_pending_interrupt(cpu);
+	// LCD
+	cpu.cycle() = {};
+	std::optional<interrupt_dispatcher> lcd_dispatcher = service_first_pending_interrupt(cpu);
+	REQUIRE(lcd_dispatcher.has_value());
+
+	tests::execute_complete_dispatch(lcd_dispatcher.value(), cpu);
 	CHECK_EQ(cpu.pc().value(), lcd_interrupt::handler_address);
 
-	service_first_pending_interrupt(cpu);
+	// Timer
+	cpu.cycle() = {};
+	std::optional<interrupt_dispatcher> timer_dispatcher =service_first_pending_interrupt(cpu);
+	REQUIRE(timer_dispatcher.has_value());
+
+	tests::execute_complete_dispatch(timer_dispatcher.value(), cpu);
 	CHECK_EQ(cpu.pc().value(), timer_interrupt::handler_address);
 
-	service_first_pending_interrupt(cpu);
+	// Serial
+	cpu.cycle() = {};
+	std::optional<interrupt_dispatcher> serial_dispatcher = service_first_pending_interrupt(cpu);
+	REQUIRE(serial_dispatcher.has_value());
+
+	tests::execute_complete_dispatch(serial_dispatcher.value(), cpu);
 	CHECK_EQ(cpu.pc().value(), serial_interrupt::handler_address);
 
-	service_first_pending_interrupt(cpu);
+	// Joypad
+	cpu.cycle() = {};
+	std::optional<interrupt_dispatcher> joypad_dispatcher = service_first_pending_interrupt(cpu);
+	REQUIRE(joypad_dispatcher.has_value());
+
+	tests::execute_complete_dispatch(joypad_dispatcher.value(), cpu);
 	CHECK_EQ(cpu.pc().value(), joypad_interrupt::handler_address);
 
 	CHECK_FALSE(is_any_interrupt_pending(cpu));
+	CHECK_EQ(service_first_pending_interrupt(cpu), std::nullopt);
 }

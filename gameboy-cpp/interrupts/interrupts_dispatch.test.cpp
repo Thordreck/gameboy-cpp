@@ -23,7 +23,7 @@ TEST_CASE_TEMPLATE("interrupts.IME flag is disabled when interrupt is dispatched
 
 	cpu.sp() = 0xFFFE;
 	cpu.ime_flag().enable();
-	interrupts::dispatch<typename test::interrupt_t>(cpu);
+	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
 
 	CHECK_FALSE(cpu.ime_flag().is_enabled());
 	CHECK_FALSE(cpu.ime_flag().is_requested());
@@ -38,7 +38,7 @@ TEST_CASE_TEMPLATE("interrupts.IF flag is unset when interrupt is dispatched", t
 	cpu.sp() = 0xFFFE;
 
 	memory[if_address] |= test::if_flag;
-	interrupts::dispatch<typename test::interrupt_t>(cpu);
+	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
 
 	CHECK_EQ(memory[if_address] & test::if_flag, 0x0);
 }
@@ -49,7 +49,7 @@ TEST_CASE_TEMPLATE("interrupts.PC is set to handler when interrupt is dispatched
 	cpu::cpu cpu{ memory };
 	cpu.sp() = 0xFFFE;
 
-	interrupts::dispatch<typename test::interrupt_t>(cpu);
+	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
 	CHECK_EQ(cpu.pc(), test::handler);
 }
 
@@ -62,9 +62,24 @@ TEST_CASE_TEMPLATE("interrupts.Previous pc is push to stack when interrupt is di
 	cpu.sp() = stack_origin;
 	cpu.pc() = 0xABCD;
 
-	interrupts::dispatch<typename test::interrupt_t>(cpu);
+	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
 
 	CHECK_EQ(memory[stack_origin - 1], 0xAB);
 	CHECK_EQ(memory[stack_origin - 2], 0xCD);
 	CHECK_EQ(cpu.sp(), stack_origin - 2);
+}
+
+TEST_CASE_TEMPLATE("interrupts.Dispatch takes 5 machine cycles", test, dispatch_test_cases)
+{
+	constexpr std::uint16_t stack_origin = 0xFFFE;
+
+	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+	cpu::cpu cpu{ memory };
+	cpu.sp() = stack_origin;
+	cpu.pc() = 0xABCD;
+
+	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
+
+	using namespace cpu::literals;
+	CHECK_EQ(cpu.cycle().m_cycle(), 5_m_cycle);
 }

@@ -88,11 +88,18 @@ namespace opcodes
 	};
 
 	export constexpr opcode_t prefix_opcode = 0xCB;
+	export constexpr instruction nop_instruction
+	{ 
+		[](cpu::cpu&) {}, 
+		[](const cpu::cpu&) { return cpu::machine_cycle{1}; }
+	};
 
-#ifdef __INTELLISENSE__
-#pragma diag_suppress 28
-#pragma diag_suppress 3160
-#endif
+	export bool is_instruction_done(const cpu::cpu& cpu, const instruction& instruction)
+	{
+		using namespace cpu::literals;
+		return cpu.cycle().m_cycle() >= (instruction.num_cycles(cpu) - 1_m_cycle);
+	}
+
 	export using default_instruction_table_builder = instruction_table_builder <
 
 		instruction_definition<0x00, nop>,

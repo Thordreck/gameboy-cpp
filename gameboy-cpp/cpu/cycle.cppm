@@ -12,7 +12,8 @@ namespace cpu
 	public:
 		constexpr machine_cycle(type_t value)
 			: value_{ value }
-		{}
+		{
+		}
 
 		constexpr machine_cycle() = default;
 
@@ -38,6 +39,18 @@ namespace cpu
 			return temp;
 		}
 
+		machine_cycle& operator+=(const machine_cycle& other)
+		{
+			value_ += other;
+			return *this;
+		}
+
+		machine_cycle& operator-=(const machine_cycle& other)
+		{
+			value_ -= other;
+			return *this;
+		}
+
 		constexpr auto operator<=>(const machine_cycle&) const = default;
 
 	private:
@@ -52,7 +65,8 @@ namespace cpu
 	public:
 		constexpr tick_cycle(type_t value)
 			: value_{ value }
-		{}
+		{
+		}
 
 		constexpr tick_cycle() = default;
 
@@ -64,7 +78,7 @@ namespace cpu
 			value_ = other;
 			return *this;
 		}
-		
+
 		tick_cycle& operator++()
 		{
 			value_++;
@@ -90,7 +104,8 @@ namespace cpu
 		cpu_cycle(machine_cycle::type_t m_cycle, tick_cycle::type_t t_cycle)
 			: m_cycle_{ m_cycle }
 			, t_cycle_{ t_cycle }
-		{}
+		{
+		}
 
 		cpu_cycle() = default;
 
@@ -116,7 +131,7 @@ namespace cpu
 			++(*this);
 			return temp;
 		}
-		
+
 		auto operator<=>(const cpu_cycle&) const = default;
 
 	private:
@@ -138,7 +153,7 @@ namespace cpu
 	}
 
 	export template<std::uint8_t Cycle>
-	bool is_tick_cycle(const tick_cycle& cycle)
+		bool is_tick_cycle(const tick_cycle& cycle)
 	{
 		return cycle.value() == Cycle;
 	}
@@ -149,13 +164,13 @@ namespace cpu
 	}
 
 	export template<std::uint8_t Cycle>
-	bool is_machine_cycle(const machine_cycle& cycle)
+		bool is_machine_cycle(const machine_cycle& cycle)
 	{
 		return cycle.value() == Cycle;
 	}
 
 	export template<std::uint8_t Cycle>
-	bool is_end_of_machine_cycle(const cpu_cycle& cycle)
+		bool is_end_of_machine_cycle(const cpu_cycle& cycle)
 	{
 		return is_machine_cycle<Cycle>(cycle.m_cycle())
 			&& is_last_tick_cycle(cycle.t_cycle());
@@ -164,6 +179,18 @@ namespace cpu
 	export bool is_end_of_any_machine_cycle(const cpu_cycle& cycle)
 	{
 		return is_last_tick_cycle(cycle.t_cycle());
+	}
+
+	export machine_cycle operator+(machine_cycle lhs, const machine_cycle& rhs)
+	{
+		lhs += rhs;
+		return lhs;
+	}
+
+	export machine_cycle operator-(machine_cycle lhs, const machine_cycle& rhs)
+	{
+		lhs -= rhs;
+		return lhs;
 	}
 }
 

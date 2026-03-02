@@ -1,7 +1,7 @@
 export module interrupts:service;
 
 import cpu;
-import std;
+export import std;
 
 import :common;
 import :enable;
@@ -11,21 +11,27 @@ import :dispatch;
 namespace interrupts
 {
 	template<InterruptDescriptor... Interrupts>
-	void service_first_pending_by_priority(cpu::cpu& cpu)
+	std::optional<interrupt_dispatcher> service_first_pending_by_priority(cpu::cpu& cpu)
 	{
-		(try_service<Interrupts>(cpu) || ...);
+		std::optional<interrupt_dispatcher> handler = std::nullopt;
+
+		((handler = try_service<Interrupts>(cpu)) || ...);
+		return handler;
 	}
 
 	template <InterruptDescriptor interrupt>
-	bool try_service(cpu::cpu& cpu)
+	std::optional<interrupt_dispatcher> try_service(cpu::cpu& cpu)
 	{
 		if (is_pending<interrupt>(cpu))
 		{
-			dispatch<interrupt>(cpu);
-			return true;
+			return interrupt_dispatcher
+			{
+				dispatcher<interrupt>::execute,
+				dispatcher<interrupt>::num_cycles
+			};
 		}
 
-		return false;
+		return std::nullopt;
 	}
 
 	export bool is_any_interrupt_pending(const cpu::cpu& cpu)
@@ -39,9 +45,9 @@ namespace interrupts
 		return is_enabled<interrupt>(cpu) && is_requested<interrupt>(cpu);
 	}
 
-	export void service_first_pending_interrupt(cpu::cpu& cpu)
+	export std::optional<interrupt_dispatcher> service_first_pending_interrupt(cpu::cpu& cpu)
 	{
-		service_first_pending_by_priority<
+		return service_first_pending_by_priority<
 			vblank_interrupt,
 			lcd_interrupt,
 			timer_interrupt,

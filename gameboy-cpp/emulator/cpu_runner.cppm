@@ -4,88 +4,177 @@ export import cpu;
 
 import std;
 import opcodes;
+import interrupts;
 
 namespace emulator
 {
-	export class cpu_runner
+	export template<typename T>
+	concept InstructionsProvider = requires(
+		T& provider, 
+		const opcodes::opcode_t opcode)
 	{
-	private:
-		enum class state : std::uint8_t
-		{
-			fetch,
-			decode,
-			execute,
-			interrupt,
-			halt
-		};
+		{ provider.get(opcode) } -> std::convertible_to<std::optional<opcodes::instruction>>;
+	};
 
+	export class default_instructions_provider
+	{
 	public:
-		cpu_runner(cpu::cpu& cpu)
-			: cpu{ cpu }
-			, state{ state::fetch }
+		default_instructions_provider()
+			: prefix_mode{ false }
 		{}
 
-		// TODO: rethink this. Possibly make handlers configurable.
+		std::optional<opcodes::instruction> get(const opcodes::opcode_t opcode)
+		{
+			if (!prefix_mode && opcode == opcodes::prefix_opcode)
+			{
+				prefix_mode = true;
+				return std::nullopt;
+			}
+
+			opcodes::instruction instruction = prefix_mode
+				? opcodes::default_prefixed_instruction_table[opcode]
+				: opcodes::default_instruction_table[opcode];
+
+			prefix_mode = false;
+			return instruction;
+		}
+
+	private:
+		bool prefix_mode;
+	};
+
+	export template<typename T>
+	concept InterruptsHandler = requires(
+		T& handler, 
+		cpu::cpu& cpu)
+	{
+		{ handler.enable_ime_if_requested(cpu) } -> std::same_as<void>;
+		{ handler.service_interrupt(cpu) } -> std::convertible_to<std::optional<interrupts::interrupt_dispatcher>>;
+	};
+
+	export class default_interrupt_handler
+	{
+	public:
+		default_interrupt_handler()
+			: should_enable_ime{ false  }
+		{}
+
+		void enable_ime_if_requested(cpu::cpu& cpu)
+		{
+			if (!cpu.ime_flag().is_requested())
+			{
+				return;
+			}
+
+			if (should_enable_ime)
+			{
+				cpu.ime_flag().enable();
+			}
+
+			should_enable_ime = !should_enable_ime;
+		}
+
+		std::optional<interrupts::interrupt_dispatcher> service_interrupt(cpu::cpu& cpu)
+		{
+			return cpu.ime_flag().is_enabled()
+				? interrupts::service_first_pending_interrupt(cpu)
+				: std::nullopt;
+		}
+
+	private:
+		bool should_enable_ime;
+	};
+
+	export template<
+		InstructionsProvider instructions_provider,
+		InterruptsHandler interrupts_handler>
+	class cpu_runner
+	{
+	public:
+		cpu_runner(
+			cpu::cpu& cpu, 
+			instructions_provider& instructions_provider,
+			interrupts_handler& interrupts_handler)
+			: cpu{ cpu }
+			, instructions { instructions_provider }
+			, interrupts { interrupts_handler }
+		{}
+
 		void tick()
 		{
+			handle_tick();
 			cpu.cycle()++;
+		}
 
+	private:
+		void handle_tick()
+		{
+			// Work is only done at the end of each m cycle
 			if (!cpu::is_end_of_any_machine_cycle(cpu.cycle()))
 			{
 				return;
 			}
 			
-			switch (state)
+			// Interrupts
+			if (active_interrupt.has_value())
 			{
-			case state::fetch: 
-				handle_fetch();
-				break;
-			case state::decode: 
-				handle_decode();
-				break;
-			case state::execute: 
-				handle_execute();
-				break;
-			case state::interrupt: 
-				handle_interrupt();
-				break;
-			case state::halt: 
-				handle_halt();
-				break;
+				const interrupts::interrupt_dispatcher dispatcher = active_interrupt.value();
+				dispatcher.execute(cpu);
+
+				if (interrupts::is_interrupt_dispatched(cpu, dispatcher))
+				{
+					active_interrupt.reset();
+					cpu.cycle() = {};
+				}
+
+				return;
+			}
+
+			// Fetch
+			if (!active_instruction.has_value())
+			{
+				fetch_decode_opcode();
+				cpu.cycle() = {};
+
+				return;
+			}
+
+			// Execution
+			const opcodes::instruction instruction = active_instruction.value();
+			instruction.execute(cpu);
+
+			if (!opcodes::is_instruction_done(cpu, instruction))
+			{
+				return;
+			}
+
+			active_instruction.reset();
+			cpu.cycle() = {};
+
+			interrupts.enable_ime_if_requested(cpu);
+			active_interrupt = interrupts.service_interrupt(cpu);
+
+			if (!active_interrupt.has_value())
+			{
+				fetch_decode_opcode();
 			}
 		}
 
-	private:
-		void handle_fetch()
+		void fetch_decode_opcode()
 		{
-			current_opcode = cpu.memory()[cpu.pc()++];
-
-			state = state::decode;
-			cpu.cycle().m_cycle() = {};
-		}
-
-		void handle_decode()
-		{
-		}
-
-		void handle_execute()
-		{
-		}
-
-		void handle_interrupt()
-		{
-		}
-
-		void handle_halt()
-		{
+			const opcodes::opcode_t next_opcode = cpu.memory()[cpu.pc()++];
+			active_instruction = instructions.get(next_opcode);
 		}
 
 	private:
 		cpu::cpu& cpu;
-		state state;
 
-		std::optional<opcodes::opcode_t> current_opcode;
-		std::optional<opcodes::instruction> current_instruction;
-		std::optional<opcodes::instruction_table&> active_table;
+		std::optional<interrupts::interrupt_dispatcher> active_interrupt;
+		std::optional<opcodes::instruction> active_instruction;
+
+		instructions_provider& instructions;
+		interrupts_handler& interrupts;
 	};
+
+	export using default_cpu_runner = cpu_runner<default_instructions_provider, default_interrupt_handler>;
 }

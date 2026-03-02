@@ -170,7 +170,7 @@ TEST_CASE_TEMPLATE("subroutine.rst_vec updates sp properly", test, rst_vec_test_
 
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xCE);
+	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xCD);
 	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
 	CHECK_EQ(cpu.sp(), stack_origin - 2);
 }

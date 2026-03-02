@@ -4,44 +4,11 @@
 import std;
 import cpu;
 import opcodes;
+import emulator;
 import interrupts;
 
 namespace
 {
-	using namespace opcodes;
-
-	// TODO: re-implement
-	/*
-	struct test_opcode_decoder
-	{
-		static instruction_fn_t decode(const cpu::cpu& cpu, const std::uint8_t opcode)
-		{
-			if (opcode != prefix_opcode)
-			{
-				REQUIRE_MESSAGE(
-					default_instruction_table[opcode] != nullptr
-					, std::format("Unknown opcode {:x} at pc {:x}", opcode, cpu.pc().value()));
-
-				return default_opcode_decoder::decode(cpu, opcode);
-			}
-
-			const std::uint8_t prefixed_opcode = cpu.memory()[cpu.pc() + 1];
-
-			REQUIRE_MESSAGE(
-				default_prefixed_instruction_table[prefixed_opcode] != nullptr, 
-				std::format("Unknown prefixed opcode {:x} pc {:x}", prefixed_opcode, cpu.pc().value()));
-
-			return default_opcode_decoder::decode(cpu, opcode);
-		}
-	};
-
-	using test_instruction_pipeline = instructions_pipeline<
-		default_opcode_fetcher,
-		test_opcode_decoder,
-		default_instruction_executor>;
-
-		*/
-
 	std::vector<std::uint8_t> read_rom(std::filesystem::path filepath)
 	{
 		std::ifstream file(filepath, std::ios::in | std::ios::binary);
@@ -65,7 +32,7 @@ namespace
 	void run_test(
 		std::string_view rom_file_path,
 		std::string_view expected_output,
-		const size_t max_num_instructions)
+		const size_t max_num_machine_cycles)
 	{
 		const std::filesystem::path rom_file{ rom_file_path };
 		REQUIRE(std::filesystem::exists(rom_file));
@@ -80,24 +47,15 @@ namespace
 		cpu.sp() = 0xFFFE;
 
 		std::string result{};
+		const size_t max_num_timer_cycles = max_num_machine_cycles * 4;
 
-		for (size_t i = 0; i < max_num_instructions; i++)
+		emulator::default_instructions_provider instructions{};
+		emulator::default_interrupt_handler interrupts{};
+		emulator::cpu_runner runner{ cpu, instructions, interrupts };
+
+		for (size_t i = 0; i < max_num_timer_cycles; i++)
 		{
-			if (cpu.ime_flag().is_enabled() && interrupts::is_any_interrupt_pending(cpu))
-			{
-				interrupts::service_first_pending_interrupt(cpu);
-			}
-			else 
-			{
-				if (cpu.ime_flag().is_requested())
-				{
-					cpu.ime_flag().enable();
-				}
-
-				// TODO: reimplement
-				//test_instruction_pipeline::step(cpu);
-			}
-
+			runner.tick();
 			read_io_result_output(cpu, result);
 
 			if (result == expected_output)
@@ -123,37 +81,37 @@ TEST_CASE("blargg.cpu_instrs.02-interrupts")
 
 TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
 {
-	run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 16e5);
+	run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.04-op r,imm")
 {
-	run_test("04-op r,imm.gb", "04-op r,imm\n\n\nPassed\n", 16e5);
+	run_test("04-op r,imm.gb", "04-op r,imm\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.05-op rp")
 {
-	run_test("05-op rp.gb", "05-op rp\n\n\nPassed\n", 30e5);
+	run_test("05-op rp.gb", "05-op rp\n\n\nPassed\n", 60e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.06-ld r,r")
 {
-	run_test("06-ld r,r.gb", "06-ld r,r\n\n\nPassed\n", 30e4);
+	run_test("06-ld r,r.gb", "06-ld r,r\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.07-jr,jp,call,ret,rst")
 {
-	run_test("07-jr,jp,call,ret,rst.gb", "07-jr,jp,call,ret,rst\n\n\nPassed\n", 30e5);
+	run_test("07-jr,jp,call,ret,rst.gb", "07-jr,jp,call,ret,rst\n\n\nPassed\n", 60e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.08-misc instrs")
 {
-	run_test("08-misc instrs.gb", "08-misc instrs\n\n\nPassed\n", 30e4);
+	run_test("08-misc instrs.gb", "08-misc instrs\n\n\nPassed\n", 30e5);
 }
 
 TEST_CASE("blargg.cpu_instrs.09-op r,r")
 {
-	run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 10e6);
+	run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.10-bit ops")
@@ -163,5 +121,5 @@ TEST_CASE("blargg.cpu_instrs.10-bit ops")
 
 TEST_CASE("blargg.cpu_instrs.11-op a,(hl)")
 {
-	run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 10e6);
+	run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 30e6);
 }

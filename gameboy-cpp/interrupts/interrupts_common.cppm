@@ -1,6 +1,7 @@
 export module interrupts:common;
 
 import std;
+import cpu;
 
 namespace interrupts
 {
@@ -56,4 +57,27 @@ namespace interrupts
 	export using timer_interrupt = interrupt<timer_ie_flag, timer_if_flag, timer_handler_address>;
 	export using serial_interrupt = interrupt<serial_ie_flag, serial_if_flag, serial_handler_address>;
 	export using joypad_interrupt = interrupt<joypad_ie_flag, joypad_if_flag, joypad_handler_address>;
+
+	export template<typename T>
+	concept InterruptDispatcher = requires(cpu::cpu & cpu)
+	{
+		{ T::num_cycles() } -> std::convertible_to<cpu::machine_cycle>;
+		{ T::execute(cpu) } -> std::same_as<void>;
+	};
+
+	export using interrupt_dispatcher_execute_fn_t = void(*)(cpu::cpu&);
+	export using interrupt_dispatcher_cycles_fn_t = cpu::machine_cycle(*)();
+
+	export struct interrupt_dispatcher
+	{
+		interrupt_dispatcher_execute_fn_t execute;
+		interrupt_dispatcher_cycles_fn_t num_cycles;
+	};
+
+	export template<InterruptDispatcher interrupt_dispatcher>
+	bool is_interrupt_dispatched(const cpu::cpu& cpu, const interrupt_dispatcher& dispatcher)
+	{
+		using namespace cpu::literals;
+		return cpu.cycle().m_cycle() >= (dispatcher.num_cycles() - 1_m_cycle);
+	}
 }
