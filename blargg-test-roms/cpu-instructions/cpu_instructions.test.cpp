@@ -17,15 +17,14 @@ namespace
 
 	void read_io_result_output(cpu::cpu& cpu, std::string& result)
 	{
-		constexpr cpu::memory_bus::index_t sb = 0xFF01;
-		constexpr cpu::memory_bus::index_t sc = 0xFF02;
+		constexpr memory::memory_address_t sb = 0xFF01;
+		constexpr memory::memory_address_t sc = 0xFF02;
+		constexpr memory::memory_data_t transfer_start = 0x81;
 
-		constexpr cpu::memory_bus::type_t transfer_start = 0x81;
-
-		if (cpu.memory()[sc] == transfer_start)
+		if (cpu.memory().read(sc) == transfer_start)
 		{
-			result += cpu.memory()[sb];
-			cpu.memory()[sc] = 0;
+			result += cpu.memory().read(sb);
+			cpu.memory().write(sc, 0);
 		}
 	}
 
@@ -39,10 +38,14 @@ namespace
 
 		const std::vector<std::uint8_t> rom_data = read_rom(rom_file);
 
-		std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
+		std::array<memory::memory_data_t, memory::memory_size> memory{};
 		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
 
-		cpu::cpu cpu{ memory };
+		auto memory_region = memory::map(memory);
+		auto memory_map = memory::build_memory_map(memory_region);
+		auto memory_bus = memory::memory_bus{ memory_map };
+
+		cpu::cpu cpu{ memory_bus };
 		cpu.pc() = 0x100;
 		cpu.sp() = 0xFFFE;
 

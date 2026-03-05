@@ -162,7 +162,7 @@ namespace emulator
 
 		void fetch_decode_opcode()
 		{
-			const opcodes::opcode_t next_opcode = cpu.memory()[cpu.pc()++];
+			const opcodes::opcode_t next_opcode = cpu.memory().read(cpu.pc()++);
 			active_instruction = instructions.get(next_opcode);
 		}
 

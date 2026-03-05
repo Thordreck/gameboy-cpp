@@ -36,7 +36,7 @@ namespace interrupts
 
 	export bool is_any_interrupt_pending(const cpu::cpu& cpu)
 	{
-		return (cpu.memory()[ie_address] & ie_mask) & (cpu.memory()[if_address] & if_mask);
+		return (cpu.memory().read(ie_address) & ie_mask) & (cpu.memory().read(if_address) & if_mask);
 	}
 
 	export template <InterruptDescriptor interrupt>

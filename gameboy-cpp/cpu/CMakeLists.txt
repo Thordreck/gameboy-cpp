@@ -4,14 +4,13 @@ target_compile_features(cpu PUBLIC cxx_std_23)
 add_std_ifc_to_target(cpu)
 
 set_target_properties(cpu PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(cpu)
+target_link_libraries(cpu memory)
 target_sources(cpu PUBLIC 
 	FILE_SET 
 		CXX_MODULES 
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/cpu.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/registers.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/memory_bus.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/program_counter.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/stack_pointer.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/ime.cppm

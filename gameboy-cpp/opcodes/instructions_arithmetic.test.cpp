@@ -3,8 +3,8 @@
 
 import cpu;
 import std;
-import opcodes;
 import tests;
+import opcodes;
 
 namespace
 {
@@ -83,8 +83,8 @@ namespace
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 updates a register properly", test, add_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.reg().a(), 0);
@@ -104,8 +104,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 updates a register properly", test, add_
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 updates zero flag properly", test, add_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK(cpu.reg().z_flag());
@@ -121,8 +121,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 updates zero flag properly", test, add_a
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 always set substraction flag to zero", test, add_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().n_flag() = true;
 	test::execute(cpu);
@@ -141,8 +141,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 always set substraction flag to zero", t
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 applies carry flag properly", test, add_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_FALSE(cpu.reg().c_flag());
@@ -161,8 +161,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 applies carry flag properly", test, add_
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 applies half carry flag properly", test, add_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_FALSE(cpu.reg().h_flag());
@@ -181,8 +181,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 applies half carry flag properly", test,
 
 TEST_CASE_TEMPLATE("arithmetic.add_a_r8 increments program counter properly", test, add_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -190,8 +190,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_a_r8 increments program counter properly", te
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r8 increments value", test, inc_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(test::reg(cpu), 1);
@@ -199,8 +199,8 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r8 increments value", test, inc_r8_test_cases
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r8 does not increment program counter", test, inc_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -208,8 +208,8 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r8 does not increment program counter", test,
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r8 sets flags properly", test, inc_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 
@@ -233,8 +233,8 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r8 sets flags properly", test, inc_r8_test_ca
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r8 decrements value", test, dec_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::reg(cpu) = 0xFF;
 	test::execute(cpu);
@@ -244,8 +244,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r8 decrements value", test, dec_r8_test_cases
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r8 does not increment program counter", test, dec_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -253,8 +253,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r8 does not increment program counter", test,
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r8 sets flags properly", test, dec_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 
@@ -278,8 +278,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r8 sets flags properly", test, dec_r8_test_ca
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r16 increments value", test, inc_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(test::reg(cpu), 1);
@@ -287,8 +287,8 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r16 increments value", test, inc_r16_test_cas
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r16 does not increment program counter", test, inc_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -296,8 +296,8 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r16 does not increment program counter", test
 
 TEST_CASE_TEMPLATE("arithmetic.inc_r16 does not modify any flags", test, inc_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 
@@ -315,11 +315,11 @@ TEST_CASE_TEMPLATE("arithmetic.inc_r16 does not modify any flags", test, inc_r16
 
 TEST_CASE("arithmetic.cp_a_n8 updates flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xBD;
-	memory[0] = 0xFF;
+	memory.bus().write(0, 0xFF);
 
 	tests::execute_all_machine_cycles<opcodes::cp_a_n8>(cpu);
 
@@ -341,10 +341,10 @@ TEST_CASE("arithmetic.cp_a_n8 updates flags properly")
 
 TEST_CASE("arithmetic.cp_a_n8 does not modify register a")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
-	memory[0] = 0xFF;
+	memory.bus().write(0, 0xFF);
 	tests::execute_all_machine_cycles<opcodes::cp_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 0);
@@ -352,8 +352,8 @@ TEST_CASE("arithmetic.cp_a_n8 does not modify register a")
 
 TEST_CASE("arithmetic.cp_a_n8 increments pc properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::cp_a_n8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -361,8 +361,8 @@ TEST_CASE("arithmetic.cp_a_n8 increments pc properly")
 
 TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 updates flags properly", test, cp_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xBB;
 	test::reg(cpu) = 0xFF;
@@ -385,8 +385,8 @@ TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 updates flags properly", test, cp_a_r8_te
 
 TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 does not modify register a", test, cp_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::reg(cpu) = 0xFF;
 	const cpu::register_8::type_t original_value = cpu.reg().a();
@@ -397,8 +397,8 @@ TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 does not modify register a", test, cp_a_r
 
 TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 does not increment pc", test, cp_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -406,8 +406,8 @@ TEST_CASE_TEMPLATE("arithmetic.cp_a_r8 does not increment pc", test, cp_a_r8_tes
 
 TEST_CASE("arithmetic.cp_a_a updates flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xBB;
 	tests::execute_all_machine_cycles<opcodes::cp_a_a>(cpu);
@@ -428,8 +428,8 @@ TEST_CASE("arithmetic.cp_a_a updates flags properly")
 
 TEST_CASE("arithmetic.cp_a_a does not modify register a")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xFF;
 	tests::execute_all_machine_cycles<opcodes::cp_a_a>(cpu);
@@ -439,8 +439,8 @@ TEST_CASE("arithmetic.cp_a_a does not modify register a")
 
 TEST_CASE("arithmetic.cp_a_a does not increment pc")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::cp_a_a>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -448,27 +448,27 @@ TEST_CASE("arithmetic.cp_a_a does not increment pc")
 
 TEST_CASE("arithmetic.add_a_n8 updates a register properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 0);
 
 	cpu.pc() = 0;
-	memory[0] = 5;
+	memory.bus().write(0, 5);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 5);
 
 	cpu.pc() = 0;
-	memory[0] = 125;
+	memory.bus().write(0, 125);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 130);
 
 	cpu.pc() = 0;
-	memory[0] = 127;
+	memory.bus().write(0, 127);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 1);
@@ -476,21 +476,21 @@ TEST_CASE("arithmetic.add_a_n8 updates a register properly")
 
 TEST_CASE("arithmetic.add_a_n8 updates zero flag properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK(cpu.reg().z_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 5;
+	memory.bus().write(0, 5);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().z_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 251;
+	memory.bus().write(0, 251);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK(cpu.reg().z_flag());
@@ -498,21 +498,21 @@ TEST_CASE("arithmetic.add_a_n8 updates zero flag properly")
 
 TEST_CASE("arithmetic.add_a_n8 always set substraction flag to zero")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 5;
+	memory.bus().write(0, 5);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 252;
+	memory.bus().write(0, 252);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().n_flag());
@@ -520,21 +520,21 @@ TEST_CASE("arithmetic.add_a_n8 always set substraction flag to zero")
 
 TEST_CASE("arithmetic.add_a_n8 applies carry flag properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().c_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 255;
+	memory.bus().write(0, 255);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 	
 	CHECK_FALSE(cpu.reg().c_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 1;
+	memory.bus().write(0, 1);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK(cpu.reg().c_flag());
@@ -547,15 +547,15 @@ TEST_CASE("arithmetic.add_a_n8 applies carry flag properly")
 
 TEST_CASE("arithmetic.add_a_n8 applies half carry flag properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().h_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 0xF;
+	memory.bus().write(0, 0xF);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().h_flag());
@@ -566,7 +566,7 @@ TEST_CASE("arithmetic.add_a_n8 applies half carry flag properly")
 	CHECK(cpu.reg().h_flag());
 
 	cpu.pc() = 0;
-	memory[0] = 0;
+	memory.bus().write(0, 0);
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 
 	CHECK_FALSE(cpu.reg().h_flag());
@@ -574,8 +574,8 @@ TEST_CASE("arithmetic.add_a_n8 applies half carry flag properly")
 
 TEST_CASE("arithmetic.add_a_n8 increments program counter properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_n8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -583,11 +583,11 @@ TEST_CASE("arithmetic.add_a_n8 increments program counter properly")
 
 TEST_CASE("arithmetic.sub_a_n8 substracts value properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xFF;
-	memory[0] = 0xF0;
+	memory.bus().write(0, 0xF0);
 	tests::execute_all_machine_cycles<opcodes::sub_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().a(), 0x0F);
@@ -595,11 +595,11 @@ TEST_CASE("arithmetic.sub_a_n8 substracts value properly")
 
 TEST_CASE("arithmetic.sub_a_n8 updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0x0F;
-	memory[0] = 0xF0;
+	memory.bus().write(0, 0xF0);
 	tests::execute_all_machine_cycles<opcodes::sub_a_n8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -619,8 +619,8 @@ TEST_CASE("arithmetic.sub_a_n8 updates flags properly")
 
 TEST_CASE("arithmetic.sub_a_n8 increments program counter properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::sub_a_n8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -628,8 +628,8 @@ TEST_CASE("arithmetic.sub_a_n8 increments program counter properly")
 
 TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 updates value properly", test, adc_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().c_flag() = true;
 
@@ -641,8 +641,8 @@ TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 updates value properly", test, adc_a_r8_
 
 TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 does not increment program counter", test, adc_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -650,8 +650,8 @@ TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 does not increment program counter", tes
 
 TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 updates flags properly", test, adc_a_r8_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 
@@ -685,8 +685,8 @@ TEST_CASE_TEMPLATE("arithmetic.adc_a_r8 updates flags properly", test, adc_a_r8_
 
 TEST_CASE("arithmetic.adc_a_a updates value properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().c_flag() = true;
 	cpu.reg().a() = 0x0F;
@@ -697,8 +697,8 @@ TEST_CASE("arithmetic.adc_a_a updates value properly")
 
 TEST_CASE("arithmetic.adc_a_a does not increment program counter")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_a>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -706,8 +706,8 @@ TEST_CASE("arithmetic.adc_a_a does not increment program counter")
 
 TEST_CASE("arithmetic.adc_a_a updates flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_a>(cpu);
 
@@ -739,11 +739,11 @@ TEST_CASE("arithmetic.adc_a_a updates flags properly")
 
 TEST_CASE("arithmetic.adc_a_n8 updates value properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().c_flag() = true;
-	memory[0] = 0x0F;
+	memory.bus().write(0, 0x0F);
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_n8>(cpu);
 	CHECK_EQ(cpu.reg().a(), 0x10);
@@ -751,8 +751,8 @@ TEST_CASE("arithmetic.adc_a_n8 updates value properly")
 
 TEST_CASE("arithmetic.adc_a_n8 increments program counter")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_n8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -760,8 +760,8 @@ TEST_CASE("arithmetic.adc_a_n8 increments program counter")
 
 TEST_CASE("arithmetic.adc_a_n8 updates flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_n8>(cpu);
 
@@ -773,7 +773,7 @@ TEST_CASE("arithmetic.adc_a_n8 updates flags properly")
 	cpu.pc() = 0;
 	cpu.reg().a() = 0x0F;
 	cpu.reg().c_flag() = false;
-	memory[0] = 0x0F;
+	memory.bus().write(0, 0x0F);
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_n8>(cpu);
 
@@ -785,7 +785,7 @@ TEST_CASE("arithmetic.adc_a_n8 updates flags properly")
 	cpu.pc() = 0;
 	cpu.reg().a() = 0xFF;
 	cpu.reg().c_flag() = true;
-	memory[0] = 0x0F;
+	memory.bus().write(0, 0x0F);
 
 	tests::execute_all_machine_cycles<opcodes::adc_a_n8>(cpu);
 
@@ -797,20 +797,20 @@ TEST_CASE("arithmetic.adc_a_n8 updates flags properly")
 
 TEST_CASE("arithmetic.dec_ind_hl decrements value")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().hl() = 0xABCD;
-	memory[0xABCD] = 0xFF;
+	memory.bus().write(0xABCD, 0xFF);
 
 	tests::execute_all_machine_cycles<opcodes::dec_ind_hl>(cpu);
-	CHECK_EQ(memory[0xABCD], 0xFE);
+	CHECK_EQ(memory.bus().read(0xABCD), 0xFE);
 }
 
 TEST_CASE("arithmetic.dec_ind_hl does not increments program counter")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::dec_ind_hl>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -818,8 +818,8 @@ TEST_CASE("arithmetic.dec_ind_hl does not increments program counter")
 
 TEST_CASE("arithmetic.dec_ind_hl sets flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().hl() = 0xABCD;
 	tests::execute_all_machine_cycles<opcodes::dec_ind_hl>(cpu);
@@ -828,7 +828,7 @@ TEST_CASE("arithmetic.dec_ind_hl sets flags properly")
 	CHECK_EQ(cpu.reg().n_flag(), true);
 	CHECK_EQ(cpu.reg().h_flag(), true);
 
-	memory[0xABCD] = 0x2;
+	memory.bus().write(0xABCD, 0x2);
 	tests::execute_all_machine_cycles<opcodes::dec_ind_hl>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -844,8 +844,8 @@ TEST_CASE("arithmetic.dec_ind_hl sets flags properly")
 
 TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 updates register hl properly", test, add_hl_r16_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.reg().hl(), 0);
@@ -860,8 +860,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 updates register hl properly", test, a
 
 TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 updates flags properly", test, add_hl_r16_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.reg().n_flag(), false);
@@ -889,8 +889,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 updates flags properly", test, add_hl_
 
 TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 does not increment program counter", test, add_hl_r16_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -898,8 +898,8 @@ TEST_CASE_TEMPLATE("arithmetic.add_hl_r16 does not increment program counter", t
 
 TEST_CASE("arithmetic.add_hl_hl updates register hl properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_hl_hl>(cpu);
 
@@ -917,8 +917,8 @@ TEST_CASE("arithmetic.add_hl_hl updates register hl properly")
 
 TEST_CASE("arithmetic.add_hl_hl updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_hl_hl>(cpu);
 
@@ -950,8 +950,8 @@ TEST_CASE("arithmetic.add_hl_hl updates flags properly")
 
 TEST_CASE("arithmetic.add_hl_hl does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_hl_hl>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -959,8 +959,8 @@ TEST_CASE("arithmetic.add_hl_hl does not increment program counter")
 
 TEST_CASE("arithmetic.add_hl_sp updates register hl properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_hl_sp>(cpu);
 	CHECK_EQ(cpu.reg().hl(), 0);
@@ -975,8 +975,8 @@ TEST_CASE("arithmetic.add_hl_sp updates register hl properly")
 
 TEST_CASE("arithmetic.add_hl_sp updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_hl_sp>(cpu);
 
@@ -1008,8 +1008,8 @@ TEST_CASE("arithmetic.add_hl_sp updates flags properly")
 
 TEST_CASE("arithmetic.add_hl_sp does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	opcodes::add_hl_sp::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1017,8 +1017,8 @@ TEST_CASE("arithmetic.add_hl_sp does not increment program counter")
 
 TEST_CASE("arithmetic.inc_sp does not increment stack pointer")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::inc_sp>(cpu);
 	CHECK_EQ(cpu.sp(), 1);
@@ -1033,8 +1033,8 @@ TEST_CASE("arithmetic.inc_sp does not increment stack pointer")
 
 TEST_CASE("arithmetic.inc_sp does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::inc_sp>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1042,8 +1042,8 @@ TEST_CASE("arithmetic.inc_sp does not increment program counter")
 
 TEST_CASE("arithmetic.dec_sp decrements stack pointer properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = 0;
 	tests::execute_all_machine_cycles<opcodes::dec_sp>(cpu);
@@ -1059,8 +1059,8 @@ TEST_CASE("arithmetic.dec_sp decrements stack pointer properly")
 
 TEST_CASE("arithmetic.dec_sp does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::dec_sp>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1068,8 +1068,8 @@ TEST_CASE("arithmetic.dec_sp does not increment program counter")
 
 TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 updates register a properly", test, sbc_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0x11;
 	cpu.reg().c_flag() = true;
@@ -1084,8 +1084,8 @@ TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 updates register a properly", test, sbc_
 
 TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 updates flags properly", test, sbc_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0x11;
 	cpu.reg().c_flag() = true;
@@ -1116,8 +1116,8 @@ TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 updates flags properly", test, sbc_a_r8_
 
 TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 does not increment program counter", test, sbc_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1125,8 +1125,8 @@ TEST_CASE_TEMPLATE("arithmetic.sbc_a_r8 does not increment program counter", tes
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r16 decrements value", test, dec_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::reg(cpu) = 0x1;
 	test::execute(cpu);
@@ -1138,8 +1138,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r16 decrements value", test, dec_r16_test_cas
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r16 does not increment program counter", test, dec_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1147,8 +1147,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r16 does not increment program counter", test
 
 TEST_CASE_TEMPLATE("arithmetic.dec_r16 does not modify any flags", test, dec_r16_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().z_flag() = true;
 	cpu.reg().n_flag() = true;
@@ -1170,8 +1170,8 @@ TEST_CASE_TEMPLATE("arithmetic.dec_r16 does not modify any flags", test, dec_r16
 
 TEST_CASE("arithmetic.add_a_a updates register a properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_a>(cpu);
 	CHECK_EQ(cpu.reg().a(), 0);
@@ -1186,8 +1186,8 @@ TEST_CASE("arithmetic.add_a_a updates register a properly")
 
 TEST_CASE("arithmetic.add_a_a updates flags properly")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_a>(cpu);
 	CHECK_EQ(cpu.reg().z_flag(), true);
@@ -1212,8 +1212,8 @@ TEST_CASE("arithmetic.add_a_a updates flags properly")
 
 TEST_CASE("arithmetic.add_a_a does not increment program counter")
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_a_a>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1221,8 +1221,8 @@ TEST_CASE("arithmetic.add_a_a does not increment program counter")
 
 TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 substracts value properly", test, sub_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xFF;
 	test::reg(cpu) = 0xF0;
@@ -1233,8 +1233,8 @@ TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 substracts value properly", test, sub_a_
 
 TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 updates flags properly", test, sub_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0x0F;
 	test::reg(cpu) = 0xF0;
@@ -1257,8 +1257,8 @@ TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 updates flags properly", test, sub_a_r8_
 
 TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 does not increment program counter", test, sub_a_r8_test_cases)
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	test::execute(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -1266,8 +1266,8 @@ TEST_CASE_TEMPLATE("arithmetic.sub_a_r8 does not increment program counter", tes
 
 TEST_CASE("arithmetic.sub_a_a substracts value properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0xFF;
 	tests::execute_all_machine_cycles<opcodes::sub_a_a>(cpu);
@@ -1280,8 +1280,8 @@ TEST_CASE("arithmetic.sub_a_a substracts value properly")
 
 TEST_CASE("arithmetic.sub_a_a updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().a() = 0x0F;
 	tests::execute_all_machine_cycles<opcodes::sub_a_a>(cpu);
@@ -1302,8 +1302,8 @@ TEST_CASE("arithmetic.sub_a_a updates flags properly")
 
 TEST_CASE("arithmetic.sub_a_a does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::sub_a_a>(cpu);
 	CHECK_EQ(cpu.pc(), 0);

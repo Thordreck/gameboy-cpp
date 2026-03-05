@@ -18,9 +18,23 @@ namespace utils
 	}
 
 	export template<auto BitIndex, std::unsigned_integral T>
-	requires std::unsigned_integral<decltype(BitIndex)> && (BitIndex < sizeof(T) * 8)
+	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits)
 	constexpr bool is_bit_set(const T input)
 	{
 		return input & (T{1} << BitIndex);
+	}
+
+	export template<auto BitIndex, std::unsigned_integral T>
+	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits) && (BitIndex >= 0)
+	constexpr void set_bit(T& input)
+	{
+		input |= (1 << BitIndex);
+	}
+
+	export template<auto BitIndex, std::unsigned_integral T>
+	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits) && (BitIndex >= 0)
+	constexpr void unset_bit(T& input)
+	{
+		input |= ~(1 << BitIndex);
 	}
 }

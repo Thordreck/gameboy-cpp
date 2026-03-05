@@ -46,7 +46,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -68,7 +68,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.reg().a() | cpu.memory()[cpu.reg().hl()];
+				cpu.reg().a() = cpu.reg().a() | cpu.memory().read(cpu.reg().hl());
 
 				cpu.reg().flags().z = cpu.reg().a() == 0;
 				cpu.reg().flags().n = false;
@@ -113,7 +113,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -162,7 +162,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -184,7 +184,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.reg().a() ^ cpu.memory()[cpu.reg().hl()];
+				cpu.reg().a() = cpu.reg().a() ^ cpu.memory().read(cpu.reg().hl());
 
 				cpu.reg().flags().z = cpu.reg().a() == 0;
 				cpu.reg().flags().n = false;
@@ -230,7 +230,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -243,7 +243,7 @@ namespace opcodes
 				cpu.reg().flags().h = false;
 				cpu.reg().flags().c = shifted_bit;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -276,7 +276,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -289,7 +289,7 @@ namespace opcodes
 				cpu.reg().flags().h = false;
 				cpu.reg().flags().c = shifted_bit;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -593,7 +593,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -605,7 +605,7 @@ namespace opcodes
 				cpu.reg().h_flag() = false;
 				cpu.reg().c_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -729,7 +729,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -742,7 +742,7 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -786,7 +786,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -799,7 +799,7 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -844,7 +844,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -860,7 +860,7 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -902,7 +902,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -915,7 +915,7 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -959,7 +959,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -973,7 +973,7 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -986,7 +986,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -1010,7 +1010,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -1042,11 +1042,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = cpu.cache().r8 & ~(0x1 << index);
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8 & ~(0x1 << index));
 			}
 		}
 	};
@@ -1070,11 +1070,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = cpu.cache().r8 | (0x1 << index);
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8 | (0x1 << index));
 			}
 		}
 	};

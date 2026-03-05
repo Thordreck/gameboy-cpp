@@ -40,7 +40,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 
 	add_executable(opcodes_tests)
 	target_compile_features(opcodes_tests PUBLIC cxx_std_23)
-	target_link_libraries(opcodes_tests PRIVATE opcodes opcodes_test_utilities doctest::doctest_with_main)
+	target_link_libraries(opcodes_tests PRIVATE opcodes memory opcodes_test_utilities doctest::doctest_with_main)
 	set_target_properties(opcodes_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 	doctest_discover_tests(opcodes_tests)
 	add_std_ifc_to_target(opcodes_tests)

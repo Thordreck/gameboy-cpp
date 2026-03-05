@@ -23,20 +23,20 @@ namespace opcodes
 				using namespace literals;
 				cpu.cache().r16 = cpu.pc() + 2_u16;
 
-				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
+				cpu.memory().write(--cpu.sp(), utils::most_significant_byte(cpu.cache().r16));
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.cache().r16);
+				cpu.memory().write(--cpu.sp(), utils::less_significant_byte(cpu.cache().r16));
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<4>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
 			}
@@ -81,12 +81,12 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.sp()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t less_significant = cpu.cache().r8;
-				const std::uint8_t most_significant = cpu.memory()[cpu.sp()++];
+				const std::uint8_t most_significant = cpu.memory().read(cpu.sp()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(less_significant, most_significant);
 			}
@@ -131,12 +131,12 @@ namespace opcodes
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.sp()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.sp()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
 				const std::uint8_t less_significant = cpu.cache().r8;
-				const std::uint8_t most_significant = cpu.memory()[cpu.sp()++];
+				const std::uint8_t most_significant = cpu.memory().read(cpu.sp()++);
 
 				cpu.pc() = utils::encode_little_endian(less_significant, most_significant);
 			}
@@ -158,11 +158,11 @@ namespace opcodes
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.cache().r16);
+				cpu.memory().write(--cpu.sp(), utils::most_significant_byte(cpu.cache().r16));
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.cache().r16);
+				cpu.memory().write(--cpu.sp(), utils::less_significant_byte(cpu.cache().r16));
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{

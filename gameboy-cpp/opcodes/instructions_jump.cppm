@@ -18,12 +18,12 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
 			}
@@ -68,7 +68,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{

@@ -98,7 +98,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				reg_provider::get(cpu) = cpu.memory()[cpu.pc()++];
+				reg_provider::get(cpu) = cpu.memory().read(cpu.pc()++);
 			}
 		}
 	};
@@ -121,12 +121,12 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				reg_provider::get(cpu) = utils::encode_little_endian(low_byte, high_byte);
 			}
@@ -147,7 +147,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = reg_provider::get(cpu);
+				cpu.memory().write(cpu.reg().hl(), reg_provider::get(cpu));
 			}
 		}
 	};
@@ -168,11 +168,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = cpu.cache().r8;
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -187,7 +187,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				reg_provider::get(cpu) = cpu.memory()[cpu.reg().hl()];
+				reg_provider::get(cpu) = cpu.memory().read(cpu.reg().hl());
 			}
 		}
 	};
@@ -208,7 +208,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
+				cpu.reg().a() = cpu.memory().read(cpu.reg().hl());
 				++cpu.reg().hl();
 			}
 		}
@@ -222,7 +222,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.memory()[cpu.reg().hl()];
+				cpu.reg().a() = cpu.memory().read(cpu.reg().hl());
 				--cpu.reg().hl();
 			}
 		}
@@ -236,7 +236,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
+				cpu.memory().write(cpu.reg().hl(), cpu.reg().a());
 				++cpu.reg().hl();
 			}
 		}
@@ -250,7 +250,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.reg().hl()] = cpu.reg().a();
+				cpu.memory().write(cpu.reg().hl(), cpu.reg().a());
 				--cpu.reg().hl();
 			}
 		}
@@ -266,7 +266,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory()[reg_provider::get(cpu)] = cpu.reg().a();
+				cpu.memory().write(reg_provider::get(cpu), cpu.reg().a());
 			}
 		}
 	};
@@ -283,19 +283,19 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
 				const std::uint16_t address = cpu.cache().r16;
-				cpu.memory()[address] = cpu.reg().a();
+				cpu.memory().write(address, cpu.reg().a());
 			}
 		}
 	};
@@ -309,19 +309,19 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
 				const std::uint16_t address = cpu.cache().r16;
-				cpu.reg().a() = cpu.memory()[address];
+				cpu.reg().a() = cpu.memory().read(address);
 			}
 		}
 	};
@@ -336,7 +336,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.memory()[reg_provider::get(cpu)];
+				cpu.reg().a() = cpu.memory().read(reg_provider::get(cpu));
 			}
 		}
 	};
@@ -353,7 +353,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
@@ -362,7 +362,7 @@ namespace opcodes
 				const std::uint8_t low_byte = cpu.cache().r8;
 				const std::uint16_t address = utils::encode_little_endian(low_byte, high_byte);
 
-				cpu.memory()[address] = cpu.reg().a();
+				cpu.memory().write(address, cpu.reg().a());
 			}
 		}
 	};
@@ -376,7 +376,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
@@ -385,7 +385,7 @@ namespace opcodes
 				const std::uint8_t low_byte = cpu.cache().r8;
 				const std::uint16_t address = utils::encode_little_endian(low_byte, high_byte);
 
-				cpu.reg().a() = cpu.memory()[address];
+				cpu.reg().a() = cpu.memory().read(address);
 			}
 		}
 	};
@@ -399,22 +399,22 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
 				const std::uint8_t low_byte = cpu.cache().r8;
-				const std::uint8_t high_byte = cpu.memory()[cpu.pc()++];
+				const std::uint8_t high_byte = cpu.memory().read(cpu.pc()++);
 
 				cpu.cache().r16 = utils::encode_little_endian(low_byte, high_byte);
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.cache().r16] = utils::less_significant_byte(cpu.sp().value());
+				cpu.memory().write(cpu.cache().r16, utils::less_significant_byte(cpu.sp().value()));
 			}
 			else if (cpu::is_end_of_machine_cycle<4>(cpu.cycle()))
 			{
-				cpu.memory()[cpu.cache().r16 + 1] = utils::most_significant_byte(cpu.sp().value());
+				cpu.memory().write(cpu.cache().r16 + 1, utils::most_significant_byte(cpu.sp().value()));
 			}
 		}
 	};
@@ -448,7 +448,7 @@ namespace opcodes
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint16_t memory_pos = cpu.cache().r16;
-				cpu.reg().a() = cpu.memory()[memory_pos];
+				cpu.reg().a() = cpu.memory().read(memory_pos);
 			}
 		}
 	};
@@ -468,7 +468,7 @@ namespace opcodes
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint16_t memory_pos = cpu.cache().r16;
-				cpu.memory()[memory_pos] = cpu.reg().a();
+				cpu.memory().write(memory_pos, cpu.reg().a());
 			}
 		}
 	};

@@ -24,12 +24,12 @@ TEST_CASE_TEMPLATE("stack.pop_r16 updates reg with correct value from stack", te
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = stack_origin - 2;
-	cpu.memory()[stack_origin - 2] = 0xCD;
-	cpu.memory()[stack_origin - 1] = 0xAB;
+	cpu.memory().write(stack_origin - 2, 0xCD);
+	cpu.memory().write(stack_origin - 1, 0xAB);
 
 	test::execute(cpu);
 
@@ -44,15 +44,15 @@ TEST_CASE_TEMPLATE("stack.push_r16 updates stack with correct value from registe
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 	cpu.sp() = stack_origin;
 
 	test::reg(cpu) = test_value;
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xCD);
-	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0xCD);
+	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0xAB);
 	CHECK_EQ(cpu.pc(), 0);
 	CHECK_EQ(cpu.sp(), stack_origin - 2);
 }
@@ -62,11 +62,11 @@ TEST_CASE("stack.ld_sp_n16 updates sp with correct value from memory")
 {
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
-	memory[0] = 0xCD;
-	memory[1] = 0xAB;
+	memory.bus().write(0, 0xCD);
+	memory.bus().write(1, 0xAB);
 
 	tests::execute_all_machine_cycles<opcodes::ld_sp_n16>(cpu);
 
@@ -76,17 +76,17 @@ TEST_CASE("stack.ld_sp_n16 updates sp with correct value from memory")
 
 TEST_CASE("stack.add_sp_e8 updates stack pointer properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = 0;
-	memory[0] = 127;
+	memory.bus().write(0, 127);
 
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 	CHECK_EQ(cpu.sp(), 127);
 
 	cpu.pc() = 0;
-	memory[0] = -127;
+	memory.bus().write(0, -127);
 
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 	CHECK_EQ(cpu.sp(), 0x0);
@@ -94,11 +94,11 @@ TEST_CASE("stack.add_sp_e8 updates stack pointer properly")
 
 TEST_CASE("stack.add_sp_e8 updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = 0;
-	memory[0] = 0xF;
+	memory.bus().write(0, 0xF);
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -107,7 +107,7 @@ TEST_CASE("stack.add_sp_e8 updates flags properly")
 	CHECK_EQ(cpu.reg().c_flag(), false);
 
 	cpu.pc() = 0;
-	memory[0] = 0xF;
+	memory.bus().write(0, 0xF);
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -116,7 +116,7 @@ TEST_CASE("stack.add_sp_e8 updates flags properly")
 	CHECK_EQ(cpu.reg().c_flag(), false);
 
 	cpu.pc() = 0;
-	memory[0] = 0xFF;
+	memory.bus().write(0, 0xFF);
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -127,8 +127,8 @@ TEST_CASE("stack.add_sp_e8 updates flags properly")
 
 TEST_CASE("stack.add_sp_e8 updates program counter properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -136,18 +136,18 @@ TEST_CASE("stack.add_sp_e8 updates program counter properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates hl properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = 127;
-	memory[0] = 0;
+	memory.bus().write(0, 0);
 
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 	CHECK_EQ(cpu.reg().hl(), 127);
 
 	cpu.pc() = 0;
 	cpu.sp() = 127;
-	memory[0] = -127;
+	memory.bus().write(0, -127);
 
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 	CHECK_EQ(cpu.reg().hl(), 0x0);
@@ -155,11 +155,11 @@ TEST_CASE("stack.ld_hl_sp_e8 updates hl properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = 0;
-	memory[0] = 0xF;
+	memory.bus().write(0, 0xF);
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -169,7 +169,7 @@ TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 
 	cpu.pc() = 0;
 	cpu.sp() = 0xF;
-	memory[0] = 0xF;
+	memory.bus().write(0, 0xF);
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -179,7 +179,7 @@ TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 
 	cpu.pc() = 0;
 	cpu.sp() = 0xFFFF;
-	memory[0] = 0xFF;
+	memory.bus().write(0, 0xFF);
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 
 	CHECK_EQ(cpu.reg().z_flag(), false);
@@ -190,8 +190,8 @@ TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates program counter properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -202,12 +202,12 @@ TEST_CASE("stack.pop_af updates reg with correct value from stack")
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = stack_origin - 2;
-	cpu.memory()[stack_origin - 2] = 0xCD;
-	cpu.memory()[stack_origin - 1] = 0xAB;
+	cpu.memory().write(stack_origin - 2, 0xCD);
+	cpu.memory().write(stack_origin - 1, 0xAB);
 
 	tests::execute_all_machine_cycles<opcodes::pop_af>(cpu);
 
@@ -221,16 +221,16 @@ TEST_CASE("stack.push_af updates stack with correct value from register")
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.sp() = stack_origin;
 	cpu.reg().af() = test_value;
 
 	tests::execute_all_machine_cycles<opcodes::push_af>(cpu);
 
-	CHECK_EQ(cpu.memory()[stack_origin - 2], 0xC0);
-	CHECK_EQ(cpu.memory()[stack_origin - 1], 0xAB);
+	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0xC0);
+	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0xAB);
 	CHECK_EQ(cpu.pc(), 0);
 	CHECK_EQ(cpu.sp(), stack_origin - 2);
 }

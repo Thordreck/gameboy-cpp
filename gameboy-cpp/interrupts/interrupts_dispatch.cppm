@@ -26,11 +26,11 @@ namespace interrupts
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
-				cpu.memory()[--cpu.sp()] = utils::most_significant_byte(cpu.pc().value());
+				cpu.memory().write(--cpu.sp(), utils::most_significant_byte(cpu.pc().value()));
 			}
 			else if (cpu::is_end_of_machine_cycle<3>(cpu.cycle()))
 			{
-				cpu.memory()[--cpu.sp()] = utils::less_significant_byte(cpu.pc().value());
+				cpu.memory().write(--cpu.sp(), utils::less_significant_byte(cpu.pc().value()));
 			}
 			else if (cpu::is_end_of_machine_cycle<4>(cpu.cycle()))
 			{

@@ -18,7 +18,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -139,7 +139,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
@@ -153,7 +153,7 @@ namespace opcodes
 				cpu.reg().flags().n = true;
 				cpu.reg().flags().h = half_underflow;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};
@@ -242,7 +242,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -298,7 +298,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -358,7 +358,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -472,7 +472,7 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.pc()++];
+				cpu.cache().r8 = cpu.memory().read(cpu.pc()++);
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
@@ -521,7 +521,7 @@ namespace opcodes
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint8_t a = cpu.reg().a();
-				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t n8 = cpu.memory().read(cpu.reg().hl());
 
 				const bool underflow = utils::check_substract_underflow(a, n8);
 				const bool half_underflow = utils::check_half_substract_underflow(a, n8);
@@ -543,7 +543,7 @@ namespace opcodes
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint8_t a = cpu.reg().a();
-				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t n8 = cpu.memory().read(cpu.reg().hl());
 
 				const bool carry = utils::check_add_overflow(a, n8);
 				const bool half_carry = utils::check_half_add_overflow(a, n8);
@@ -566,7 +566,7 @@ namespace opcodes
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint8_t a = cpu.reg().a();
-				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t n8 = cpu.memory().read(cpu.reg().hl());
 				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
 				const uint16_t result 
@@ -592,7 +592,7 @@ namespace opcodes
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint8_t a = cpu.reg().a();
-				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t n8 = cpu.memory().read(cpu.reg().hl());
 
 				const bool underflow = utils::check_substract_underflow(a, n8);
 				const bool half_underflow = utils::check_half_substract_underflow(a, n8);
@@ -615,7 +615,7 @@ namespace opcodes
 			if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				const std::uint8_t a = cpu.reg().a();
-				const std::uint8_t n8 = cpu.memory()[cpu.reg().hl()];
+				const std::uint8_t n8 = cpu.memory().read(cpu.reg().hl());
 				const std::uint8_t carry = cpu.reg().c_flag() ? 1 : 0;
 
 				const std::uint16_t result
@@ -640,7 +640,7 @@ namespace opcodes
 		{
 			if(cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory()[cpu.reg().hl()];
+				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
@@ -654,7 +654,7 @@ namespace opcodes
 				cpu.reg().flags().n = false;
 				cpu.reg().flags().h = half_carry;
 
-				cpu.memory()[cpu.reg().hl()] = result;
+				cpu.memory().write(cpu.reg().hl(), result);
 			}
 		}
 	};

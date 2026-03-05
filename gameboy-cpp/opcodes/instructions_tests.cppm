@@ -3,6 +3,7 @@ export module tests;
 
 export import cpu;
 export import std;
+export import memory;
 export import opcodes;
 
 namespace tests
@@ -140,5 +141,24 @@ namespace tests
 	{
 		static void execute(cpu::cpu& cpu) { execute_all_machine_cycles<OpCode>(cpu); }
 		static constexpr auto vector = vec;
+	};
+
+	export class mock_memory_bus
+	{
+	public:
+		mock_memory_bus()
+			: memory {}
+			, memory_region{ memory }
+			, memory_map{ memory::build_memory_map(memory_region) }
+			, memory_bus{ memory_map }
+		{}
+
+		memory::memory_bus& bus() { return memory_bus; }
+
+	private:
+		std::array<memory::memory_data_t, memory::memory_size> memory;
+		memory::span_map<memory::memory_size> memory_region;
+		memory::memory_map_array_t memory_map;
+		memory::memory_bus memory_bus;
 	};
 }

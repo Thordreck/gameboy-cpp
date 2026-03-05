@@ -13,6 +13,9 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/arithmetic.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/bits.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/frequency.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/panic.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/assert.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

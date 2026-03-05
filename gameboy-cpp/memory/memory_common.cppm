@@ -1,0 +1,27 @@
+
+export module memory:common;
+export import std;
+
+namespace memory
+{
+	export constexpr size_t memory_size = 0x10000;
+
+	export using memory_data_t = std::uint8_t;
+	export using memory_address_t = std::uint16_t;
+	export using memory_span_t = std::span<memory_data_t, memory_size>;
+
+	export template<typename T>
+	concept ReadOnlyMemory = requires(const T& memory, const memory_address_t address)
+	{
+		{ memory.read(address) } -> std::convertible_to<memory_data_t>;
+	};
+
+	export template<typename T>
+	concept WriteOnlyMemory = requires(T& memory, const memory_address_t address, const memory_data_t value)
+	{
+		{ memory.write(address, value) } -> std::same_as<void>;
+	};
+
+	export template<typename T>
+	concept Memory = WriteOnlyMemory<T> && ReadOnlyMemory<T>;
+}

@@ -19,8 +19,8 @@ namespace
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when enabled but not requested", test, interrupt_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	interrupts::enable<typename test::interrupt_t>(cpu);
 	CHECK_FALSE(interrupts::is_pending<typename test::interrupt_t>(cpu));
@@ -28,8 +28,8 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when enable
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when requested but not enabled", test, interrupt_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	interrupts::request<typename test::interrupt_t>(cpu);
 	CHECK_FALSE(interrupts::is_pending<typename test::interrupt_t>(cpu));
@@ -37,16 +37,16 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when reques
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when not requested nor enabled", test, interrupt_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	CHECK_FALSE(interrupts::is_pending<typename test::interrupt_t>(cpu));
 }
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are flagged as pending when enabled and requested", test, interrupt_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	interrupts::enable<typename test::interrupt_t>(cpu);
 	interrupts::request<typename test::interrupt_t>(cpu);
@@ -55,8 +55,8 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are flagged as pending when enabled an
 
 TEST_CASE_TEMPLATE("interrupts.Any serviceable interrupt is detected through is_any_interrupt_pending", test, interrupt_test_cases)
 {
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	interrupts::enable<typename test::interrupt_t>(cpu);
 	interrupts::request<typename test::interrupt_t>(cpu);
@@ -67,8 +67,8 @@ TEST_CASE("interrupts.Interrupts are serviced in order by priority")
 {
 	using namespace interrupts;
 
-	std::array<cpu::memory_bus::type_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 	cpu.sp() = 0xFFFE;
 
 	// Enable all interrupts

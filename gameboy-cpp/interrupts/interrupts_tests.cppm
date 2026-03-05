@@ -1,7 +1,8 @@
 export module tests;
 
-export import interrupts;
 export import std;
+export import memory;
+export import interrupts;
 
 namespace tests
 {
@@ -39,4 +40,24 @@ namespace tests
 		using dispatcher_t = typename interrupts::dispatcher<interrupt>;
 		execute_complete_dispatch<dispatcher_t>({}, cpu);
 	}
+
+	export class mock_memory_bus
+	{
+	public:
+		mock_memory_bus()
+			: memory {}
+			, memory_region{ memory::map(memory) }
+			, memory_map{ memory::build_memory_map(memory_region) }
+			, memory_bus{ memory_map }
+		{}
+
+		memory::memory_bus& bus() { return memory_bus; }
+
+	private:
+		std::array<memory::memory_data_t, memory::memory_size> memory;
+		memory::span_map<memory::memory_size> memory_region;
+		memory::memory_map_array_t memory_map;
+		memory::memory_bus memory_bus;
+
+	};
 }

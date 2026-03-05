@@ -3,13 +3,13 @@
 
 import std;
 import cpu;
-import opcodes;
 import tests;
+import opcodes;
 
 TEST_CASE("carry.scf set flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().n_flag() = true;
 	cpu.reg().h_flag() = true;
@@ -24,8 +24,8 @@ TEST_CASE("carry.scf set flags properly")
 
 TEST_CASE("carry.scf does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::scf>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -33,8 +33,8 @@ TEST_CASE("carry.scf does not increment program counter")
 
 TEST_CASE("carry.ccf set flags properly")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	cpu.reg().n_flag() = true;
 	cpu.reg().h_flag() = true;
@@ -55,8 +55,8 @@ TEST_CASE("carry.ccf set flags properly")
 
 TEST_CASE("carry.ccf does not increment program counter")
 {
-	std::array<std::uint8_t, cpu::memory_bus::size> memory{};
-	cpu::cpu cpu{ memory };
+	tests::mock_memory_bus memory{};
+	cpu::cpu cpu{ memory.bus() };
 
 	tests::execute_all_machine_cycles<opcodes::ccf>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
