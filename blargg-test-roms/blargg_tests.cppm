@@ -1,7 +1,10 @@
-
+module;
 #include "doctest.h"
 
-import std;
+export module blargg;
+
+export import std;
+
 import cpu;
 import timer;
 import memory;
@@ -18,7 +21,7 @@ namespace
 	}
 
 	void read_io_result_output(
-		memory::memory_bus& memory, 
+		memory::memory_bus& memory,
 		std::string& result)
 	{
 		constexpr memory::memory_address_t sb = 0xFF01;
@@ -31,8 +34,11 @@ namespace
 			memory.write(sc, 0);
 		}
 	}
+}
 
-	void run_test(
+namespace blargg
+{
+	export void run_test(
 		std::string_view rom_file_path,
 		std::string_view expected_output,
 		const size_t max_num_machine_cycles)
@@ -49,7 +55,7 @@ namespace
 		timers.divider() = 0xAB;
 
 		interrupts::interrupt_registers interrupts{};
-		emulator::io_hram_interrupt_memory_page memory_page { timers, interrupts };
+		emulator::io_hram_interrupt_memory_page memory_page{ timers, interrupts };
 
 		std::array<memory::memory_data_t, 0xFF00> memory{};
 		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
@@ -83,59 +89,4 @@ namespace
 		REQUIRE_EQ(expected_output, result);
 		std::cout << result;
 	}
-}
-
-TEST_CASE("blargg.cpu_instrs.01-special")
-{
-	run_test("01-special.gb", "01-special\n\n\nPassed\n", 30e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.02-interrupts")
-{
-	run_test("02-interrupts.gb", "02-interrupts\n\n\nPassed\n", 20e6);
-}
-
-TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
-{
-	run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 30e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.04-op r,imm")
-{
-	run_test("04-op r,imm.gb", "04-op r,imm\n\n\nPassed\n", 30e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.05-op rp")
-{
-	run_test("05-op rp.gb", "05-op rp\n\n\nPassed\n", 60e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.06-ld r,r")
-{
-	run_test("06-ld r,r.gb", "06-ld r,r\n\n\nPassed\n", 30e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.07-jr,jp,call,ret,rst")
-{
-	run_test("07-jr,jp,call,ret,rst.gb", "07-jr,jp,call,ret,rst\n\n\nPassed\n", 60e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.08-misc instrs")
-{
-	run_test("08-misc instrs.gb", "08-misc instrs\n\n\nPassed\n", 30e5);
-}
-
-TEST_CASE("blargg.cpu_instrs.09-op r,r")
-{
-	run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 30e6);
-}
-
-TEST_CASE("blargg.cpu_instrs.10-bit ops")
-{
-	run_test("10-bit ops.gb", "10-bit ops\n\n\nPassed\n",  30e6);
-}
-
-TEST_CASE("blargg.cpu_instrs.11-op a,(hl)")
-{
-	run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 30e6);
 }
