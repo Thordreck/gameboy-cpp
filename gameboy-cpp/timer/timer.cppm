@@ -4,4 +4,5 @@ export import :common;
 export import :div;
 export import :tima;
 export import :tac;
+export import :tma;
 export import :timer_system;

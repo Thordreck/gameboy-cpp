@@ -1,6 +1,6 @@
 
 export module cpu:program_counter;
-import std;
+export import std;
 
 namespace cpu
 {

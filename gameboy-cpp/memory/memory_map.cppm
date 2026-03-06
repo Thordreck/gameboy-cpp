@@ -1,8 +1,7 @@
 
 export module memory:map;
 export import std;
-
-import :common;
+export import :common;
 
 namespace memory
 {
@@ -52,7 +51,7 @@ namespace memory
 		std::array regions{ std::pair { Regions::start, Regions::end }... };
 		std::ranges::sort(regions, [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
 
-		size_t current = 0;
+		std::size_t current = 0;
 
 		for (auto [start, end] : regions)
 		{

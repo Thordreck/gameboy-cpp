@@ -1,6 +1,6 @@
 
 export module cpu:registers;
-import std;
+export import std;
 
 namespace cpu
 {

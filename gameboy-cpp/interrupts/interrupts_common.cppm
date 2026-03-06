@@ -1,7 +1,8 @@
 export module interrupts:common;
 
-import std;
-import cpu;
+export import std;
+export import memory;
+export import cpu;
 
 namespace interrupts
 {
@@ -80,4 +81,10 @@ namespace interrupts
 		using namespace cpu::literals;
 		return cpu.cycle().m_cycle() >= (dispatcher.num_cycles() - 1_m_cycle);
 	}
+
+	export struct interrupt_registers
+	{
+		memory::memory_data_t enable;
+		memory::memory_data_t flag;
+	};
 }

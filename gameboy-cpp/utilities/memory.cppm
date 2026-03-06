@@ -1,6 +1,6 @@
 
 export module utilities:memory;
-import std;
+export import std;
 
 namespace utils
 {

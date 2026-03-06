@@ -1,8 +1,8 @@
 
 export module opcodes:common;
 
-import cpu;
-import std;
+export import std;
+export import cpu;
 
 namespace opcodes
 {

@@ -1,7 +1,8 @@
 export module memory:bus;
 
-import :common;
-import :map;
+export import std;
+export import :common;
+export import :map;
 
 namespace memory
 {
@@ -11,8 +12,6 @@ namespace memory
 		memory_bus(memory_map_span_t map)
 			: map{ map }
 		{}
-
-		memory_bus() = default;
 
 		memory_data_t read(const memory_address_t address) const
 		{
@@ -29,4 +28,16 @@ namespace memory
 	private:
 		memory_map_span_t map;
 	};
+
+	export template<typename T>
+	concept BusConnectable = requires(T instance, memory_bus & bus)
+	{
+		{ instance.connect(bus) } -> std::same_as<void>;
+	};
+
+	export template<BusConnectable... Connectables>
+	void connect(memory_bus& bus, Connectables&... connectables)
+	{
+		(connectables.connect(bus), ...);
+	}
 }

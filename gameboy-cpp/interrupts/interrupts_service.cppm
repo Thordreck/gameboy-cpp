@@ -1,12 +1,12 @@
 export module interrupts:service;
 
-import cpu;
 export import std;
+export import cpu;
 
-import :common;
-import :enable;
-import :request;
-import :dispatch;
+export import :common;
+export import :enable;
+export import :request;
+export import :dispatch;
 
 namespace interrupts
 {
@@ -42,7 +42,7 @@ namespace interrupts
 	export template <InterruptDescriptor interrupt>
 	bool is_pending(const cpu::cpu& cpu)
 	{
-		return is_enabled<interrupt>(cpu) && is_requested<interrupt>(cpu);
+		return is_enabled<interrupt>(cpu.memory()) && is_requested<interrupt>(cpu.memory());
 	}
 
 	export std::optional<interrupt_dispatcher> service_first_pending_interrupt(cpu::cpu& cpu)

@@ -3,6 +3,8 @@
 
 import std;
 import cpu;
+import timer;
+import memory;
 import opcodes;
 import emulator;
 import interrupts;
@@ -15,16 +17,18 @@ namespace
 		return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 	}
 
-	void read_io_result_output(cpu::cpu& cpu, std::string& result)
+	void read_io_result_output(
+		memory::memory_bus& memory, 
+		std::string& result)
 	{
 		constexpr memory::memory_address_t sb = 0xFF01;
 		constexpr memory::memory_address_t sc = 0xFF02;
 		constexpr memory::memory_data_t transfer_start = 0x81;
 
-		if (cpu.memory().read(sc) == transfer_start)
+		if (memory.read(sc) == transfer_start)
 		{
-			result += cpu.memory().read(sb);
-			cpu.memory().write(sc, 0);
+			result += memory.read(sb);
+			memory.write(sc, 0);
 		}
 	}
 
@@ -35,31 +39,40 @@ namespace
 	{
 		const std::filesystem::path rom_file{ rom_file_path };
 		REQUIRE(std::filesystem::exists(rom_file));
-
 		const std::vector<std::uint8_t> rom_data = read_rom(rom_file);
 
-		std::array<memory::memory_data_t, memory::memory_size> memory{};
-		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
-
-		auto memory_region = memory::map(memory);
-		auto memory_map = memory::build_memory_map(memory_region);
-		auto memory_bus = memory::memory_bus{ memory_map };
-
-		cpu::cpu cpu{ memory_bus };
+		cpu::cpu cpu{ };
 		cpu.pc() = 0x100;
 		cpu.sp() = 0xFFFE;
+
+		timer::timer_system timers{};
+		timers.divider() = 0xAB;
+
+		interrupts::interrupt_registers interrupts{};
+		emulator::io_hram_interrupt_memory_page memory_page { timers, interrupts };
+
+		std::array<memory::memory_data_t, 0xFF00> memory{};
+		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
+		auto memory_region = memory::map(memory);
+
+		auto memory_map = memory::build_memory_map(memory_region, memory_page);
+		auto memory_bus = memory::memory_bus{ memory_map };
+
+		memory::connect(memory_bus, cpu, timers);
 
 		std::string result{};
 		const size_t max_num_timer_cycles = max_num_machine_cycles * 4;
 
 		emulator::default_instructions_provider instructions{};
-		emulator::default_interrupt_handler interrupts{};
-		emulator::cpu_runner runner{ cpu, instructions, interrupts };
+		emulator::default_interrupt_handler interrupts_handler{};
+		emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
 
 		for (size_t i = 0; i < max_num_timer_cycles; i++)
 		{
 			runner.tick();
-			read_io_result_output(cpu, result);
+			timers.tick();
+
+			read_io_result_output(memory_bus, result);
 
 			if (result == expected_output)
 			{

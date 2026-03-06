@@ -8,8 +8,10 @@ import opcodes;
 
 TEST_CASE("misc.nop does not increment program counter")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	tests::execute_all_machine_cycles<opcodes::nop>(cpu);
 	CHECK_EQ(cpu.pc(), 0);

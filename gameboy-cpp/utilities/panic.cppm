@@ -1,6 +1,6 @@
 export module utilities:panic;
 
-import std;
+export import std;
 
 namespace utils
 {

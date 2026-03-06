@@ -1,6 +1,7 @@
 export module opcodes:misc;
 
-import cpu;
+export import cpu;
+import interrupts;
 
 namespace opcodes
 {
@@ -35,7 +36,9 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				// TODO: implement properly
+				cpu.halt_state().enabled = true;
+				cpu.halt_state().ime_flag_set = cpu.ime_flag().is_enabled();
+				cpu.halt_state().interrupts_pending = interrupts::is_any_interrupt_pending(cpu);
 			}
 		}
 	};

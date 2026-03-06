@@ -1,12 +1,12 @@
 export module opcodes:subroutine;
 
-import std;
-import cpu;
-import utilities;
+export import std;
+export import cpu;
+export import utilities;
 
-import :common;
-import :jump;
-import :stack;
+export import :common;
+export import :jump;
+export import :stack;
 
 namespace opcodes
 {

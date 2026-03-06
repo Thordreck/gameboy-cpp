@@ -21,10 +21,12 @@ TEST_CASE_TEMPLATE("interrupts.Enabled interrupts have their ie flag set", test,
 {
 	constexpr std::uint16_t ie_address = 0xFFFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
 
-	interrupts::enable<typename test::interrupt_t>(cpu);
+	memory::connect(memory.bus(), cpu);
+
+	interrupts::enable<typename test::interrupt_t>(cpu.memory());
 	CHECK_EQ(memory.bus().read(ie_address) & test::ie_flag, test::ie_flag);
 }
 
@@ -32,29 +34,35 @@ TEST_CASE_TEMPLATE("interrupts.Disabled interrupts have their flag unset", test,
 {
 	constexpr std::uint16_t ie_address = 0xFFFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
 
-	interrupts::enable<typename test::interrupt_t>(cpu);
-	interrupts::disable<typename test::interrupt_t>(cpu);
+	memory::connect(memory.bus(), cpu);
+
+	interrupts::enable<typename test::interrupt_t>(cpu.memory());
+	interrupts::disable<typename test::interrupt_t>(cpu.memory());
 	CHECK_EQ(memory.bus().read(ie_address) & test::ie_flag, 0x0);
 }
 
 TEST_CASE_TEMPLATE("interrupts.Enabled interrupts are detected as is_enabled", test, enable_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
 
-	interrupts::enable<typename test::interrupt_t>(cpu);
-	CHECK(interrupts::is_enabled<typename test::interrupt_t>(cpu));
+	memory::connect(memory.bus(), cpu);
+
+	interrupts::enable<typename test::interrupt_t>(cpu.memory());
+	CHECK(interrupts::is_enabled<typename test::interrupt_t>(cpu.memory()));
 }
 
 TEST_CASE_TEMPLATE("interrupts.Disabled interrupts are not detected as is_enabled", test, enable_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
 
-	interrupts::enable<typename test::interrupt_t>(cpu);
-	interrupts::disable<typename test::interrupt_t>(cpu);
-	CHECK_FALSE(interrupts::is_enabled<typename test::interrupt_t>(cpu));
+	memory::connect(memory.bus(), cpu);
+
+	interrupts::enable<typename test::interrupt_t>(cpu.memory());
+	interrupts::disable<typename test::interrupt_t>(cpu.memory());
+	CHECK_FALSE(interrupts::is_enabled<typename test::interrupt_t>(cpu.memory()));
 }

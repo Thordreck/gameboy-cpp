@@ -1,10 +1,10 @@
 
 export module opcodes:arithmetic;
 
-import std;
-import cpu;
-import utilities;
-import :common;
+export import std;
+export import cpu;
+export import utilities;
+export import :common;
 
 namespace opcodes 
 {

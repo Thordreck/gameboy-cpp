@@ -1,18 +1,18 @@
 
 export module opcodes:table;
 
-import std;
-import cpu;
+export import std;
+export import cpu;
 
-import :bit;
-import :misc;
-import :jump;
-import :load;
-import :stack;
-import :carry;
-import :interrupt;
-import :arithmetic;
-import :subroutine;
+export import :bit;
+export import :misc;
+export import :jump;
+export import :load;
+export import :stack;
+export import :carry;
+export import :interrupt;
+export import :arithmetic;
+export import :subroutine;
 
 namespace opcodes
 {

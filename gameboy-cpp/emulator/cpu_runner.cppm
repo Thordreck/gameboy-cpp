@@ -1,10 +1,9 @@
 export module emulator:cpu_runner;
 
+export import std;
 export import cpu;
-
-import std;
-import opcodes;
-import interrupts;
+export import opcodes;
+export import interrupts;
 
 namespace emulator
 {
@@ -115,6 +114,21 @@ namespace emulator
 				return;
 			}
 			
+			// Halt 
+			if (cpu.halt_state().enabled)
+			{
+				if (!interrupts::is_any_interrupt_pending(cpu))
+				{
+					return;
+				}
+
+				active_interrupt = cpu.halt_state().ime_flag_set
+					? interrupts.service_interrupt(cpu)
+					: std::nullopt;
+
+				cpu.halt_state() = {};
+			}
+			
 			// Interrupts
 			if (active_interrupt.has_value())
 			{
@@ -150,6 +164,18 @@ namespace emulator
 
 			active_instruction.reset();
 			cpu.cycle() = {};
+
+			// Halt bug
+			if (cpu.halt_state().enabled
+				&& !cpu.halt_state().ime_flag_set
+				&& cpu.halt_state().interrupts_pending)
+			{
+				const opcodes::opcode_t next_opcode = cpu.memory().read(cpu.pc());
+				active_instruction = instructions.get(next_opcode);
+				cpu.halt_state() = {};
+
+				return;
+			}
 
 			interrupts.enable_ime_if_requested(cpu);
 			active_interrupt = interrupts.service_interrupt(cpu);

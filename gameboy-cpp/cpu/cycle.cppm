@@ -1,6 +1,6 @@
-export module cpu:cycle;
 
-import std;
+export module cpu:cycle;
+export import std;
 
 namespace cpu
 {

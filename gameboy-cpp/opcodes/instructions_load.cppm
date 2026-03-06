@@ -1,10 +1,10 @@
 
 export module opcodes:load;
 
-import cpu;
-import std;
-import utilities;
-import :common;
+export import cpu;
+export import std;
+export import utilities;
+export import :common;
 
 namespace opcodes
 {

@@ -1,7 +1,7 @@
 export module interrupts:processor;
 
-import cpu;
-import :service;
+export import cpu;
+export import :service;
 
 namespace interrupts
 {

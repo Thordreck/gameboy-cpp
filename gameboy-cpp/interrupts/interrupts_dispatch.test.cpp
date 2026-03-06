@@ -19,8 +19,10 @@ namespace
 
 TEST_CASE_TEMPLATE("interrupts.IME flag is disabled when interrupt is dispatched", test, dispatch_test_cases)
 {
-	tests::mock_memory_bus mock_memory{};
-	cpu::cpu cpu{ mock_memory.bus() };
+	cpu::cpu cpu{ };
+	tests::mock_memory_bus memory{};
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = 0xFFFE;
 	cpu.ime_flag().enable();
@@ -34,8 +36,10 @@ TEST_CASE_TEMPLATE("interrupts.IF flag is unset when interrupt is dispatched", t
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 	cpu.sp() = 0xFFFE;
 
 	const auto if_value = memory.bus().read(if_address);
@@ -47,8 +51,10 @@ TEST_CASE_TEMPLATE("interrupts.IF flag is unset when interrupt is dispatched", t
 
 TEST_CASE_TEMPLATE("interrupts.PC is set to handler when interrupt is dispatched", test, dispatch_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 	cpu.sp() = 0xFFFE;
 
 	tests::execute_complete_dispatch<typename test::interrupt_t>(cpu);
@@ -59,8 +65,10 @@ TEST_CASE_TEMPLATE("interrupts.Previous pc is push to stack when interrupt is di
 {
 	constexpr std::uint16_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 	cpu.sp() = stack_origin;
 	cpu.pc() = 0xABCD;
 
@@ -75,8 +83,10 @@ TEST_CASE_TEMPLATE("interrupts.Dispatch takes 5 machine cycles", test, dispatch_
 {
 	constexpr std::uint16_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 	cpu.sp() = stack_origin;
 	cpu.pc() = 0xABCD;
 

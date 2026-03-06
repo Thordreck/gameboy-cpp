@@ -4,13 +4,14 @@ target_compile_features(emulator PUBLIC cxx_std_23)
 add_std_ifc_to_target(emulator)
 
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator cpu memory opcodes interrupts utilities)
+target_link_libraries(emulator cpu timer memory opcodes interrupts utilities)
 target_sources(emulator PUBLIC 
 	FILE_SET 
 		CXX_MODULES 
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/cpu_runner.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/memory_map.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

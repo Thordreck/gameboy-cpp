@@ -1,28 +1,29 @@
 
 export module interrupts:request;
 
-import cpu;
-import :common;
+export import std;
+export import memory;
+export import :common;
 
 namespace interrupts
 {
 	export template<InterruptDescriptor interrupt>
-	void request(cpu::cpu& cpu)
+	void request(memory::memory_bus& memory)
 	{
-		const auto value = cpu.memory().read(if_address);
-		cpu.memory().write(if_address, value | interrupt::if_flag);
+		const auto value = memory.read(if_address);
+		memory.write(if_address, value | interrupt::if_flag);
 	}
 
 	export template<InterruptDescriptor interrupt>
-	void clear_request(cpu::cpu& cpu)
+	void clear_request(memory::memory_bus& memory)
 	{
-		const auto value = cpu.memory().read(if_address);
-		cpu.memory().write(if_address, value & ~interrupt::if_flag);
+		const auto value = memory.read(if_address);
+		memory.write(if_address, value & ~interrupt::if_flag);
 	}
 
 	export template<InterruptDescriptor interrupt>
-	bool is_requested(const cpu::cpu& cpu)
+	bool is_requested(const memory::memory_bus& memory)
 	{
-		return (cpu.memory().read(if_address) & interrupt::if_flag) == interrupt::if_flag;
+		return (memory.read(if_address) & interrupt::if_flag) == interrupt::if_flag;
 	}
 }

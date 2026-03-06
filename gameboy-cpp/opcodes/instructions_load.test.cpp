@@ -104,8 +104,10 @@ TEST_CASE_TEMPLATE("load.ld_r8_r8 copies registry value and does not increment p
 {
 	constexpr cpu::register_8::type_t test_value = 0xAB;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	Opcode::rhs(cpu) = test_value;
 	Opcode::execute(cpu);
@@ -118,8 +120,10 @@ TEST_CASE_TEMPLATE("load.ld_r8_n8 stores value into target registry and updates 
 {
 	constexpr cpu::register_8::type_t test_value = 0xAB;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.memory().write(0, test_value);
 	Opcode::execute(cpu);
@@ -132,8 +136,10 @@ TEST_CASE_TEMPLATE("load.ld_r16_n16 stores value into target registry and update
 {
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.memory().write(0, static_cast<cpu::register_8::type_t>(test_value));
     cpu.memory().write(1, static_cast<cpu::register_8::type_t>(test_value >> 8));
@@ -145,8 +151,10 @@ TEST_CASE_TEMPLATE("load.ld_r16_n16 stores value into target registry and update
 
 TEST_CASE_TEMPLATE("load.ld_hl_r8 stores value into target registry and does not update pc", test, ld_hl_r8_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().hl() = test::memory_pos;
 
@@ -159,8 +167,10 @@ TEST_CASE_TEMPLATE("load.ld_hl_r8 stores value into target registry and does not
 
 TEST_CASE_TEMPLATE("load.ld_r8_hl stores value into target registry and does not update pc", test, ld_r8_hl_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().hl() = test::memory_pos;
     memory.bus().write(test::memory_pos, test::target_value);
@@ -176,8 +186,10 @@ TEST_CASE("load.ld_a_hli updates a register with value pointed by hl and increme
     constexpr memory::memory_address_t test_memory_pos = 0xABCD;
     constexpr memory::memory_data_t test_value = 0xDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     memory.bus().write(test_memory_pos, test_value);
     cpu.reg().hl() = test_memory_pos;
@@ -194,8 +206,10 @@ TEST_CASE("load.ld_a_hld updates a register with value pointed by hl and decreme
     constexpr memory::memory_address_t test_memory_pos = 0xABCD;
     constexpr memory::memory_data_t test_value = 0xDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     memory.bus().write(test_memory_pos, test_value);
     cpu.reg().hl() = test_memory_pos;
@@ -212,8 +226,10 @@ TEST_CASE("load.ld_hli_a updates memory pointed by hl with register a's value an
     constexpr memory::memory_address_t test_memory_pos = 0xABCD;
     constexpr memory::memory_data_t test_value = 0xDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().a() = test_value;
     cpu.reg().hl() = test_memory_pos;
@@ -230,8 +246,10 @@ TEST_CASE("load.ld_hld_a updates memory pointed by hl with register a's value an
     constexpr memory::memory_address_t test_memory_pos = 0xABCD;
     constexpr memory::memory_data_t test_value = 0xDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().a() = test_value;
     cpu.reg().hl() = test_memory_pos;
@@ -248,8 +266,10 @@ TEST_CASE_TEMPLATE("load.ld_r16_a copies registry a's value into memory pointed 
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xDEFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
     cpu.reg().a() = test_value;
 
     test::reg(cpu) = memory_pos;
@@ -264,8 +284,10 @@ TEST_CASE_TEMPLATE("load.ld_a_r16 copies value from memory pointed by registry i
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xDEFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     memory.bus().write(memory_pos, test_value);
     test::reg(cpu) = memory_pos;
@@ -280,8 +302,10 @@ TEST_CASE("load.ld_n16_a copies registry a's value into memory pointed by argume
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xDEFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
     cpu.reg().a() = test_value;
 
     cpu.memory().write(0, 0xFF);
@@ -298,8 +322,10 @@ TEST_CASE("load.ld_a_n16 copies value in memory pointed by argument into registe
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xDEFF;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.memory().write(memory_pos, test_value);
     cpu.memory().write(0, 0xFF);
@@ -316,8 +342,10 @@ TEST_CASE("load.ldh_n16_a copies registry a's value into memory pointed by argum
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xFFDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().a() = test_value;
     cpu.memory().write(0, 0xDE);
@@ -333,8 +361,10 @@ TEST_CASE("load.ldh_a_n16 copies value pointed by memory into register a")
 	constexpr memory::memory_data_t test_value = 0xAB;
 	constexpr memory::memory_address_t memory_pos = 0xFFDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.memory().write(memory_pos, test_value);
     cpu.memory().write(0, 0xDE);
@@ -350,8 +380,10 @@ TEST_CASE("load.ld_n16_sp updates memory position with sp value")
 	constexpr memory::memory_address_t test_value = 0xABCD;
 	constexpr memory::memory_address_t memory_pos = 0xFFDE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.sp() = test_value;
     memory.bus().write(0, 0xDE);
@@ -365,8 +397,10 @@ TEST_CASE("load.ld_n16_sp updates memory position with sp value")
 
 TEST_CASE("load.ld_n16_sp updates program counter properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     tests::execute_all_machine_cycles<opcodes::ld_n16_sp>(cpu);
 	CHECK_EQ(cpu.pc(), 2);
@@ -376,8 +410,10 @@ TEST_CASE("load.ld_sp_hl updates sp with hl value")
 {
 	constexpr memory::memory_address_t test_value = 0xABCD;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     tests::execute_all_machine_cycles<opcodes::ld_sp_hl>(cpu);
     CHECK_EQ(cpu.sp(), 0);
@@ -389,8 +425,10 @@ TEST_CASE("load.ld_sp_hl updates sp with hl value")
 
 TEST_CASE("load.ld_sp_hl does not increment program counter")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     tests::execute_all_machine_cycles<opcodes::ld_sp_hl>(cpu);
 	CHECK_EQ(cpu.pc(), 0);
@@ -401,8 +439,10 @@ TEST_CASE("load.ld_hl_n8 stores value into target registry and updates pc proper
     constexpr memory::memory_data_t test_value = 0xFE;
     constexpr memory::memory_address_t memory_pos = 0xABCD;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().hl() = memory_pos;
     memory.bus().write(0, test_value);
@@ -417,8 +457,10 @@ TEST_CASE("load.ldh_c_a stores value into target memory and does not increment p
 {
     constexpr memory::memory_data_t test_value = 0xFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().a() = test_value;
     cpu.reg().c() = 0xBD;
@@ -433,8 +475,10 @@ TEST_CASE("load.ldh_a_c stores value into register a and does not increment pc")
 {
     constexpr memory::memory_data_t test_value = 0xFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
     cpu.reg().c() = 0xBD;
     memory.bus().write(0xFFBD, test_value);

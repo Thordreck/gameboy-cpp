@@ -1,7 +1,7 @@
 export module opcodes:interrupt;
 
-import cpu;
-import std;
+export import cpu;
+export import std;
 
 namespace opcodes
 {

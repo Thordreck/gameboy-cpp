@@ -1,6 +1,6 @@
-export module cpu:temp_cache;
 
-import std;
+export module cpu:temp_cache;
+export import std;
 
 namespace cpu
 {

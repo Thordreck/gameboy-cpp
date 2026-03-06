@@ -39,8 +39,10 @@ TEST_CASE("table.instruction table maps existing opcodes correctly")
 {
 	const auto instruction_table = test_instruction_table_builder::build();
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	instruction_table[0x0].execute(cpu);
 	instruction_table[0x1].execute(cpu);

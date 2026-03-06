@@ -8,7 +8,6 @@ namespace memory
 
 	export using memory_data_t = std::uint8_t;
 	export using memory_address_t = std::uint16_t;
-	export using memory_span_t = std::span<memory_data_t, memory_size>;
 
 	export template<typename T>
 	concept ReadOnlyMemory = requires(const T& memory, const memory_address_t address)

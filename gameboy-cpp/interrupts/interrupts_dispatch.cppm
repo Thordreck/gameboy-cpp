@@ -1,10 +1,10 @@
 export module interrupts:dispatch;
 
-import std;
-import cpu;
-import utilities;
-import :common;
-import :request;
+export import std;
+export import cpu;
+export import utilities;
+export import :common;
+export import :request;
 
 namespace interrupts
 {
@@ -22,7 +22,7 @@ namespace interrupts
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
 				cpu.ime_flag().disable();
-				clear_request<interrupt>(cpu);
+				clear_request<interrupt>(cpu.memory());
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{

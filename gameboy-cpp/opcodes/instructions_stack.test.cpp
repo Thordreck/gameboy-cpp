@@ -24,8 +24,10 @@ TEST_CASE_TEMPLATE("stack.pop_r16 updates reg with correct value from stack", te
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = stack_origin - 2;
 	cpu.memory().write(stack_origin - 2, 0xCD);
@@ -44,8 +46,10 @@ TEST_CASE_TEMPLATE("stack.push_r16 updates stack with correct value from registe
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 	cpu.sp() = stack_origin;
 
 	test::reg(cpu) = test_value;
@@ -62,8 +66,10 @@ TEST_CASE("stack.ld_sp_n16 updates sp with correct value from memory")
 {
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	memory.bus().write(0, 0xCD);
 	memory.bus().write(1, 0xAB);
@@ -76,8 +82,10 @@ TEST_CASE("stack.ld_sp_n16 updates sp with correct value from memory")
 
 TEST_CASE("stack.add_sp_e8 updates stack pointer properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = 0;
 	memory.bus().write(0, 127);
@@ -94,8 +102,10 @@ TEST_CASE("stack.add_sp_e8 updates stack pointer properly")
 
 TEST_CASE("stack.add_sp_e8 updates flags properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = 0;
 	memory.bus().write(0, 0xF);
@@ -127,8 +137,10 @@ TEST_CASE("stack.add_sp_e8 updates flags properly")
 
 TEST_CASE("stack.add_sp_e8 updates program counter properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	tests::execute_all_machine_cycles<opcodes::add_sp_e8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -136,8 +148,10 @@ TEST_CASE("stack.add_sp_e8 updates program counter properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates hl properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = 127;
 	memory.bus().write(0, 0);
@@ -155,8 +169,10 @@ TEST_CASE("stack.ld_hl_sp_e8 updates hl properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = 0;
 	memory.bus().write(0, 0xF);
@@ -190,8 +206,10 @@ TEST_CASE("stack.ld_hl_sp_e8 updates flags properly")
 
 TEST_CASE("stack.ld_hl_sp_e8 updates program counter properly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	tests::execute_all_machine_cycles<opcodes::ld_hl_sp_e8>(cpu);
 	CHECK_EQ(cpu.pc(), 1);
@@ -202,8 +220,10 @@ TEST_CASE("stack.pop_af updates reg with correct value from stack")
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = stack_origin - 2;
 	cpu.memory().write(stack_origin - 2, 0xCD);
@@ -221,8 +241,10 @@ TEST_CASE("stack.push_af updates stack with correct value from register")
 	constexpr cpu::register_16::type_t test_value = 0xABCD;
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.sp() = stack_origin;
 	cpu.reg().af() = test_value;

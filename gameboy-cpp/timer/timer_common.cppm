@@ -11,13 +11,13 @@ namespace timer
 	export constexpr std::uint16_t tac_address = 0xFF07;
 
 	export constexpr std::uint8_t tac_enable_bit = 2;
-	export constexpr std::uint8_t tac_clock_select_mask = 0x3;
+	export constexpr std::uint8_t tac_clock_select_mask = 0b11;
 
 	export enum class tac_clock : std::uint8_t
 	{
-		_01 = 1,
-		_10 = 3,
-		_11 = 5,
-		_00 = 7,
+		_01,
+		_10,
+		_11,
+		_00,
 	};
 }

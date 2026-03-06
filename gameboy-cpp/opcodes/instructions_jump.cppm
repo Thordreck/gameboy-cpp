@@ -1,10 +1,10 @@
 
 export module opcodes:jump;
 
-import :common;
-import cpu;
-import utilities;
-import std;
+export import :common;
+export import cpu;
+export import utilities;
+export import std;
 
 namespace opcodes
 {

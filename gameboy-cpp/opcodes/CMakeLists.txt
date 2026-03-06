@@ -4,7 +4,7 @@ target_compile_features(opcodes PUBLIC cxx_std_23)
 add_std_ifc_to_target(opcodes)
 
 set_target_properties(opcodes PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(opcodes cpu utilities)
+target_link_libraries(opcodes cpu utilities interrupts)
 target_sources(opcodes PUBLIC 
 	FILE_SET 
 		CXX_MODULES 

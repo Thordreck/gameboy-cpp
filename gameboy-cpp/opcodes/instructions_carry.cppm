@@ -1,8 +1,8 @@
 
 export module opcodes:carry;
 
-import cpu;
-import std;
+export import cpu;
+export import std;
 
 namespace opcodes
 {

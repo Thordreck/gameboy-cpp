@@ -2,39 +2,30 @@
 export module timer:div;
 
 export import std;
-export import memory;
 
 namespace timer
 {
 	export class div
 	{
 	public:
-		div(memory::memory_span_t memory)
+		div()
 			: counter{}
-			, memory{ memory }
 		{}
 
 		void tick() { counter++; }
 		void reset() { counter = 0; }
 
 		operator std::uint16_t() const { return value(); }
-		std::uint16_t value() const { return counter; }
 
-		div& operator++()
+		div& operator=(const uint16_t value)
 		{
-			counter++;
+			counter = value;
 			return *this;
 		}
 
-		div operator++(int)
-		{
-			div temp = *this;
-			++(*this);
-			return temp;
-		}
+		std::uint16_t value() const { return counter; }
 
 	private:
 		std::uint16_t counter;
-		memory::memory_span_t memory;
 	};
 }

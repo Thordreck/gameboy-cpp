@@ -1,6 +1,6 @@
 
 export module utilities:arithmetic;
-import std;
+export import std;
 
 namespace utils
 {

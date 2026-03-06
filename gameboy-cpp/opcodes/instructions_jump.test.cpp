@@ -35,8 +35,10 @@ namespace
 
 TEST_CASE("jump.jp_n16 updates pc correctly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 0xFF);
 	cpu.memory().write(1, 0xAA);
@@ -47,8 +49,10 @@ TEST_CASE("jump.jp_n16 updates pc correctly")
 
 TEST_CASE_TEMPLATE("jump.jp_cc_n16 sets expected pc when condition is met", test, jp_cc_n16_successful_jump_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 0xFF);
 	cpu.memory().write(1, 0xAA);
@@ -61,8 +65,10 @@ TEST_CASE_TEMPLATE("jump.jp_cc_n16 sets expected pc when condition is met", test
 
 TEST_CASE_TEMPLATE("jump.jp_cc_n16 sets expected pc when condition is not met", test, jp_cc_n16_unsuccessful_jump_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 0xFF);
 	cpu.memory().write(1, 0xAA);
@@ -75,8 +81,10 @@ TEST_CASE_TEMPLATE("jump.jp_cc_n16 sets expected pc when condition is not met", 
 
 TEST_CASE("jump.jr_n16 updates pc correctly")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 2);
 
@@ -91,8 +99,10 @@ TEST_CASE("jump.jr_n16 updates pc correctly")
 
 TEST_CASE_TEMPLATE("jump.jr_cc_n16 sets expected pc when condition is met", test, jr_cc_n16_successful_jump_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 2);
 
@@ -108,8 +118,10 @@ TEST_CASE_TEMPLATE("jump.jr_cc_n16 sets expected pc when condition is met", test
 
 TEST_CASE_TEMPLATE("jump.jr_cc_n16 sets expected pc when condition is not met", test, jr_cc_n16_unsuccessful_jump_test_cases)
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	cpu.memory().write(0, 2);
 
@@ -120,8 +132,10 @@ TEST_CASE_TEMPLATE("jump.jr_cc_n16 sets expected pc when condition is not met", 
 
 TEST_CASE("jump.jp_hl sets expected pc")
 {
+	cpu::cpu cpu{ };
 	tests::mock_memory_bus memory{};
-	cpu::cpu cpu{ memory.bus() };
+
+	memory::connect(memory.bus(), cpu);
 
 	tests::execute_all_machine_cycles<opcodes::jp_hl>(cpu);
 	CHECK_EQ(cpu.pc(), 0);

@@ -1,6 +1,6 @@
 
 export module cpu:stack_pointer;
-import std;
+export import std;
 
 namespace cpu
 {
