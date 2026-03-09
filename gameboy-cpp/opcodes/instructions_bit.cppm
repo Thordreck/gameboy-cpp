@@ -230,11 +230,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t r8 = cpu.cache().r8;
+				const std::uint8_t r8 = cpu.memory().read(cpu.cache().r16);
 				const bool shifted_bit = r8 & 0x01;
 				const std::uint8_t result = r8 >> 1;
 
@@ -280,11 +280,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t r8 = cpu.cache().r8;
+				const std::uint8_t r8 = cpu.memory().read(cpu.cache().r16);
 				const bool shifted_bit = r8 & 0x01;
 				const std::uint8_t result = (r8 >> 1) | (cpu.reg().c_flag() << 7);
 
@@ -601,11 +601,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t r8 = cpu.cache().r8;
+				const std::uint8_t r8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t result = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
 
 				cpu.reg().z_flag() = (result == 0);
@@ -741,11 +741,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
 				const std::uint8_t result = (n8 << 1) | shifted_bit;
 
@@ -802,11 +802,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t shifted_bit = n8 & 0x01;
 				const std::uint8_t result = (n8 >> 1) | (shifted_bit << 7);
 
@@ -864,13 +864,13 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
 				using namespace literals;
 
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t c = cpu.reg().c_flag() ? 1_u8 : 0_u8;
 				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
 				const std::uint8_t result = (n8 << 1) | c;
@@ -926,11 +926,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
 				const std::uint8_t result = (n8 << 1);
 
@@ -987,11 +987,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 				const std::uint8_t n8_7 = n8 & 0x80;
 				const std::uint8_t n8_0 = n8 & 0x01;
 				const std::uint8_t result = (n8 >> 1) | n8_7;
@@ -1018,11 +1018,12 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.reg().a() = cpu.reg().a() & cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
+				cpu.reg().a() = cpu.reg().a() & n8;
 
 				cpu.reg().flags().z = cpu.reg().a() == 0;
 				cpu.reg().flags().n = false;
@@ -1042,11 +1043,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				const std::uint8_t n8 = cpu.cache().r8;
+				const std::uint8_t n8 = cpu.memory().read(cpu.cache().r16);
 
 				cpu.reg().z_flag() = !utils::is_bit_set<index>(n8);
 				cpu.reg().n_flag() = false;
@@ -1074,11 +1075,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.cache().r8 & ~(0x1 << index);
+				cpu.cache().r8 = cpu.memory().read(cpu.cache().r16) & ~(0x1 << index);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
@@ -1106,11 +1107,11 @@ namespace opcodes
 		{
 			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.memory().read(cpu.reg().hl());
+				cpu.cache().r16 = cpu.reg().hl();
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.cache().r8 = cpu.cache().r8 | (0x1 << index);
+				cpu.cache().r8 = cpu.memory().read(cpu.cache().r16) | (0x1 << index);
 			}
 			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
 			{
