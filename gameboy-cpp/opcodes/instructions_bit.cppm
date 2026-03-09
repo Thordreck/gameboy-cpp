@@ -224,7 +224,7 @@ namespace opcodes
 
 	export struct srl_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -243,7 +243,11 @@ namespace opcodes
 				cpu.reg().flags().h = false;
 				cpu.reg().flags().c = shifted_bit;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -270,7 +274,7 @@ namespace opcodes
 
 	export struct rr_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -289,7 +293,11 @@ namespace opcodes
 				cpu.reg().flags().h = false;
 				cpu.reg().flags().c = shifted_bit;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -587,7 +595,7 @@ namespace opcodes
 
 	export struct swap_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -605,7 +613,11 @@ namespace opcodes
 				cpu.reg().h_flag() = false;
 				cpu.reg().c_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -723,7 +735,7 @@ namespace opcodes
 
 	export struct prefix_rlc_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -742,7 +754,11 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -780,7 +796,7 @@ namespace opcodes
 
 	export struct prefix_rrc_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -799,7 +815,11 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -838,7 +858,7 @@ namespace opcodes
 
 	export struct prefix_rl_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -860,7 +880,11 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -896,7 +920,7 @@ namespace opcodes
 
 	export struct sla_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -915,7 +939,11 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -953,7 +981,7 @@ namespace opcodes
 
 	export struct sra_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -973,7 +1001,11 @@ namespace opcodes
 				cpu.reg().n_flag() = false;
 				cpu.reg().h_flag() = false;
 
-				cpu.memory().write(cpu.reg().hl(), result);
+				cpu.cache().r8 = result;
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -1036,7 +1068,7 @@ namespace opcodes
 	requires BitIndex<index>
 	struct res_u3_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -1046,7 +1078,11 @@ namespace opcodes
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8 & ~(0x1 << index));
+				cpu.cache().r8 = cpu.cache().r8 & ~(0x1 << index);
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};
@@ -1064,7 +1100,7 @@ namespace opcodes
 	requires BitIndex<index>
 	struct set_u3_hl
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 2_m_cycle; }
+		static constexpr auto num_cycles(const cpu::cpu&) { return 3_m_cycle; }
 
 		static void execute(cpu::cpu& cpu)
 		{
@@ -1074,7 +1110,11 @@ namespace opcodes
 			}
 			else if (cpu::is_end_of_machine_cycle<1>(cpu.cycle()))
 			{
-				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8 | (0x1 << index));
+				cpu.cache().r8 = cpu.cache().r8 | (0x1 << index);
+			}
+			else if (cpu::is_end_of_machine_cycle<2>(cpu.cycle()))
+			{
+				cpu.memory().write(cpu.reg().hl(), cpu.cache().r8);
 			}
 		}
 	};

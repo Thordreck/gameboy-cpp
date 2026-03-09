@@ -101,17 +101,25 @@ namespace emulator
 
 		void tick()
 		{
-			handle_tick();
-			cpu.cycle()++;
+			const bool should_reset_m_cycle = handle_tick();
+
+			if (should_reset_m_cycle)
+			{
+				cpu.cycle() = {};
+			}
+			else 
+			{
+				cpu.cycle()++;
+			}
 		}
 
 	private:
-		void handle_tick()
+		bool handle_tick()
 		{
 			// Work is only done at the end of each m cycle
 			if (!cpu::is_end_of_any_machine_cycle(cpu.cycle()))
 			{
-				return;
+				return false;
 			}
 			
 			// Halt 
@@ -119,7 +127,7 @@ namespace emulator
 			{
 				if (!interrupts::is_any_interrupt_pending(cpu))
 				{
-					return;
+					return false;
 				}
 
 				active_interrupt = cpu.halt_state().ime_flag_set
@@ -138,19 +146,17 @@ namespace emulator
 				if (interrupts::is_interrupt_dispatched(cpu, dispatcher))
 				{
 					active_interrupt.reset();
-					cpu.cycle() = {};
+					return true;
 				}
 
-				return;
+				return false;
 			}
 
 			// Fetch
 			if (!active_instruction.has_value())
 			{
 				fetch_decode_opcode();
-				cpu.cycle() = {};
-
-				return;
+				return true;
 			}
 
 			// Execution
@@ -159,11 +165,10 @@ namespace emulator
 
 			if (!opcodes::is_instruction_done(cpu, instruction))
 			{
-				return;
+				return false;
 			}
 
 			active_instruction.reset();
-			cpu.cycle() = {};
 
 			// Halt bug
 			if (cpu.halt_state().enabled
@@ -174,7 +179,7 @@ namespace emulator
 				active_instruction = instructions.get(next_opcode);
 				cpu.halt_state() = {};
 
-				return;
+				return true;
 			}
 
 			interrupts.enable_ime_if_requested(cpu);
@@ -184,6 +189,8 @@ namespace emulator
 			{
 				fetch_decode_opcode();
 			}
+
+			return true;
 		}
 
 		void fetch_decode_opcode()
