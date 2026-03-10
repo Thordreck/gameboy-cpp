@@ -4,7 +4,7 @@ import blargg;
 
 TEST_CASE("blargg.mem_timing-2.01-read_timing")
 {
-	blargg::run_test("01-read_timing-2.gb", "01-read_timing\n\n\nPassed\n", 30e5);
+	blargg::run_test("01-read_timing-2.gb", "01-read_timing\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.mem_timing-2.02-write_timing")

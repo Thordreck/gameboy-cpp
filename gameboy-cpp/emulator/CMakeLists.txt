@@ -14,6 +14,17 @@ target_sources(emulator PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/memory_map.cppm
 )
 
+# TODO: testing imgui installation
+add_executable(gameboy-cpp)
+target_compile_features(gameboy-cpp PUBLIC cxx_std_23)
+target_link_libraries(gameboy-cpp PRIVATE imgui)
+add_std_ifc_to_target(gameboy-cpp)
+
+target_sources(gameboy-cpp 
+	PRIVATE 
+		${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+)
+
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	add_executable(emulator_tests)
 	target_compile_features(emulator_tests PUBLIC cxx_std_23)
