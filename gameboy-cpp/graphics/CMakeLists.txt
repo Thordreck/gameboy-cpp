@@ -11,4 +11,5 @@ target_sources(graphics PUBLIC
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_common.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_lcd.cppm
 )

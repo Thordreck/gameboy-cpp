@@ -14,5 +14,11 @@ namespace graphics
 		color_channel_t a;
 	};
 
-	export using color_palette = std::array<color, 4>;
+	export using coords_2d_axis_t = std::uint8_t;
+
+	export struct coords_2d
+	{
+		coords_2d_axis_t x;
+		coords_2d_axis_t y;
+	};
 }
