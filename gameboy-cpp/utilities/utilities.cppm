@@ -7,3 +7,4 @@ export import :bits;
 export import :frequency;
 export import :panic;
 export import :assert;
+export import :fixed_size_queue;

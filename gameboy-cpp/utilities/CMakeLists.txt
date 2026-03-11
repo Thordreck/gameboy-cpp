@@ -16,6 +16,7 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/frequency.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/panic.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/assert.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/fixed_size_queue.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -29,6 +30,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_sources(utilities_tests
 		PRIVATE 
 			${CMAKE_CURRENT_SOURCE_DIR}/arithmetic.test.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/fixed_size_queue.test.cpp
 	)
 
 endif()
