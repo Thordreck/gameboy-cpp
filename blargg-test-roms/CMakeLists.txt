@@ -1,7 +1,6 @@
 
 add_library(blargg_tests_utilities)
 target_compile_features(blargg_tests_utilities PUBLIC cxx_std_23)
-add_std_ifc_to_target(blargg_tests_utilities)
 
 set_target_properties(blargg_tests_utilities PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(blargg_tests_utilities PUBLIC emulator memory cpu opcodes timer interrupts doctest)
@@ -17,7 +16,6 @@ target_compile_features(blargg_tests PUBLIC cxx_std_23)
 target_link_libraries(blargg_tests PRIVATE blargg_tests_utilities doctest::doctest_with_main)
 set_target_properties(blargg_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 doctest_discover_tests(blargg_tests)
-add_std_ifc_to_target(blargg_tests)
 
 target_sources(blargg_tests 
 	PRIVATE 

@@ -23,9 +23,7 @@ target_compile_definitions(imgui
 		VK_ENABLE_BETA_EXTENSIONS
 )
 
-add_std_ifc_to_target(imgui)
-
-target_include_directories(imgui 
+target_include_directories(imgui
 	PUBLIC 
 		$<TARGET_PROPERTY:glfw,INTERFACE_INCLUDE_DIRECTORIES>
 		${CMAKE_CURRENT_SOURCE_DIR}/src 

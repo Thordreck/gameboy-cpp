@@ -1,7 +1,6 @@
 
 add_library(emulator)
 target_compile_features(emulator PUBLIC cxx_std_23)
-add_std_ifc_to_target(emulator)
 
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(emulator cpu timer memory opcodes interrupts utilities)
@@ -18,7 +17,6 @@ target_sources(emulator PUBLIC
 add_executable(gameboy-cpp)
 target_compile_features(gameboy-cpp PUBLIC cxx_std_23)
 target_link_libraries(gameboy-cpp PRIVATE imgui)
-add_std_ifc_to_target(gameboy-cpp)
 
 target_sources(gameboy-cpp 
 	PRIVATE 
@@ -31,7 +29,6 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_link_libraries(emulator_tests PRIVATE emulator doctest::doctest_with_main)
 	set_target_properties(emulator_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 	doctest_discover_tests(emulator_tests)
-	add_std_ifc_to_target(emulator_tests)
 
 	target_sources(emulator_tests 
 		PRIVATE 

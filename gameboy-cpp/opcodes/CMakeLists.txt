@@ -1,7 +1,6 @@
 
 add_library(opcodes)
 target_compile_features(opcodes PUBLIC cxx_std_23)
-add_std_ifc_to_target(opcodes)
 
 set_target_properties(opcodes PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(opcodes cpu utilities interrupts)
@@ -27,7 +26,6 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 
 	add_library(opcodes_test_utilities)
 	target_compile_features(opcodes_test_utilities PUBLIC cxx_std_23)
-	add_std_ifc_to_target(opcodes_test_utilities)
 
 	set_target_properties(opcodes_test_utilities PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 	target_link_libraries(opcodes_test_utilities cpu opcodes)
@@ -43,7 +41,6 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_link_libraries(opcodes_tests PRIVATE opcodes memory opcodes_test_utilities doctest::doctest_with_main)
 	set_target_properties(opcodes_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 	doctest_discover_tests(opcodes_tests)
-	add_std_ifc_to_target(opcodes_tests)
 
 	target_sources(opcodes_tests 
 		PRIVATE 
