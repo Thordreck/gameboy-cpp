@@ -1,0 +1,227 @@
+export module graphics:ppu;
+export import memory;
+export import :lcd;
+
+import std;
+import interrupts;
+import utilities;
+
+import :fifo;
+import :common;
+import :pixel_fetcher;
+
+namespace graphics
+{
+    export enum class ppu_mode : std::uint8_t
+    {
+        h_blank,
+        v_blank,
+        oam_scan,
+        drawing,
+    };
+
+    export struct ppu_interrupt_sources
+    {
+        bool lyc_select;
+        bool mode2;
+        bool mode1;
+        bool mode0;
+    };
+
+    export class pixel_processing_unit
+    {
+    public:
+        explicit pixel_processing_unit(lcd& screen)
+            : enabled{true}
+              , screen(screen)
+              , pixel_fetcher(background_fifo)
+        {
+        }
+
+        std::uint8_t [[nodiscard]] scanline() const { return current_scanline; }
+        std::uint8_t [[nodiscard]] lyc() const { return scanline_compare; }
+        ppu_mode [[nodiscard]] mode() const { return current_mode; }
+        bool [[nodiscard]] is_enabled() const { return enabled; }
+        ppu_interrupt_sources [[nodiscard]] interrupts() const { return interrupt_sources; }
+
+        void tick()
+        {
+            if (!enabled)
+            {
+                return;
+            }
+
+            switch (current_mode)
+            {
+            case ppu_mode::h_blank:
+                h_blank();
+                break;
+            case ppu_mode::v_blank:
+                v_blank();
+                break;
+            case ppu_mode::oam_scan:
+                scan_oam();
+                break;
+            case ppu_mode::drawing:
+                draw();
+                break;
+            default: std::unreachable();
+            }
+
+            update_stat_line();
+        }
+
+        void set_enabled(const bool enabled)
+        {
+            this->enabled = enabled;
+
+            if (!enabled)
+            {
+                current_scanline = 0;
+                scanline_cycle = 0;
+                background_fifo.clear();
+                current_mode = ppu_mode::oam_scan;
+            }
+        }
+
+        void set_interrupts(const ppu_interrupt_sources new_config)
+        {
+            interrupt_sources = new_config;
+            update_stat_line();
+        }
+
+        void set_lyc(const std::uint8_t lyc)
+        {
+            scanline_compare = lyc;
+            update_stat_line();
+        }
+
+        void connect(memory::memory_bus& bus)
+        {
+            pixel_fetcher.connect(bus);
+            memory_bus = &bus;
+        }
+
+    private:
+        void scan_oam()
+        {
+            // TODO: implement objects
+            if (++scanline_cycle >= 80)
+            {
+                update_mode(ppu_mode::drawing);
+            }
+        }
+
+        void draw()
+        {
+            if (scanline_cycle++ == 80)
+            {
+                pixel_fetcher.reset_scanline();
+                pixels_drawn_in_scanline = 0;
+            }
+
+            pixel_fetcher.tick();
+
+            if (const std::optional<pixel> pixel = background_fifo.try_pop(); pixel.has_value())
+            {
+                const color pixel_color = background_palette[pixel.value().color_index];
+                const coords_2d pixel_coords { current_scanline, pixels_drawn_in_scanline };
+
+                screen.set_pixel(pixel_coords, pixel_color);
+
+                pixels_drawn_in_scanline++;
+            }
+
+            if (pixels_drawn_in_scanline == 160)
+            {
+                update_mode(ppu_mode::h_blank);
+            }
+        }
+
+        void h_blank()
+        {
+            if (++scanline_cycle >= 456)
+            {
+                scanline_cycle = 0;
+                current_scanline++;
+
+                const auto next_mode = current_scanline <= 143
+                                           ? ppu_mode::oam_scan
+                                           : ppu_mode::v_blank;
+
+                update_mode(next_mode);
+            }
+        }
+
+        void v_blank()
+        {
+            if (++scanline_cycle >= 456)
+            {
+                scanline_cycle = 0;
+                current_scanline++;
+
+                if (current_scanline > 153)
+                {
+                    current_scanline = 0;
+                    update_mode(ppu_mode::oam_scan);
+                }
+            }
+        }
+
+        void update_stat_line()
+        {
+            if (!enabled)
+            {
+                return;
+            }
+
+            const bool new_stat_line
+                = (current_scanline == scanline_compare && interrupt_sources.lyc_select)
+                || (current_mode == ppu_mode::h_blank && interrupt_sources.mode0)
+                || (current_mode == ppu_mode::v_blank && interrupt_sources.mode1)
+                || (current_mode == ppu_mode::oam_scan && interrupt_sources.mode2);
+
+            const bool should_trigger_stat_interrupt
+                = !stat_line && new_stat_line;
+
+            if (should_trigger_stat_interrupt)
+            {
+                utils::assert_not_nullptr(memory_bus);
+                interrupts::request<interrupts::lcd_interrupt>(*memory_bus);
+            }
+
+            stat_line = new_stat_line;
+        }
+
+        void update_mode(const ppu_mode new_mode)
+        {
+            current_mode = new_mode;
+
+            // VBlank interrupt
+            if (new_mode == ppu_mode::v_blank)
+            {
+                utils::assert_not_nullptr(memory_bus);
+                interrupts::request<interrupts::vblank_interrupt>(*memory_bus);
+            }
+        }
+
+    private:
+        bool enabled;
+        ppu_mode current_mode{ppu_mode::oam_scan};
+        std::uint8_t scanline_compare{};
+        std::uint8_t current_scanline{};
+        std::uint16_t scanline_cycle{};
+
+        lcd& screen;
+        pixel_fifo background_fifo{};
+        std::uint8_t pixels_drawn_in_scanline{};
+        pixel_fetcher pixel_fetcher;
+
+        ppu_interrupt_sources interrupt_sources{};
+        memory::memory_bus* memory_bus{nullptr};
+        bool stat_line{};
+
+        // TODO: make this configurable
+        const color_palette background_palette { background_green_color_palette };
+    };
+}

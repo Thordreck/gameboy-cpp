@@ -25,12 +25,12 @@ namespace graphics
 	{
 	public:
 		template<LCD Imp>
-		lcd(Imp& imp)
+		explicit lcd(Imp& imp)
 			: imp{ &imp }
 			, set_pixel_imp_fn{ set_pixel_imp<Imp> }
 		{}
 
-		void set_pixel(const coords_2d coords, const color color)
+		void set_pixel(const coords_2d coords, const color color) const
 		{
 			set_pixel_imp_fn(imp, coords, color);
 		}

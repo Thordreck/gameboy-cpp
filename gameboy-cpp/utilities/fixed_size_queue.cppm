@@ -18,9 +18,9 @@ namespace utils
 
 		static constexpr size_t size = N;
 
-		bool is_empty() const { return count() == 0; }
-		bool is_full() const { return count() == size; }
-		size_t count() const { return num_elements; }
+		[[nodiscard]] bool is_empty() const { return count() == 0; }
+		[[nodiscard]] bool is_full() const { return count() == size; }
+		[[nodiscard]] size_t count() const { return num_elements; }
 
 		bool try_push(T&& element)
 		{
@@ -98,6 +98,13 @@ namespace utils
 			num_elements--;
 
 			return element;
+		}
+
+		void clear()
+		{
+			num_elements = 0;
+			head = 0;
+			tail = 0;
 		}
 
 	private:

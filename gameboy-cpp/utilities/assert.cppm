@@ -19,10 +19,16 @@ namespace utils
 		{
 			if (!std::forward<decltype(condition)>(condition)())
 			{
-				auto msg = std::format("{}:{} Assertion failed\n", loc.file_name(), loc.line());
+				const auto msg = std::format("{}:{} Assertion failed\n", loc.file_name(), loc.line());
 				std::cerr << msg;
 				std::terminate();
 			}
 		}
+	}
+
+	export template<typename T>
+	void assert_not_nullptr(T* ptr)
+	{
+		assert([ptr] { return ptr != nullptr; });
 	}
 }
