@@ -124,11 +124,11 @@ namespace graphics
 
             if (const std::optional<pixel> pixel = background_fifo.try_pop(); pixel.has_value())
             {
-                const color pixel_color = background_palette[pixel.value().color_index];
+                // TODO: make this configurable
+                const color pixel_color = background_green_color_palette[pixel.value().color_index];
                 const coords_2d pixel_coords { current_scanline, pixels_drawn_in_scanline };
 
                 screen.set_pixel(pixel_coords, pixel_color);
-
                 pixels_drawn_in_scanline++;
             }
 
@@ -220,8 +220,5 @@ namespace graphics
         ppu_interrupt_sources interrupt_sources{};
         memory::memory_bus* memory_bus{nullptr};
         bool stat_line{};
-
-        // TODO: make this configurable
-        const color_palette background_palette { background_green_color_palette };
     };
 }
