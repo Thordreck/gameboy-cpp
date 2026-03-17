@@ -14,7 +14,7 @@ import interrupts;
 
 namespace
 {
-	std::vector<std::uint8_t> read_rom(std::filesystem::path filepath)
+	std::vector<std::uint8_t> read_rom(const std::filesystem::path& filepath)
 	{
 		std::ifstream file(filepath, std::ios::in | std::ios::binary);
 		return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
@@ -58,7 +58,7 @@ namespace blargg
 		emulator::io_hram_interrupt_memory_page memory_page{ timers, interrupts };
 
 		std::array<memory::memory_data_t, 0xFF00> memory{};
-		std::copy(rom_data.cbegin(), rom_data.cend(), memory.begin());
+		std::ranges::copy(rom_data, memory.begin());
 		auto memory_region = memory::map(memory);
 
 		auto memory_map = memory::build_memory_map(memory_region, memory_page);
