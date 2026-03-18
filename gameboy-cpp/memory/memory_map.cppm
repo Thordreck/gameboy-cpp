@@ -105,11 +105,11 @@ namespace memory
 		static constexpr auto start = start_address;
 		static constexpr auto end = end_address;
 
-		span_map(std::span<memory_data_t, size> data)
+		explicit span_map(std::span<memory_data_t, size> data)
 			: data{ data }
 		{}
 
-		memory_data_t read(const memory_address_t address) const
+		[[nodiscard]] memory_data_t read(const memory_address_t address) const
 		{
 			return data[address - start];
 		}
@@ -127,13 +127,13 @@ namespace memory
 	requires (size == (end_address - start_address + 1))
 	constexpr auto map(std::span<memory_data_t, size> data)
 	{
-		return span_map{ data };
+		return span_map<size, start_address, end_address>{ data };
 	}
 
 	export template<size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1> 
 	requires (size == (end_address - start_address + 1))
 	constexpr auto map(std::array<memory_data_t, size>& data)
 	{
-		return map(std::span(data));
+		return map<size, start_address, end_address>(std::span(data));
 	}
 }

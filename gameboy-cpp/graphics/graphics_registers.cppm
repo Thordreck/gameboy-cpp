@@ -1,5 +1,6 @@
 
 export module graphics:registers;
+
 export import memory;
 export import utilities;
 
@@ -89,4 +90,5 @@ namespace graphics
 	{
 		return memory.read(scx_address);
 	}
+
 }

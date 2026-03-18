@@ -73,7 +73,7 @@ namespace emulator
 			should_enable_ime = !should_enable_ime;
 		}
 
-		std::optional<interrupts::interrupt_dispatcher> service_interrupt(cpu::cpu& cpu)
+		static std::optional<interrupts::interrupt_dispatcher> service_interrupt(cpu::cpu& cpu)
 		{
 			return cpu.ime_flag().is_enabled()
 				? interrupts::service_first_pending_interrupt(cpu)
@@ -92,24 +92,22 @@ namespace emulator
 	public:
 		cpu_runner(
 			cpu::cpu& cpu, 
-			instructions_provider& instructions_provider,
-			interrupts_handler& interrupts_handler)
+			instructions_provider& instructions,
+			interrupts_handler& interrupts)
 			: cpu{ cpu }
-			, instructions { instructions_provider }
-			, interrupts { interrupts_handler }
+			, instructions { instructions}
+			, interrupts { interrupts}
 		{}
 
 		void tick()
 		{
-			const bool should_reset_m_cycle = handle_tick();
-
-			if (should_reset_m_cycle)
+			if (const bool should_reset_m_cycle = handle_tick())
 			{
 				cpu.cycle() = {};
 			}
 			else 
 			{
-				cpu.cycle()++;
+				++cpu.cycle();
 			}
 		}
 
@@ -127,7 +125,7 @@ namespace emulator
 			{
 				if (!interrupts::is_any_interrupt_pending(cpu))
 				{
-					return false;
+					return true;
 				}
 
 				active_interrupt = cpu.halt_state().ime_flag_set
@@ -183,7 +181,9 @@ namespace emulator
 			}
 
 			interrupts.enable_ime_if_requested(cpu);
-			active_interrupt = interrupts.service_interrupt(cpu);
+			active_interrupt = cpu.ime_flag().is_enabled()
+				? interrupts.service_interrupt(cpu)
+				: std::nullopt;
 
 			if (!active_interrupt.has_value())
 			{
@@ -202,8 +202,8 @@ namespace emulator
 	private:
 		cpu::cpu& cpu;
 
-		std::optional<interrupts::interrupt_dispatcher> active_interrupt;
-		std::optional<opcodes::instruction> active_instruction;
+		std::optional<interrupts::interrupt_dispatcher> active_interrupt {};
+		std::optional<opcodes::instruction> active_instruction {};
 
 		instructions_provider& instructions;
 		interrupts_handler& interrupts;

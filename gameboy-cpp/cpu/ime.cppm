@@ -11,8 +11,8 @@ namespace cpu
 			, requested{ false }
 		{}
 
-		bool is_enabled() const { return enabled; }
-		bool is_requested() const { return requested; }
+		[[nodiscard]] bool is_enabled() const { return enabled; }
+		[[nodiscard]] bool is_requested() const { return requested; }
 
 		void request() 
 		{ 

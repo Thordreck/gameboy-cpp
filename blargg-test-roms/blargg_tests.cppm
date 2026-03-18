@@ -9,6 +9,7 @@ import cpu;
 import timer;
 import memory;
 import opcodes;
+import graphics;
 import emulator;
 import interrupts;
 
@@ -34,6 +35,25 @@ namespace
 			memory.write(sc, 0);
 		}
 	}
+
+	class memory_lcd
+	{
+	public:
+		void set_pixel(const graphics::coords_2d coords, const graphics::color color)
+		{
+			const std::uint8_t pixel_data_pos = (coords.x * graphics::lcd_width + coords.y) * 4;
+			CHECK(pixel_data_pos < data.size());
+
+			data[pixel_data_pos] = color.r;
+			data[pixel_data_pos + 1] = color.g;
+			data[pixel_data_pos + 2] = color.b;
+			data[pixel_data_pos + 3] = color.a;
+		}
+
+	private:
+		std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * 4> data {};
+	};
+
 }
 
 namespace blargg
@@ -54,8 +74,13 @@ namespace blargg
 		timer::timer_system timers{};
 		timers.divider() = 0xAB;
 
+		// graphics
+		memory_lcd lcd_imp {};
+		graphics::lcd lcd(lcd_imp);
+		graphics::pixel_processing_unit ppu(lcd);
+
 		interrupts::interrupt_registers interrupts{};
-		emulator::io_hram_interrupt_memory_page memory_page{ timers, interrupts };
+		emulator::io_hram_interrupt_memory_page memory_page{ timers, interrupts, ppu };
 
 		std::array<memory::memory_data_t, 0xFF00> memory{};
 		std::ranges::copy(rom_data, memory.begin());

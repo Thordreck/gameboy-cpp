@@ -221,4 +221,34 @@ namespace graphics
         memory::memory_bus* memory_bus{nullptr};
         bool stat_line{};
     };
+
+    export std::uint8_t lcd_status(const pixel_processing_unit& ppu)
+    {
+        const auto [lyc_select, mode2, mode1, mode0] = ppu.interrupts();
+        const bool lyc_equal_ly = ppu.lyc() == ppu.scanline();
+        const std::uint8_t ppu_mode_reg = ppu.is_enabled()
+            ? (std::to_underlying(ppu.mode()) & 0b11)
+            : 0;
+
+        return (lyc_select << 6)
+            | (mode2 << 5)
+            | (mode1 << 4)
+            | (mode0 << 3)
+            | (lyc_equal_ly << 2)
+            | ppu_mode_reg;
+    }
+
+    export void set_lcd_status(const std::uint8_t status, pixel_processing_unit& ppu)
+    {
+        const ppu_interrupt_sources interrupts
+        {
+            utils::is_bit_set<6>(status),
+            utils::is_bit_set<5>(status),
+            utils::is_bit_set<4>(status),
+            utils::is_bit_set<3>(status),
+        };
+
+        ppu.set_interrupts(interrupts);
+    }
+
 }

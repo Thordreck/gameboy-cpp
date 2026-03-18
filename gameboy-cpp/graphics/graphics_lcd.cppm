@@ -6,6 +6,9 @@ export import :common;
 
 namespace graphics
 {
+	export constexpr std::uint8_t lcd_width = 160;
+	export constexpr std::uint8_t lcd_height = 144;
+
 	export template<typename T>
 	concept LCD = requires(T& lcd, const coords_2d coords, const color color)
 	{

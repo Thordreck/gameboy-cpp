@@ -3,7 +3,7 @@ add_library(emulator)
 target_compile_features(emulator PUBLIC cxx_std_23)
 
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator cpu timer memory opcodes interrupts utilities)
+target_link_libraries(emulator cpu timer memory opcodes interrupts graphics utilities)
 target_sources(emulator PUBLIC 
 	FILE_SET 
 		CXX_MODULES 
