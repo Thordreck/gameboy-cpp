@@ -65,15 +65,20 @@ namespace
     }
 
     void decode_tile_row(
+        const memory::memory_bus& memory,
         const std::uint8_t low,
         const std::uint8_t high,
         std::span<graphics::pixel, 8> pixels)
     {
         using namespace graphics;
+        const bool is_bg_and_window_enabled = is_bg_and_window_display_flag_set(memory);
 
         for (int i = 7; i >= 0; i--)
         {
-            const color_index_t color = (high >> i & 1) << 1 | low >> i & 1;
+            const color_index_t color = is_bg_and_window_enabled
+                ? (high >> i & 1) << 1 | low >> i & 1
+                : 0;
+
             pixels[7 - i] = {color};
         }
     }
@@ -174,7 +179,7 @@ namespace graphics
             }
 
             const std::uint8_t high_byte = read_vram(vram, tile_address + 1);
-            decode_tile_row(tile_low_byte, high_byte, tile_row);
+            decode_tile_row(*memory, tile_low_byte, high_byte, tile_row);
             advance_state();
 
             // TODO: according to pandocs, there's an additional push here, but the wording used
