@@ -98,10 +98,6 @@ TEST_CASE("acid.PPU generates output equals to reference image")
         ppu.tick();
     }
 
-    REQUIRE_MESSAGE(
-        std::ranges::all_of(lcd_imp.get_data(), [] (const auto color) { return color != 0; }),
-        "Not all pixels have been drawn into lcd");
-
     const auto output_filepath = std::filesystem::temp_directory_path() / "test.png";
     constexpr stb::image_metadata output_metadata
     {

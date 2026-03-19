@@ -11,6 +11,28 @@ import :fifo;
 import :common;
 import :pixel_fetcher;
 
+namespace
+{
+    bool is_window_present_in_scanline(const memory::memory_bus& memory)
+    {
+        using namespace graphics;
+        return lcd_y(memory) >= wy(memory);
+    }
+
+    bool is_window_visible(const memory::memory_bus& memory, const std::uint8_t screen_x)
+    {
+        using namespace graphics;
+        return is_window_present_in_scanline(memory) && screen_x >= static_cast<int>(wx(memory)) - 7;
+    }
+
+    bool is_window_first_line(const memory::memory_bus& memory)
+    {
+        using namespace graphics;
+        return lcd_y(memory) == wy(memory);
+    }
+
+}
+
 namespace graphics
 {
     export enum class ppu_mode : std::uint8_t
@@ -79,7 +101,14 @@ namespace graphics
             {
                 current_scanline = 0;
                 scanline_cycle = 0;
+                window_line = 0;
+                window_fetcher_penalty = 0;
+                window_active_in_scanline = false;
+                pixels_drawn_in_scanline = 0;
+                pixels_to_discard = 0;
                 background_fifo.clear();
+                pixel_fetcher.reset();
+
                 current_mode = ppu_mode::oam_scan;
             }
         }
@@ -114,18 +143,46 @@ namespace graphics
 
         void draw()
         {
+            // Draw start
             if (scanline_cycle++ == 80)
             {
-                pixel_fetcher.reset_scanline();
+                pixel_fetcher.reset();
                 pixels_drawn_in_scanline = 0;
+                pixels_to_discard = scx(*memory_bus) % 8;
             }
 
-            pixel_fetcher.tick();
+            // Window start
+            if (!window_active_in_scanline
+                && is_window_enabled(*memory_bus)
+                && is_window_visible(*memory_bus, pixels_drawn_in_scanline))
+            {
+                window_active_in_scanline = true;
+                window_line = is_window_first_line(*memory_bus) ? 0 : window_line;
+
+                background_fifo.clear();
+                pixel_fetcher.reset();
+                pixels_to_discard = 0;
+                window_fetcher_penalty = wx(*memory_bus) > 0 ? 6 : 0;
+            }
+
+            if (window_fetcher_penalty > 0)
+            {
+                window_fetcher_penalty--;
+                return;
+            }
+
+            pixel_fetcher.tick(window_active_in_scanline, window_line);
 
             if (const std::optional<pixel> pixel = background_fifo.try_pop(); pixel.has_value())
             {
+                if (pixels_to_discard > 0)
+                {
+                    pixels_to_discard--;
+                    return;
+                }
+
                 // TODO: make this configurable
-                const color pixel_color = background_green_color_palette[pixel.value().color_index];
+                const color pixel_color = background_grayscale_color_palette[pixel.value().color_index];
                 const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
 
                 screen.set_pixel(pixel_coords, pixel_color);
@@ -140,10 +197,17 @@ namespace graphics
 
         void h_blank()
         {
+            // End of scanline
             if (++scanline_cycle >= 456)
             {
                 scanline_cycle = 0;
                 current_scanline++;
+
+                if (window_active_in_scanline)
+                {
+                    window_active_in_scanline = false;
+                    window_line++;
+                }
 
                 const auto next_mode = current_scanline <= 143
                                            ? ppu_mode::oam_scan
@@ -213,8 +277,13 @@ namespace graphics
         std::uint16_t scanline_cycle{};
 
         lcd& screen;
+
         pixel_fifo background_fifo{};
+        std::uint8_t window_line {};
+        std::uint8_t window_fetcher_penalty{};
+        bool window_active_in_scanline {};
         std::uint8_t pixels_drawn_in_scanline{};
+        std::uint8_t pixels_to_discard{};
         pixel_fetcher pixel_fetcher;
 
         ppu_interrupt_sources interrupt_sources{};

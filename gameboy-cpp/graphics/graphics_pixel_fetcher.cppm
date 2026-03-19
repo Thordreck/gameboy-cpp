@@ -9,10 +9,13 @@ import utilities;
 
 namespace
 {
-    std::uint8_t compute_fetcher_y(const memory::memory_bus& memory)
+    std::uint8_t compute_fetcher_y(const memory::memory_bus& memory, const bool is_window_tile, const std::uint8_t window_line)
     {
         using namespace graphics;
-        return lcd_y(memory) + scy(memory);
+
+        return is_window_tile
+            ? window_line
+            : lcd_y(memory) + scy(memory);
     }
 
     std::uint8_t compute_tile_y(const std::uint8_t fetcher_y)
@@ -25,16 +28,19 @@ namespace
         return fetcher_y % 8;
     }
 
-    std::uint8_t compute_tile_x(const memory::memory_bus& memory, const std::uint8_t fetcher_x)
+    std::uint8_t compute_tile_x(const memory::memory_bus& memory, const std::uint8_t fetcher_x, const bool is_window_tile)
     {
         using namespace graphics;
-        return ((scx(memory) / 8) + fetcher_x) & 0x1F;
+        return is_window_tile ? fetcher_x : ((scx(memory) / 8) + fetcher_x) & 0x1F;
     }
 
-    std::uint16_t compute_tilemap_base_address(const memory::memory_bus& memory)
+    std::uint16_t compute_tilemap_base_address(const memory::memory_bus& memory, const bool is_window_tile)
     {
         using namespace graphics;
-        return is_background_tilemap_flag_set(memory) ? 0x9C00 : 0x9800;
+
+        return is_window_tile
+            ? is_window_tilemap_flag_set(memory) ? 0x9C00 : 0x9800
+            : is_background_tilemap_flag_set(memory) ? 0x9C00 : 0x9800;
     }
 
     std::uint16_t compute_base_tile_data_address(const memory::memory_bus& memory)
@@ -84,7 +90,6 @@ namespace graphics
         push,
     };
 
-    // TODO: window support
     export class pixel_fetcher
     {
     public:
@@ -94,23 +99,21 @@ namespace graphics
             , current_step{pixel_fetch_step::get_tile_address}
         {}
 
-        void reset_scanline()
+        void reset()
         {
-            utils::assert_not_nullptr(memory);
-
             fetcher_x = 0;
-            fetcher_y = compute_fetcher_y(*memory);
             current_step = pixel_fetch_step::get_tile_address;
+            step_cycle = 0;
         }
 
-        void tick()
+        void tick(const bool is_window_active, const std::uint8_t window_line)
         {
             utils::assert_not_nullptr(memory);
 
             switch (current_step)
             {
             case pixel_fetch_step::get_tile_address:
-                fetch_tile_address();
+                fetch_tile_address(is_window_active, window_line);
                 break;
             case pixel_fetch_step::get_tile_data_low:
                 get_tile_data_low();
@@ -131,18 +134,20 @@ namespace graphics
         void connect(memory::memory_bus& bus) { memory = &bus; }
 
     private:
-        void fetch_tile_address()
+        void fetch_tile_address(const bool is_window_active, const std::uint8_t window_line)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            const std::uint8_t tile_x = compute_tile_x(*memory, fetcher_x);
+            const std::uint8_t fetcher_y = compute_fetcher_y(*memory, is_window_active, window_line);
+
+            const std::uint8_t tile_x = compute_tile_x(*memory, fetcher_x, is_window_active);
             const std::uint8_t tile_y = compute_tile_y(fetcher_y);
             const std::uint8_t tile_line = compute_tile_line(fetcher_y);
 
-            const std::uint16_t tilemap_base_address = compute_tilemap_base_address(*memory);
+            const std::uint16_t tilemap_base_address = compute_tilemap_base_address(*memory, is_window_active);
             const std::uint16_t tilemap_address = tilemap_base_address + tile_y * 32 + tile_x;
             const std::uint8_t tile_index = read_vram(vram, tilemap_address);
 
@@ -209,8 +214,8 @@ namespace graphics
 
 		memory::memory_bus* memory { nullptr };
 
+        // Tile coordinate along the scanline (groups of 8 pixels)
         std::uint8_t fetcher_x {};
-        std::uint8_t fetcher_y {};
 
         pixel_fetch_step current_step;
         std::uint8_t step_cycle{};

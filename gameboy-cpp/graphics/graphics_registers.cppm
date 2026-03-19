@@ -91,4 +91,16 @@ namespace graphics
 		return memory.read(scx_address);
 	}
 
+	export template<memory::ReadOnlyMemory Memory>
+	memory::memory_data_t wy(const Memory& memory)
+	{
+		return memory.read(wy_address);
+	}
+
+	export template<memory::ReadOnlyMemory Memory>
+	memory::memory_data_t wx(const Memory& memory)
+	{
+		return memory.read(wx_address);
+	}
+
 }
