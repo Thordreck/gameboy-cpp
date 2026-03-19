@@ -74,7 +74,7 @@ namespace graphics
 	export constexpr memory::memory_address_t lcd_status_address = 0xFF41;
 
 	export constexpr memory::memory_address_t scy_address = 0xFF42;
-	export constexpr memory::memory_address_t scx_address = 0xFF42;
+	export constexpr memory::memory_address_t scx_address = 0xFF43;
 
 	export constexpr memory::memory_address_t wy_address = 0xFF4A;
 	export constexpr memory::memory_address_t wx_address = 0xFF4B;

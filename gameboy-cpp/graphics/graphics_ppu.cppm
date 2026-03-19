@@ -147,6 +147,7 @@ namespace graphics
             if (scanline_cycle++ == 80)
             {
                 pixel_fetcher.reset();
+                background_fifo.clear();
                 pixels_drawn_in_scanline = 0;
                 pixels_to_discard = scx(*memory_bus) % 8;
             }

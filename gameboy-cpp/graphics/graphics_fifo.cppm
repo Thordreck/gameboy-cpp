@@ -12,14 +12,19 @@ namespace graphics
 	export class pixel_fifo
 	{
 	public:
-		bool try_push(tile_row row)
+		[[nodiscard]] bool try_push(tile_row row)
 		{
 			return queue.try_push(row);
 		}
 
-		std::optional<pixel> try_pop()
+		[[nodiscard]] std::optional<pixel> try_pop()
 		{
 			return queue.try_pop();
+		}
+
+		[[nodiscard]] size_t count() const
+		{
+			return queue.count();
 		}
 
 		void clear()
