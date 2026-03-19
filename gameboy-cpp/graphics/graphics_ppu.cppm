@@ -6,6 +6,7 @@ import std;
 import interrupts;
 import utilities;
 
+import :vram;
 import :fifo;
 import :common;
 import :pixel_fetcher;
@@ -31,12 +32,11 @@ namespace graphics
     export class pixel_processing_unit
     {
     public:
-        explicit pixel_processing_unit(lcd& screen)
+        explicit pixel_processing_unit(lcd& screen, const_vram_t vram)
             : enabled{true}
-              , screen(screen)
-              , pixel_fetcher(background_fifo)
-        {
-        }
+            , screen(screen)
+            , pixel_fetcher(background_fifo, vram)
+        {}
 
         std::uint8_t [[nodiscard]] scanline() const { return current_scanline; }
         std::uint8_t [[nodiscard]] lyc() const { return scanline_compare; }
@@ -126,7 +126,7 @@ namespace graphics
             {
                 // TODO: make this configurable
                 const color pixel_color = background_green_color_palette[pixel.value().color_index];
-                const coords_2d pixel_coords { current_scanline, pixels_drawn_in_scanline };
+                const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
 
                 screen.set_pixel(pixel_coords, pixel_color);
                 pixels_drawn_in_scanline++;

@@ -62,17 +62,21 @@ namespace stb
         return image{data, metadata};
     }
 
-    export stb_result<void> write_png(const std::filesystem::path& path, const image_data_t* data, const image_metadata& metadata)
+    export [[nodiscard]] stb_result<void> write_png(
+        const std::filesystem::path& path,
+        const image_data_t* data,
+        const image_metadata& metadata)
     {
         const int error = stbi_write_png(
             path.string().c_str(),
             metadata.width,
             metadata.height,
-            metadata.channels, data,
+            metadata.channels,
+            data,
             metadata.width * metadata.channels);
 
-        return error != 0
-            ? std::unexpected("Could not write png")
+        return error == 0
+            ? std::unexpected(std::format("Could not write png."))
             : stb_result<void>{};
     }
 

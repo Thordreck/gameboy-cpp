@@ -12,31 +12,34 @@ namespace emulator
 	export class vram_memory_page
 	{
 	public:
-		static constexpr memory::memory_address_t start = 0x8000;
-		static constexpr memory::memory_address_t end = 0x9FFF;
+		static constexpr memory::memory_address_t start = graphics::vram_start_address;
+		static constexpr memory::memory_address_t end = graphics::vram_end_address;
 
-		explicit vram_memory_page(const graphics::pixel_processing_unit& ppu)
+		explicit vram_memory_page(
+			const graphics::pixel_processing_unit& ppu,
+			graphics::vram_t vram)
 			: ppu { ppu }
+			, vram { vram }
 		{}
 
 		[[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
 		{
 			return ppu.mode() == graphics::ppu_mode::drawing
 				? 0xFF
-				: vram[address - start];
+				: graphics::read_vram(vram, address);
 		}
 
 		void write(const memory::memory_address_t address, const memory::memory_data_t value)
 		{
 			if (ppu.mode() != graphics::ppu_mode::drawing)
 			{
-				vram[address - start] = value;
+				graphics::write_vram(vram, address, value);
 			}
 		}
 
 	private:
 		const graphics::pixel_processing_unit& ppu;
-		std::array<memory::memory_data_t, end - start + 1> vram {};
+		graphics::vram_t vram;
 	};
 
 	export class io_hram_interrupt_memory_page

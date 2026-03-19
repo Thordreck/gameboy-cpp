@@ -21,21 +21,19 @@ namespace
     public:
         void set_pixel(const graphics::coords_2d coords, const graphics::color color)
         {
-            //std::cout << "Drawing pixels\n";
-
-            const std::uint8_t pixel_data_pos = (coords.x * graphics::lcd_width + coords.y) * 4;
-            CHECK(pixel_data_pos < data.size());
+            const std::size_t pixel_data_pos = (coords.y * graphics::lcd_width + coords.x) * 3;
+            CHECK(pixel_data_pos + 2 < data.size());
 
             data[pixel_data_pos] = color.r;
             data[pixel_data_pos + 1] = color.g;
             data[pixel_data_pos + 2] = color.b;
-            data[pixel_data_pos + 3] = color.a;
+            //data[pixel_data_pos + 3] = color.a;
         }
 
         [[nodiscard]] auto& get_data() const { return data; }
 
     private:
-        std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * 4> data {};
+        std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * 3> data {};
     };
 
 }
@@ -60,12 +58,15 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     interrupts::interrupt_registers interrupts{};
 
     // graphics
+    std::array<memory::memory_data_t, graphics::vram_size> vram {};
+
     memory_lcd lcd_imp {};
     graphics::lcd lcd(lcd_imp);
-    graphics::pixel_processing_unit ppu(lcd);
+
+    graphics::pixel_processing_unit ppu(lcd, vram);
 
     // memory
-    emulator::vram_memory_page vram_page { ppu };
+    emulator::vram_memory_page vram_page { ppu, std::span {vram } };
     emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
 
     std::array<memory::memory_data_t, vram_page.start> fallback_memory_1{};
@@ -89,14 +90,29 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     emulator::default_interrupt_handler interrupts_handler{};
     emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
 
-    constexpr size_t max_num_timer_cycles = 30e5 * 4;
-
-    for (size_t i = 0; i < max_num_timer_cycles; i++)
+    // The rom draws a single frame.
+    while (ppu.scanline() < 153)
     {
         runner.tick();
         timers.tick();
         ppu.tick();
     }
 
+    REQUIRE_MESSAGE(
+        std::ranges::all_of(lcd_imp.get_data(), [] (const auto color) { return color != 0; }),
+        "Not all pixels have been drawn into lcd");
+
+    const auto output_filepath = std::filesystem::temp_directory_path() / "test.png";
+    constexpr stb::image_metadata output_metadata
+    {
+        graphics::lcd_width,
+        graphics::lcd_height,
+        3
+    };
+
     // TODO: generate resulting png data and compare it with reference image
+    const auto result = stb::write_png(output_filepath, lcd_imp.get_data().data(), output_metadata);
+    REQUIRE_MESSAGE(result.has_value(), std::format("Result vram png failed. {}", result.error()));
+
+    std::cout << "Image generated at " << output_filepath << "\n";
 }
