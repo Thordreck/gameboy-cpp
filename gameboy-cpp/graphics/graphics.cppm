@@ -6,3 +6,4 @@ export import :lcd;
 export import :fifo;
 export import :ppu;
 export import :vram;
+export import :oam;
