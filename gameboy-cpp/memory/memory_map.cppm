@@ -78,6 +78,7 @@ namespace memory
 		auto fill_region = [&]<typename T>(T& region)
 		{
 			using region_t = std::remove_reference_t<T>;
+			constexpr size_t num_pages = (region_t::end - region_t::start + 1) / memory_map_page_size;
 
 			const memory_map_page page
 			{
