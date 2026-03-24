@@ -63,45 +63,64 @@ namespace blargg
 		std::string_view expected_output,
 		const size_t max_num_machine_cycles)
 	{
+		// rom
 		const std::filesystem::path rom_file{ rom_file_path };
 		REQUIRE(std::filesystem::exists(rom_file));
 		const std::vector<std::uint8_t> rom_data = read_rom(rom_file);
 
+		// cpu
 		cpu::cpu cpu{ };
 		cpu.pc() = 0x100;
 		cpu.sp() = 0xFFFE;
 
+		// rimer
 		timer::timer_system timers{};
 		timers.divider() = 0xAB;
 
+		// interrupts
+		interrupts::interrupt_registers interrupts{};
+
 		// graphics
+		std::array<memory::memory_data_t, graphics::vram_size> vram {};
+
 		memory_lcd lcd_imp {};
 		graphics::lcd lcd(lcd_imp);
-		graphics::pixel_processing_unit ppu(lcd);
+		graphics::pixel_processing_unit ppu(lcd, vram);
 
-		interrupts::interrupt_registers interrupts{};
-		emulator::io_hram_interrupt_memory_page memory_page{ timers, interrupts, ppu };
+		// Memory
+		emulator::vram_memory_page vram_page { ppu, std::span {vram } };
+		emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
 
-		std::array<memory::memory_data_t, 0xFF00> memory{};
-		std::ranges::copy(rom_data, memory.begin());
-		auto memory_region = memory::map(memory);
+		std::array<memory::memory_data_t, vram_page.start> fallback_memory_1{};
+		std::array<memory::memory_data_t, 0x5F00> fallback_memory_2{};
 
-		auto memory_map = memory::build_memory_map(memory_region, memory_page);
+		std::ranges::copy(rom_data, fallback_memory_1.begin());
+		auto fallback_memory_page_1 = memory::map(fallback_memory_1);
+		auto fallback_memory_page_2 = memory::map<0x5F00, 0xA000, 0xFEFF>(fallback_memory_2);
+
+		auto memory_map = memory::build_memory_map(
+			fallback_memory_page_1,
+			vram_page,
+			fallback_memory_page_2,
+			io_hram_interrupt_page);
+
 		auto memory_bus = memory::memory_bus{ memory_map };
+		memory::connect(memory_bus, cpu, timers, ppu);
 
-		memory::connect(memory_bus, cpu, timers);
-
-		std::string result{};
-		const size_t max_num_timer_cycles = max_num_machine_cycles * 4;
-
+		// cpu runner
 		emulator::default_instructions_provider instructions{};
 		emulator::default_interrupt_handler interrupts_handler{};
 		emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
+
+		// results
+		std::string result{};
+		const size_t max_num_timer_cycles = max_num_machine_cycles * 4;
 
 		for (size_t i = 0; i < max_num_timer_cycles; i++)
 		{
 			runner.tick();
 			timers.tick();
+			ppu.tick();
 
 			read_io_result_output(memory_bus, result);
 
