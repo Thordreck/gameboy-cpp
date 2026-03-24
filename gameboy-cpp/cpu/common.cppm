@@ -33,14 +33,14 @@ namespace cpu
 		temp_cache& cache() { return cache_; }
 		halt_context& halt_state() { return halt_; }
 
-		const program_counter& pc() const { return pc_; }
-		const registers& reg() const { return registers_; }
-		const memory::memory_bus& memory() const { return *memory_; }
-		const stack_pointer& sp() const { return sp_; }
-		const ime& ime_flag() const { return ime_; }
-		const cpu_cycle& cycle() const { return cycle_; }
-		const temp_cache& cache() const { return cache_; }
-		const halt_context& halt_state() const { return halt_; }
+		[[nodiscard]] const program_counter& pc() const { return pc_; }
+		[[nodiscard]] const registers& reg() const { return registers_; }
+		[[nodiscard]] const memory::memory_bus& memory() const { return *memory_; }
+		[[nodiscard]] const stack_pointer& sp() const { return sp_; }
+		[[nodiscard]] const ime& ime_flag() const { return ime_; }
+		[[nodiscard]] const cpu_cycle& cycle() const { return cycle_; }
+		[[nodiscard]] const temp_cache& cache() const { return cache_; }
+		[[nodiscard]] const halt_context& halt_state() const { return halt_; }
 
 		void connect(memory::memory_bus& bus) { memory_ = &bus; }
 
