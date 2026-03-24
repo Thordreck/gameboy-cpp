@@ -78,7 +78,6 @@ namespace memory
 		auto fill_region = [&]<typename T>(T& region)
 		{
 			using region_t = std::remove_reference_t<T>;
-			const size_t num_pages = (region_t::end - region_t::start + 1) / memory_map_page_size;
 
 			const memory_map_page page
 			{
@@ -87,7 +86,7 @@ namespace memory
 				&region,
 			};
 
-			const size_t initial_page_pos = region_t::start >> 8;
+			constexpr size_t initial_page_pos = region_t::start >> 8;
 			const auto initial_fill_pos = std::next(mapping.begin(), initial_page_pos);
 
 			std::ranges::fill_n(initial_fill_pos, num_pages, page);
