@@ -43,7 +43,7 @@ namespace memory
     public:
         template <AccessPolicy Policy>
         requires (sizeof(std::decay_t<Policy>) <= 32)
-            && (alignof(Policy) <= alignof(std::max_align_t))
+            && (alignof(std::decay_t<Policy>) <= alignof(std::max_align_t))
             && std::destructible<std::decay_t<Policy>>
         explicit access_policy(Policy&& policy)
             : can_read_func{invoke_can_read<std::decay_t<Policy>>}
@@ -81,18 +81,47 @@ namespace memory
         alignas(std::max_align_t) std::array<std::byte, 32> context;
     };
 
+    template<AccessPolicy... Policies>
+    class access_policy_chain
+    {
+    public:
+        access_policy_chain(Policies&&... policies)
+            : policies { std::forward<Policies>(policies)... }
+        {}
+
+        [[nodiscard]] bool can_read(const memory_address_t address) const
+        {
+            return std::apply([address] (const auto&... policy) { return (... && policy.can_read(address)); }, policies);
+        }
+
+        [[nodiscard]] bool can_write(const memory_address_t address) const
+        {
+            return std::apply([address] (const auto&... policy) { return (... && policy.can_write(address)); }, policies);
+        }
+
+    private:
+        using tuple_t = std::tuple<std::decay_t<Policies>...>;
+        tuple_t policies;
+    };
+
     export class memory_bus
     {
     public:
-        memory_bus(const memory_map_span_t map)
-            : map{map}
-            , access(std::nullopt)
-        {}
-
         template <AccessPolicy Policy>
         memory_bus(const memory_map_span_t map, Policy&& policy)
             : map{map}
             , access(std::in_place, std::forward<Policy>(policy))
+        {}
+
+        template <AccessPolicy... Policies>
+        requires (sizeof...(Policies) > 1)
+        memory_bus(const memory_map_span_t map, Policies&&... policies)
+            : memory_bus(map, access_policy_chain<Policies...>(std::forward<Policies>(policies)...))
+        {}
+
+        memory_bus(const memory_map_span_t map)
+            : map{map}
+            , access(std::nullopt)
         {}
 
         [[nodiscard]] memory_data_t read(const memory_address_t address) const

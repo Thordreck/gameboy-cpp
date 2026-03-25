@@ -1,5 +1,6 @@
 
 export module graphics:oam;
+export import :ppu;
 export import memory;
 export import std;
 
@@ -86,4 +87,110 @@ namespace graphics
             | std::views::chunk(object_memory_byte_size)
             | std::ranges::views::transform([](auto chunk) { return object(chunk); });
     }
+
+    export class oam_dma
+    {
+    public:
+        void start_transfer(const memory::memory_address_t start_address)
+        {
+            current_byte = 0;
+            current_tick = 0;
+            start = start_address;
+            is_transferring = true;
+        }
+
+        [[nodiscard]] bool is_transfer_active() const
+        {
+            return is_transferring;
+        }
+
+        void tick()
+        {
+            if (is_transferring && ++current_tick % 4 == 0)
+            {
+                using namespace memory;
+                utils::assert_not_nullptr(memory);
+
+                const memory_address_t source_address = start + current_byte;
+                const memory_address_t target_address = oam_start_address + current_byte;
+                const memory_data_t byte_to_copy = memory->read(source_address);
+
+                memory->write(target_address, byte_to_copy);
+
+                if (++current_byte >= oam_size)
+                {
+                    is_transferring = false;
+                }
+            }
+        }
+
+        void connect(memory::memory_bus& bus)
+        {
+            memory = &bus;
+        }
+
+    private:
+        memory::memory_bus* memory { nullptr };
+
+        bool is_transferring {};
+        std::uint16_t current_tick {};
+        std::uint8_t current_byte {};
+        memory::memory_address_t start {};
+    };
+
+    export class oam_dma_access_policy
+    {
+    public:
+        explicit oam_dma_access_policy(const oam_dma& oam_dma)
+            : dma { oam_dma }
+        {}
+
+        [[nodiscard]] bool can_read(const memory::memory_address_t address) const
+        {
+            constexpr memory::memory_address_t hram_start_address = 0xFF80;
+            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
+
+            return memory::is_in_region<hram_start_address, hram_end_address>(address)
+                || !dma.is_transfer_active();
+        }
+
+        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
+        {
+            constexpr memory::memory_address_t hram_start_address = 0xFF80;
+            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
+
+            return memory::is_in_region<hram_start_address, hram_end_address>(address)
+                || !dma.is_transfer_active();
+        }
+
+    private:
+        const oam_dma& dma;
+    };
+
+    export class oam_ppu_access_policy
+    {
+    public:
+        explicit oam_ppu_access_policy(const pixel_processing_unit& ppu, const oam_dma& oam_dma)
+            : ppu { ppu }
+            , dma { oam_dma }
+        {}
+
+        [[nodiscard]] bool can_read(const memory::memory_address_t address) const
+        {
+            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
+                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
+                || !dma.is_transfer_active();
+        }
+
+        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
+        {
+            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
+                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
+                || !dma.is_transfer_active();
+        }
+
+    private:
+        const pixel_processing_unit& ppu;
+        const oam_dma& dma;
+    };
 }

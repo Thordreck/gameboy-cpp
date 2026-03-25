@@ -85,10 +85,10 @@ namespace blargg
 
 		memory_lcd lcd_imp {};
 		graphics::lcd lcd(lcd_imp);
-		graphics::pixel_processing_unit ppu(lcd, vram);
+		graphics::pixel_processing_unit ppu(lcd);
 
 		// Memory
-		emulator::vram_memory_page vram_page { ppu, std::span {vram } };
+		emulator::vram_memory_page vram_page { vram };
 		emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
 
 		std::array<memory::memory_data_t, vram_page.start> fallback_memory_1{};
@@ -104,8 +104,13 @@ namespace blargg
 			fallback_memory_page_2,
 			io_hram_interrupt_page);
 
-		auto memory_bus = memory::memory_bus{ memory_map };
-		memory::connect(memory_bus, cpu, timers, ppu);
+		graphics::vram_access_policy vram_policy { ppu };
+
+		memory::memory_bus cpu_memory_bus { memory_map, vram_policy };
+		memory::memory_bus ppu_memory_bus { memory_map };
+
+		memory::connect(cpu_memory_bus, cpu, timers);
+		memory::connect(ppu_memory_bus, cpu, timers, ppu);
 
 		// cpu runner
 		emulator::default_instructions_provider instructions{};
@@ -122,7 +127,7 @@ namespace blargg
 			timers.tick();
 			ppu.tick();
 
-			read_io_result_output(memory_bus, result);
+			read_io_result_output(ppu_memory_bus, result);
 
 			if (result == expected_output)
 			{

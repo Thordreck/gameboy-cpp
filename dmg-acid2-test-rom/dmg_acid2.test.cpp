@@ -63,27 +63,53 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     memory_lcd lcd_imp {};
     graphics::lcd lcd(lcd_imp);
 
-    graphics::pixel_processing_unit ppu(lcd, vram);
+    graphics::oam_dma oam_dma {};
+    graphics::pixel_processing_unit ppu(lcd);
 
     // memory
-    emulator::vram_memory_page vram_page { ppu, std::span {vram } };
+    emulator::vram_memory_page vram_page { vram };
     emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
+    emulator::oam_memory_page oam_memory_page { oam_dma };
 
-    std::array<memory::memory_data_t, vram_page.start> fallback_memory_1{};
-    std::array<memory::memory_data_t, 0x5F00> fallback_memory_2{};
+    std::array<memory::memory_data_t, 0x4000> rom_bank_0{};
+    std::array<memory::memory_data_t, 0x4000> rom_bank_n{};
+    std::array<memory::memory_data_t, 0x2000> external_ram{};
+    std::array<memory::memory_data_t, 0x1000> work_ram_0{};
+    std::array<memory::memory_data_t, 0x1000> work_ram_1{};
+    std::array<memory::memory_data_t, 0x1E00> echo_ram{};
 
-    std::ranges::copy(rom_data, fallback_memory_1.begin());
-    auto fallback_memory_page_1 = memory::map(fallback_memory_1);
-    auto fallback_memory_page_2 = memory::map<0x5F00, 0xA000, 0xFEFF>(fallback_memory_2);
+    std::ranges::copy(rom_data | std::views::take(rom_bank_0.size()), rom_bank_0.begin());
+    std::ranges::copy(rom_data | std::views::drop(rom_bank_0.size()), rom_bank_n.begin());
+
+    auto rom_bank_0_page = memory::map(rom_bank_0);
+    auto rom_bank_n_page = memory::map<0x4000, 0x4000, 0x7FFF>(rom_bank_n);
+    auto external_ram_page = memory::map<0x2000, 0xA000, 0xBFFF>(external_ram);
+    auto work_ram_0_page = memory::map<0x1000, 0xC000, 0xCFFF>(work_ram_0);
+    auto work_ram_1_page = memory::map<0x1000, 0xD000, 0xDFFF>(work_ram_1);
+    auto echo_ram_page = memory::map<0x1E00, 0xE000, 0xFDFF>(echo_ram);
 
     auto memory_map = memory::build_memory_map(
-        fallback_memory_page_1,
+        rom_bank_0_page,
+        rom_bank_n_page,
         vram_page,
-        fallback_memory_page_2,
+        external_ram_page,
+        work_ram_0_page,
+        work_ram_1_page,
+        echo_ram_page,
+        oam_memory_page,
         io_hram_interrupt_page);
 
-    auto memory_bus = memory::memory_bus{ memory_map };
-    memory::connect(memory_bus, cpu, timers, ppu);
+    graphics::vram_access_policy vram_policy { ppu };
+    graphics::oam_dma_access_policy oam_dma_policy { oam_dma };
+    graphics::oam_ppu_access_policy oam_ppu_policy { ppu, oam_dma };
+
+    memory::memory_bus raw_memory_bus { memory_map };
+    memory::memory_bus cpu_memory_bus { memory_map, vram_policy, oam_dma_policy, oam_ppu_policy };
+    memory::memory_bus ppu_memory_bus { memory_map, oam_ppu_policy };
+
+    memory::connect(cpu_memory_bus, cpu, timers);
+    memory::connect(ppu_memory_bus, ppu);
+    memory::connect(raw_memory_bus, oam_dma);
 
     // cpu runner
     emulator::default_instructions_provider instructions{};
@@ -96,6 +122,7 @@ TEST_CASE("acid.PPU generates output equals to reference image")
         runner.tick();
         timers.tick();
         ppu.tick();
+        oam_dma.tick();
     }
 
     const auto output_filepath = std::filesystem::temp_directory_path() / "test.png";

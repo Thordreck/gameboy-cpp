@@ -1,6 +1,5 @@
 export module graphics:pixel_fetcher;
 
-export import :vram;
 export import :fifo;
 export import memory;
 
@@ -98,9 +97,8 @@ namespace graphics
     export class pixel_fetcher
     {
     public:
-        explicit pixel_fetcher(pixel_fifo& fifo, const_vram_t vram)
+        explicit pixel_fetcher(pixel_fifo& fifo)
             : fifo{fifo}
-            , vram{vram}
             , current_step{pixel_fetch_step::get_tile_address}
         {}
 
@@ -154,7 +152,7 @@ namespace graphics
 
             const std::uint16_t tilemap_base_address = compute_tilemap_base_address(*memory, is_window_active);
             const std::uint16_t tilemap_address = tilemap_base_address + tile_y * 32 + tile_x;
-            const std::uint8_t tile_index = read_vram(vram, tilemap_address);
+            const std::uint8_t tile_index = memory->read(tilemap_address);
 
             tile_address = compute_tile_address(*memory, tile_index, tile_line);
             advance_state();
@@ -167,7 +165,7 @@ namespace graphics
                 return;
             }
 
-            tile_low_byte = read_vram(vram, tile_address);
+            tile_low_byte = memory->read(tile_address);
             advance_state();
         }
 
@@ -178,7 +176,7 @@ namespace graphics
                 return;
             }
 
-            const std::uint8_t high_byte = read_vram(vram, tile_address + 1);
+            const std::uint8_t high_byte = memory->read(tile_address + 1);
             decode_tile_row(*memory, tile_low_byte, high_byte, tile_row);
             advance_state();
 
@@ -215,8 +213,6 @@ namespace graphics
 
     private:
         pixel_fifo& fifo;
-        const_vram_t vram;
-
 		memory::memory_bus* memory { nullptr };
 
         // Tile coordinate along the scanline (groups of 8 pixels)

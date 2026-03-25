@@ -9,37 +9,33 @@ export import interrupts;
 
 namespace emulator
 {
-	export class vram_memory_page
+	export using vram_memory_page = memory::span_map<graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
+
+	// OAM + not-usable memory region
+	// TODO: oam corruption bug
+	export class oam_memory_page
 	{
 	public:
-		static constexpr memory::memory_address_t start = graphics::vram_start_address;
-		static constexpr memory::memory_address_t end = graphics::vram_end_address;
+		static constexpr memory::memory_address_t start = graphics::oam_start_address;
+		static constexpr memory::memory_address_t end = 0xFEFF;
 
-		explicit vram_memory_page(
-			const graphics::pixel_processing_unit& ppu,
-			graphics::vram_t vram)
-			: ppu { ppu }
-			, vram { vram }
+		oam_memory_page(const graphics::oam_dma& oam_dma)
+			: dma { oam_dma }
 		{}
 
 		[[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
 		{
-			return ppu.mode() == graphics::ppu_mode::drawing
-				? 0xFF
-				: graphics::read_vram(vram, address);
+			return memory[address - start];
 		}
 
 		void write(const memory::memory_address_t address, const memory::memory_data_t value)
 		{
-			if (ppu.mode() != graphics::ppu_mode::drawing)
-			{
-				graphics::write_vram(vram, address, value);
-			}
+			memory[address - start] = value;
 		}
 
 	private:
-		const graphics::pixel_processing_unit& ppu;
-		graphics::vram_t vram;
+		const graphics::oam_dma& dma;
+		std::array<memory::memory_data_t, end - start + 1> memory {};
 	};
 
 	export class io_hram_interrupt_memory_page

@@ -6,7 +6,6 @@ import std;
 import interrupts;
 import utilities;
 
-import :vram;
 import :fifo;
 import :common;
 import :pixel_fetcher;
@@ -54,10 +53,10 @@ namespace graphics
     export class pixel_processing_unit
     {
     public:
-        explicit pixel_processing_unit(lcd& screen, const_vram_t vram)
+        explicit pixel_processing_unit(lcd& screen)
             : enabled{true}
             , screen(screen)
-            , pixel_fetcher(background_fifo, vram)
+            , pixel_fetcher(background_fifo)
         {}
 
         std::uint8_t [[nodiscard]] scanline() const { return current_scanline; }
