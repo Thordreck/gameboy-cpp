@@ -7,3 +7,5 @@ export import :fifo;
 export import :ppu;
 export import :vram;
 export import :oam;
+export import :memory;
+export import :object_buffer;

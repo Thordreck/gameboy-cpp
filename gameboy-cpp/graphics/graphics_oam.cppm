@@ -1,6 +1,5 @@
 
 export module graphics:oam;
-export import :ppu;
 export import memory;
 export import std;
 
@@ -17,8 +16,8 @@ namespace graphics
     export using const_oam_t = std::span<const memory::memory_data_t, oam_size>;
 
     export constexpr std::uint8_t object_memory_byte_size = 4;
-    export using object_memory_t = std::span<memory::memory_data_t, object_memory_byte_size>;
-    export using const_object_memory_t = std::span<const memory::memory_data_t, 4>;
+    export using object_memory_t = std::array<memory::memory_data_t, object_memory_byte_size>;
+    export using const_object_memory_t = std::array<const memory::memory_data_t, 4>;
 
     export constexpr std::uint8_t object_y_position_byte_index = 0;
     export constexpr std::uint8_t object_x_position_byte_index = 1;
@@ -30,13 +29,22 @@ namespace graphics
     export constexpr std::uint8_t object_x_flip_flag_bit_index = 5;
     export constexpr std::uint8_t object_palette_bit_index = 4;
 
+    export constexpr std::uint8_t max_num_objects_per_scanline = 10;
+
     export class object
     {
     public:
         template<std::ranges::contiguous_range R>
-        explicit object(R&& data)
-            : memory(data.begin(), 4)
-        {}
+        explicit object(const std::uint8_t oam_index, const R& data)
+            : oam_index { oam_index }
+        {
+            std::ranges::copy(data, memory.begin());
+        }
+
+        [[nodiscard]] std::uint8_t index() const
+        {
+            return oam_index;
+        }
 
         [[nodiscard]] std::uint8_t x() const
         {
@@ -78,14 +86,30 @@ namespace graphics
         }
 
     private:
-        const_object_memory_t memory;
+        std::uint8_t oam_index;
+        object_memory_t memory {};
     };
 
-    export auto oam_objects(const_oam_t oam)
+    export object get_object(const std::uint8_t index, const memory::memory_bus& memory)
     {
-        return oam
-            | std::views::chunk(object_memory_byte_size)
-            | std::ranges::views::transform([](auto chunk) { return object(chunk); });
+        const memory::memory_address_t initial_address = oam_start_address + index * object_memory_byte_size;
+        const auto bytes =
+        {
+            memory.read(initial_address),
+            memory.read(initial_address + 1),
+            memory.read(initial_address + 2),
+            memory.read(initial_address + 3)
+        };
+
+        return object { index, bytes };
+    }
+
+    export bool is_in_scanline(const object& object, const std::uint8_t height, const std::uint8_t scanline)
+    {
+        const std::uint8_t min_y = object.y() - 16;
+        const std::uint8_t max_y = min_y + height;
+
+        return scanline >= min_y && scanline <= max_y;
     }
 
     export class oam_dma
@@ -138,59 +162,4 @@ namespace graphics
         memory::memory_address_t start {};
     };
 
-    export class oam_dma_access_policy
-    {
-    public:
-        explicit oam_dma_access_policy(const oam_dma& oam_dma)
-            : dma { oam_dma }
-        {}
-
-        [[nodiscard]] bool can_read(const memory::memory_address_t address) const
-        {
-            constexpr memory::memory_address_t hram_start_address = 0xFF80;
-            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
-
-            return memory::is_in_region<hram_start_address, hram_end_address>(address)
-                || !dma.is_transfer_active();
-        }
-
-        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
-        {
-            constexpr memory::memory_address_t hram_start_address = 0xFF80;
-            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
-
-            return memory::is_in_region<hram_start_address, hram_end_address>(address)
-                || !dma.is_transfer_active();
-        }
-
-    private:
-        const oam_dma& dma;
-    };
-
-    export class oam_ppu_access_policy
-    {
-    public:
-        explicit oam_ppu_access_policy(const pixel_processing_unit& ppu, const oam_dma& oam_dma)
-            : ppu { ppu }
-            , dma { oam_dma }
-        {}
-
-        [[nodiscard]] bool can_read(const memory::memory_address_t address) const
-        {
-            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
-                || !dma.is_transfer_active();
-        }
-
-        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
-        {
-            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
-                || !dma.is_transfer_active();
-        }
-
-    private:
-        const pixel_processing_unit& ppu;
-        const oam_dma& dma;
-    };
 }

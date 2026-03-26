@@ -103,4 +103,14 @@ namespace graphics
 		return memory.read(wx_address);
 	}
 
+	export template<memory::ReadOnlyMemory Memory>
+	std::uint8_t get_objects_height(const Memory& memory)
+	{
+		return is_obj_size_flag_set(memory) ? 16 : 8;
+	}
+
+	export constexpr memory::memory_address_t bgp_address = 0xFF47;
+	export constexpr memory::memory_address_t obp0_address = 0xFF48;
+	export constexpr memory::memory_address_t obp1_address = 0xFF49;
+
 }

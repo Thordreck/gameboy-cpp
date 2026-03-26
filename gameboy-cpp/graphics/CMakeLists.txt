@@ -17,4 +17,6 @@ target_sources(graphics PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_pixel_fetcher.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_ppu.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_oam.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_memory.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_object_buffer.cppm
 )

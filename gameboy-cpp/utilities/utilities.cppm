@@ -8,3 +8,4 @@ export import :frequency;
 export import :panic;
 export import :assert;
 export import :fixed_size_queue;
+export import :fixed_capacity_vector;

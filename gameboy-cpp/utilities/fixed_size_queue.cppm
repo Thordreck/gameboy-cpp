@@ -22,14 +22,16 @@ namespace utils
 		[[nodiscard]] bool is_full() const { return count() == size; }
 		[[nodiscard]] size_t count() const { return num_elements; }
 
-		bool try_push(T&& element)
+		template<typename U>
+		requires std::convertible_to<U, T>
+		bool try_push(U&& element)
 		{
 			if (is_full())
 			{
 				return false;
 			}
 
-			storage[tail] = std::forward<T>(element);
+			storage[tail] = std::forward<U>(element);
 			tail = (tail + 1) % size;
 			num_elements++;
 
@@ -49,7 +51,7 @@ namespace utils
 
 			for (auto&& v : range)
 			{
-				storage[tail] = std::forward<decltype(v)>(v);
+				storage[tail] = std::move(v);
 				tail = (tail + 1) % size;
 			}
 

@@ -39,18 +39,27 @@ namespace graphics
         color_index_t color_index{};
         std::optional<palette_index_t> palette_index{};
         bool background_priority{};
+
+        // For sprite's opaque pixels conflict resolution
+        std::optional<std::uint8_t> x {};
+        std::optional<std::uint8_t> oam_index {};
     };
 
-    export using color_palette = std::array<color, 4>;
+    export using lcd_color_palette = std::array<color, 4>;
 
-    export constexpr color_palette background_grayscale_color_palette =
+    export constexpr lcd_color_palette grayscale_lcd_color_palette =
     {
         black, dark_gray, light_gray, white
     };
 
-    export constexpr color_palette background_green_color_palette =
+    export constexpr lcd_color_palette green_lcd_color_palette =
     {
         almost_black, dark_green, light_green, lightest_green
     };
+
+    export bool is_transparent_sprite_pixel(const pixel& pixel)
+    {
+        return pixel.color_index == 0;
+    }
 
 };

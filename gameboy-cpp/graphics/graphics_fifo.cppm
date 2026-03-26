@@ -12,9 +12,16 @@ namespace graphics
 	export class pixel_fifo
 	{
 	public:
-		[[nodiscard]] bool try_push(tile_row row)
+		[[nodiscard]] bool try_push(const pixel& pixel)
 		{
-			return queue.try_push(row);
+			return queue.try_push(pixel);
+		}
+
+		template<std::ranges::input_range R>
+		requires std::convertible_to<std::ranges::range_value_t<R>, pixel>
+		[[nodiscard]] bool try_push(R&& range)
+		{
+			return queue.try_push(range);
 		}
 
 		[[nodiscard]] std::optional<pixel> try_pop()

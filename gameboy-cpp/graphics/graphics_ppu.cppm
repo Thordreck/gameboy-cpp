@@ -9,6 +9,8 @@ import utilities;
 import :fifo;
 import :common;
 import :pixel_fetcher;
+import :oam;
+import :object_buffer;
 
 namespace
 {
@@ -28,6 +30,66 @@ namespace
     {
         using namespace graphics;
         return lcd_y(memory) == wy(memory);
+    }
+
+    const graphics::pixel& mix(
+        const graphics::pixel& background,
+        const graphics::pixel& sprite,
+        const memory::memory_bus& memory)
+    {
+        using namespace graphics;
+        const bool bg_and_windows_enabled = is_bg_and_window_display_flag_set(memory);
+        const bool objects_enabled = is_obj_enabled(memory);
+
+        // Sprites with color index zero are transparent.
+        if (sprite.color_index == 0)
+        {
+            return background;
+        }
+
+        if (!objects_enabled)
+        {
+            return background;
+        }
+
+        if (!bg_and_windows_enabled)
+        {
+            return sprite;
+        }
+
+        if (background.color_index == 0)
+        {
+            return sprite;
+        }
+
+        if (sprite.background_priority && background.color_index != 0)
+        {
+            return background;
+        }
+
+        return sprite;
+    }
+
+    memory::memory_address_t get_palette_address(const graphics::pixel& pixel)
+    {
+        using namespace graphics;
+
+        return pixel.palette_index
+            .transform([] (const auto index) { return index == 1 ? obp1_address : obp0_address; })
+            .value_or(bgp_address);
+    }
+
+    graphics::color get_pixel_color(const graphics::pixel& pixel, const memory::memory_bus& memory)
+    {
+        using namespace graphics;
+        using namespace memory;
+
+        const memory_address_t palette_address = get_palette_address(pixel);
+        const memory_data_t palette_data = memory.read(palette_address);
+        const std::uint8_t mapped_color_index = (palette_data >> (pixel.color_index * 2)) & 0b11;
+
+        // TODO: make this configurable
+        return grayscale_lcd_color_palette[mapped_color_index];
     }
 
 }
@@ -57,6 +119,7 @@ namespace graphics
             : enabled{true}
             , screen(screen)
             , pixel_fetcher(background_fifo)
+            , sprite_fetcher(sprite_fifo)
         {}
 
         std::uint8_t [[nodiscard]] scanline() const { return current_scanline; }
@@ -126,14 +189,31 @@ namespace graphics
 
         void connect(memory::memory_bus& bus)
         {
-            pixel_fetcher.connect(bus);
+            memory::connect(bus, pixel_fetcher, sprite_fetcher);
             memory_bus = &bus;
         }
 
     private:
         void scan_oam()
         {
-            // TODO: implement objects
+            if (scanline_cycle == 0)
+            {
+                sprite_buffer.clear();
+            }
+
+            if (scanline_cycle % 2 == 0)
+            {
+                const std::uint8_t object_index = scanline_cycle / 2;
+                const object candidate = get_object(object_index, *memory_bus);
+                const std::uint8_t objects_height = get_objects_height(*memory_bus);
+                const bool is_visible = is_in_scanline(candidate, objects_height, current_scanline);
+
+                if (is_visible && !sprite_buffer.is_full())
+                {
+                    sprite_buffer.push_back(candidate);
+                }
+            }
+
             if (++scanline_cycle >= 80)
             {
                 update_mode(ppu_mode::drawing);
@@ -147,6 +227,10 @@ namespace graphics
             {
                 pixel_fetcher.reset();
                 background_fifo.clear();
+
+                sprite_fetcher.reset();
+                sprite_fifo.clear();
+
                 pixels_drawn_in_scanline = 0;
                 pixels_to_discard = scx(*memory_bus) % 8;
             }
@@ -171,9 +255,34 @@ namespace graphics
                 return;
             }
 
+            // Sprite fetch
+            if (!sprite_fetcher.is_fetching())
+            {
+                if (const std::optional next_object = get_object_at_x(sprite_buffer, pixels_drawn_in_scanline); next_object.has_value())
+                {
+                    std::cout << std::format("Setting target pixel at coords ({}, {})", pixels_drawn_in_scanline, current_scanline) << std::endl;
+                    sprite_fetcher.set_target(next_object.value());
+                }
+            }
+
+            // Wait for background fifo to reach step 5
+            if (sprite_fetcher.is_fetching() && background_fifo.count() < 8)
+            {
+                pixel_fetcher.tick(window_active_in_scanline, window_line);
+                return;
+            }
+
+            // Wait until sprite fetch completes
+            sprite_fetcher.tick();
+            if (sprite_fetcher.is_fetching())
+            {
+                return;
+            }
+
+            // Background/window fetch
             pixel_fetcher.tick(window_active_in_scanline, window_line);
 
-            if (const std::optional<pixel> pixel = background_fifo.try_pop(); pixel.has_value())
+            if (const std::optional<pixel> bg_pixel = background_fifo.try_pop(); bg_pixel.has_value())
             {
                 if (pixels_to_discard > 0)
                 {
@@ -181,8 +290,17 @@ namespace graphics
                     return;
                 }
 
-                // TODO: make this configurable
-                const color pixel_color = background_grayscale_color_palette[pixel.value().color_index];
+                const std::optional sprite_pixel = sprite_fifo.try_pop();
+                const pixel& mixed_pixel = sprite_pixel.has_value()
+                    ? mix(bg_pixel.value(), sprite_pixel.value(), *memory_bus)
+                    : bg_pixel.value();
+
+                if (sprite_pixel.has_value())
+                {
+                    //std::cout << std::format("Mixing background pixel {} with sprite pixel {}\n", pixels_drawn_in_scanline, sprite_pixel.value().x.value() - 8);
+                }
+
+                const color pixel_color = get_pixel_color(mixed_pixel, *memory_bus);
                 const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
 
                 screen.set_pixel(pixel_coords, pixel_color);
@@ -285,6 +403,10 @@ namespace graphics
         std::uint8_t pixels_drawn_in_scanline{};
         std::uint8_t pixels_to_discard{};
         pixel_fetcher pixel_fetcher;
+
+        pixel_fifo sprite_fifo {};
+        object_buffer sprite_buffer {};
+        object_fetcher sprite_fetcher;
 
         ppu_interrupt_sources interrupt_sources{};
         memory::memory_bus* memory_bus{nullptr};
