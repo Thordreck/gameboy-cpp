@@ -17,3 +17,12 @@ foreach(ROM ${TEST_ROMS})
             ${CMAKE_CURRENT_BINARY_DIR}
             COPYONLY)
 endforeach()
+
+# Copy any references images to build directory
+file(GLOB_RECURSE REFERENCE_IMAGES "${CMAKE_CURRENT_SOURCE_DIR}/*.png")
+
+foreach(IMG ${REFERENCE_IMAGES})
+    configure_file(${IMG}
+            ${CMAKE_CURRENT_BINARY_DIR}
+            COPYONLY)
+endforeach()

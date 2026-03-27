@@ -22,12 +22,14 @@ namespace
         void set_pixel(const graphics::coords_2d coords, const graphics::color color)
         {
             const std::size_t pixel_data_pos = (coords.y * graphics::lcd_width + coords.x) * 3;
+
+            CHECK(coords.x < graphics::lcd_width);
+            CHECK(coords.y < graphics::lcd_height);
             CHECK(pixel_data_pos + 2 < data.size());
 
             data[pixel_data_pos] = color.r;
             data[pixel_data_pos + 1] = color.g;
             data[pixel_data_pos + 2] = color.b;
-            //data[pixel_data_pos + 3] = color.a;
         }
 
         [[nodiscard]] auto& get_data() const { return data; }
@@ -116,7 +118,9 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     emulator::default_interrupt_handler interrupts_handler{};
     emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
 
-    // The rom draws a single frame.
+    // The rom draws a first frame where the ppu is disabled as soon as vblank
+    // is detected. The actual test image is generated the second time the frame
+    // is presented.
     while (ppu.scanline() < 153)
     {
         runner.tick();
@@ -125,17 +129,25 @@ TEST_CASE("acid.PPU generates output equals to reference image")
         oam_dma.tick();
     }
 
-    const auto output_filepath = std::filesystem::temp_directory_path() / "test.png";
+    const std::filesystem::path output_filepath = std::filesystem::temp_directory_path() / "test.png";
     constexpr stb::image_metadata output_metadata
     {
         graphics::lcd_width,
         graphics::lcd_height,
-        3
+        graphics::num_color_channels
     };
 
-    // TODO: generate resulting png data and compare it with reference image
     const auto result = stb::write_png(output_filepath, lcd_imp.get_data().data(), output_metadata);
     REQUIRE_MESSAGE(result.has_value(), std::format("Result vram png failed. {}", result.error()));
 
-    std::cout << "Image generated at " << output_filepath << "\n";
+    std::cout << std::format("Result test image generated at {}", output_filepath.string()) << std:: endl;
+
+    using namespace stb;
+    const stb_result<image> reference_img = load_image("reference-dmg.png", graphics::num_color_channels);
+    REQUIRE_MESSAGE(reference_img.has_value(), std::format("Could not read reference image. {}", reference_img.error()));
+
+    const auto actual_data = lcd_imp.get_data();
+    const auto expected_data = reference_img.value().as_span();
+
+    REQUIRE_MESSAGE(std::ranges::equal(actual_data, expected_data), "Result and reference images do not match");
 }

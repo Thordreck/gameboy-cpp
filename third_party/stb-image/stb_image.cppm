@@ -20,26 +20,35 @@ namespace stb
         int channels;
     };
 
+    static void image_data_free(image_data_t* data)
+    {
+        stbi_image_free(data);
+    }
+
     export class image
     {
     public:
-        image(image_data_t* data, const image_metadata& metadata)
-            : data(data)
+        image(image_data_t* data, const image_metadata& metadata) noexcept
+            : image_data(data, image_data_free)
             , metadata(metadata)
         {}
 
-        ~image()
+        [[nodiscard]] image_data_t* data() const { return image_data.get(); }
+
+        [[nodiscard]] std::span<image_data_t> as_span() const
         {
-            stbi_image_free(data);
-            data = nullptr;
+            return std::span{
+                data(),
+                static_cast<size_t>(metadata.channels) * (metadata.width * metadata.height)
+            };
         }
 
     private:
-        image_data_t* data;
-        const image_metadata metadata;
+        std::unique_ptr<image_data_t, decltype(&image_data_free)> image_data;
+        image_metadata metadata;
     };
 
-    export [[nodiscard]] stb_result<image> load_image(const std::filesystem::path& path)
+    export [[nodiscard]] stb_result<image> load_image(const std::filesystem::path& path, const std::uint8_t desired_channels = 0)
     {
         if (!std::filesystem::exists(path))
         {
@@ -47,16 +56,21 @@ namespace stb
         }
 
         image_metadata metadata {};
-        std::uint8_t* data = stbi_load(
+        image_data_t* data = stbi_load(
             path.string().c_str(),
             &metadata.width,
             &metadata.height,
             &metadata.channels,
-            0);
+            desired_channels);
 
         if (data == nullptr)
         {
             return std::unexpected("Could not load image");
+        }
+
+        if (desired_channels != 0)
+        {
+            metadata.channels = desired_channels;
         }
 
         return image{data, metadata};

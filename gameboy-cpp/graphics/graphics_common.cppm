@@ -4,24 +4,24 @@ export import std;
 namespace graphics
 {
     export using color_channel_t = std::uint8_t;
+    export constexpr std::uint8_t num_color_channels = 3;
 
     export struct color
     {
         color_channel_t r{};
         color_channel_t g{};
         color_channel_t b{};
-        color_channel_t a{};
     };
 
-    export constexpr color white      {255, 255, 255, 255};
-    export constexpr color light_gray {170, 170, 170, 255};
-    export constexpr color dark_gray  {85,  85,  85,  255};
-    export constexpr color black      {0,   0,   0,   255};
+    export constexpr color white      {255, 255, 255 };
+    export constexpr color light_gray {170, 170, 170 };
+    export constexpr color dark_gray  {85,  85,  85  };
+    export constexpr color black      {0,   0,   0   };
 
-    export constexpr color lightest_green   {224, 248, 208, 255};
-    export constexpr color light_green      {136, 192, 112, 255};
-    export constexpr color dark_green       {52, 104,  86, 255};
-    export constexpr color almost_black     {8,   24,  32, 255};
+    export constexpr color lightest_green   {224, 248, 208 };
+    export constexpr color light_green      {136, 192, 112 };
+    export constexpr color dark_green       {52, 104,  86  };
+    export constexpr color almost_black     {8,   24,  32  };
 
     export using coords_2d_axis_t = std::uint8_t;
 
@@ -49,7 +49,7 @@ namespace graphics
 
     export constexpr lcd_color_palette grayscale_lcd_color_palette =
     {
-        black, dark_gray, light_gray, white
+        white, light_gray, dark_gray, black
     };
 
     export constexpr lcd_color_palette green_lcd_color_palette =
