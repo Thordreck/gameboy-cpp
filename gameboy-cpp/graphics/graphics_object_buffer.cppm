@@ -11,7 +11,9 @@ namespace graphics
 
     export std::optional<object> get_object_at_x(const object_buffer& objects, const std::uint8_t x)
     {
-        const auto result_it = std::ranges::find_if(objects, [x] (const auto& candidate) { return candidate.x() - 8 == x; });
+        const auto result_it = std::ranges::find_if(
+            objects,
+            [x] (const auto& candidate) { return static_cast<int>(candidate.x()) - 8 == x; });
 
         return result_it == objects.end()
             ? std::nullopt
