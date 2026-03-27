@@ -256,11 +256,19 @@ namespace graphics
             }
 
             // Sprite fetch
-            if (!sprite_fetcher.is_fetching())
+            const bool objects_enabled = is_obj_enabled(*memory_bus);
+
+            // TODO: sprite fetch cancelling timing
+            if (!objects_enabled)
+            {
+                sprite_fetcher.reset();
+                sprite_fifo.clear();
+            }
+
+            if (objects_enabled && !sprite_fetcher.is_fetching())
             {
                 if (const std::optional next_object = get_object_at_x(sprite_buffer, pixels_drawn_in_scanline); next_object.has_value())
                 {
-                    std::cout << std::format("Setting target pixel at coords ({}, {})", pixels_drawn_in_scanline, current_scanline) << std::endl;
                     sprite_fetcher.set_target(next_object.value());
                 }
             }
@@ -274,6 +282,7 @@ namespace graphics
 
             // Wait until sprite fetch completes
             sprite_fetcher.tick();
+
             if (sprite_fetcher.is_fetching())
             {
                 return;
@@ -291,14 +300,10 @@ namespace graphics
                 }
 
                 const std::optional sprite_pixel = sprite_fifo.try_pop();
+
                 const pixel& mixed_pixel = sprite_pixel.has_value()
                     ? mix(bg_pixel.value(), sprite_pixel.value(), *memory_bus)
                     : bg_pixel.value();
-
-                if (sprite_pixel.has_value())
-                {
-                    //std::cout << std::format("Mixing background pixel {} with sprite pixel {}\n", pixels_drawn_in_scanline, sprite_pixel.value().x.value() - 8);
-                }
 
                 const color pixel_color = get_pixel_color(mixed_pixel, *memory_bus);
                 const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
