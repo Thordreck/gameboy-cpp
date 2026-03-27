@@ -17,10 +17,10 @@ namespace utils
         [[nodiscard]] bool is_full() const { return size() == capacity(); }
 
         [[nodiscard]] T* begin() { return reinterpret_cast<T*>(elements.data()); }
-        [[nodiscard]] T* end() { return reinterpret_cast<T*>(elements.data() + num_elements + 1); }
+        [[nodiscard]] T* end() { return reinterpret_cast<T*>(elements.data() + num_elements); }
 
         [[nodiscard]] const T* begin() const { return reinterpret_cast<const T*>(elements.data()); }
-        [[nodiscard]] const T* end() const { return reinterpret_cast<const T*>(elements.data() + num_elements + 1); }
+        [[nodiscard]] const T* end() const { return reinterpret_cast<const T*>(elements.data() + num_elements); }
 
         [[nodiscard]] T& operator[] (const std::size_t n) { return *reinterpret_cast<T*>(elements[n].data()); }
         [[nodiscard]] const T& operator[] (const std::size_t n) const { return *reinterpret_cast<const T*>(elements[n].data()); }
