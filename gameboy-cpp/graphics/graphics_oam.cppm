@@ -106,10 +106,10 @@ namespace graphics
 
     export bool is_in_scanline(const object& object, const std::uint8_t height, const std::uint8_t scanline)
     {
-        const std::uint8_t min_y = object.y() - 16;
-        const std::uint8_t max_y = min_y + height;
+        const int min_y = static_cast<int>(object.y()) - 16;
+        const int max_y = min_y + height;
 
-        return scanline >= min_y && scanline <= max_y;
+        return scanline >= min_y && scanline < max_y;
     }
 
     export class oam_dma
