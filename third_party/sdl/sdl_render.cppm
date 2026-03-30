@@ -1,0 +1,110 @@
+module;
+#include <SDL3/SDL_render.h>
+
+export module sdl:render;
+export import :common;
+export import :window;
+
+import std;
+import :internal;
+
+namespace sdl
+{
+    export class render_driver
+    {
+    public:
+        [[nodiscard]] std::string_view name() const { return sdl_name; }
+
+        static [[nodiscard]] std::vector<render_driver> get_available()
+        {
+            const int num_drivers = SDL_GetNumRenderDrivers();
+
+            std::vector<render_driver> drivers;
+            drivers.reserve(num_drivers);
+
+            for (int i = 0; i < num_drivers; ++i)
+            {
+                drivers.push_back(render_driver{ SDL_GetRenderDriver(i) });
+            }
+
+            return drivers;
+        }
+
+    private:
+        explicit render_driver(const std::string_view name)
+            : sdl_name { name }
+        {}
+
+        std::string_view sdl_name;
+        friend wrapper;
+    };
+
+    export class renderer
+    {
+    public:
+        static result<renderer> create(window& window, const std::optional<render_driver>& driver = std::nullopt)
+        {
+            const char* driver_name = driver
+                .transform([] (const auto& value) { return value.name().data(); })
+                .value_or(nullptr);
+
+            if (SDL_Renderer* imp = SDL_CreateRenderer(native::get_handle(window), driver_name); imp != nullptr)
+            {
+                return renderer(imp);
+            }
+
+            return std::unexpected(SDL_GetError());
+        }
+
+        [[nodiscard]] result<render_driver> driver() const
+        {
+            if (const char* name = SDL_GetRendererName(imp.get()); name != nullptr)
+            {
+                return wrapper::create<render_driver>(name);
+            }
+
+            return std::unexpected(SDL_GetError());
+        }
+
+        [[nodiscard]] result<void> clear()
+        {
+            if (!SDL_RenderClear(imp.get()))
+            {
+                return std::unexpected(SDL_GetError());
+            }
+
+            return {};
+        }
+
+        [[nodiscard]] result<void> set_draw_color(const color& color)
+        {
+            if (!SDL_SetRenderDrawColor(imp.get(), color.r, color.g, color.b, color.a))
+            {
+                return std::unexpected(SDL_GetError());
+            }
+
+            return {};
+        }
+
+        [[nodiscard]] result<void> present()
+        {
+            if (!SDL_RenderPresent(imp.get()))
+            {
+                return std::unexpected(SDL_GetError());
+            }
+
+            return {};
+        }
+
+    private:
+        explicit renderer(SDL_Renderer* imp) noexcept
+            : imp { imp, SDL_DestroyRenderer }
+        {}
+
+        [[nodiscard]] auto native_handle() const { return imp.get(); }
+
+        std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> imp;
+        friend native;
+    };
+
+}

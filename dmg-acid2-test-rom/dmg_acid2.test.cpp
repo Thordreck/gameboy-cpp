@@ -35,7 +35,7 @@ namespace
         [[nodiscard]] auto& get_data() const { return data; }
 
     private:
-        std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * 3> data {};
+        std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * graphics::num_color_channels> data {};
     };
 
 }

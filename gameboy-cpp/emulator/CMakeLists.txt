@@ -3,7 +3,7 @@ add_library(emulator)
 target_compile_features(emulator PUBLIC cxx_std_23)
 
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator cpu timer memory opcodes interrupts graphics utilities)
+target_link_libraries(emulator PUBLIC cpu timer memory opcodes interrupts graphics utilities)
 target_sources(emulator PUBLIC 
 	FILE_SET 
 		CXX_MODULES 
@@ -11,12 +11,13 @@ target_sources(emulator PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/cpu_runner.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/memory_map.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/lcd.cppm
 )
 
-# TODO: testing imgui installation
+# TODO: testing different libraries (imgui, sdl, etc)
 add_executable(gameboy-cpp)
 target_compile_features(gameboy-cpp PUBLIC cxx_std_23)
-target_link_libraries(gameboy-cpp PRIVATE imgui)
+target_link_libraries(gameboy-cpp PRIVATE emulator imgui sdl)
 
 target_sources(gameboy-cpp 
 	PRIVATE 

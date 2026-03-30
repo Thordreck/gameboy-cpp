@@ -47,11 +47,10 @@ namespace
 			data[pixel_data_pos] = color.r;
 			data[pixel_data_pos + 1] = color.g;
 			data[pixel_data_pos + 2] = color.b;
-			data[pixel_data_pos + 3] = color.a;
 		}
 
 	private:
-		std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * 4> data {};
+		std::array<std::uint8_t, graphics::lcd_width * graphics::lcd_height * graphics::num_color_channels> data {};
 	};
 
 }
