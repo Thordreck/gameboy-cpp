@@ -66,5 +66,4 @@ namespace graphics
 		lcd_raw_memory_t memory;
 	};
 
-
 }

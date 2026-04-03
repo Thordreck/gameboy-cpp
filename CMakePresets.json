@@ -2,30 +2,50 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "win-64-debug",
-      "displayName": "Debug",
+      "name": "base",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
       "warnings": {
-        "dev":  false
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "BUILD_TESTING": "ON",
-        "CMAKE_VERBOSE_MAKEFILE": "ON" 
+        "dev": false
       },
       "architecture": {
         "value": "x64",
         "strategy": "external"
       }
-    }
-  ],
-   "buildPresets": [
+    },
     {
       "name": "win-64-debug",
       "displayName": "Debug",
-      "configurePreset": "win-64-debug",
-      "configuration": "Debug"
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON",
+        "CMAKE_VERBOSE_MAKEFILE": "ON"
+      }
+    },
+    {
+      "name": "win-64-release",
+      "displayName": "Release",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "OFF",
+        "CMAKE_VERBOSE_MAKEFILE": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-64-debug",
+      "displayName": "Debug",
+      "configurePreset": "win-64-debug"
+    },
+    {
+      "name": "win-64-release",
+      "displayName": "Release",
+      "configurePreset": "win-64-release"
     }
   ],
   "testPresets": [

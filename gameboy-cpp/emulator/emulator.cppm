@@ -1,4 +1,6 @@
 export module emulator;
 
-export import :cpu_runner;
-export import :memory_map;
+export import emulator.core;
+export import emulator.ui;
+
+export import :adapters;

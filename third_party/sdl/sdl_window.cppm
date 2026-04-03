@@ -52,7 +52,7 @@ namespace sdl
         {
             if (SDL_Window* imp = SDL_CreateWindow(title.data(), width, height, std::to_underlying(flags)); imp != nullptr )
             {
-                return wrapper::create<window>(imp);
+                return internal::wrapper::create<window>(imp);
             }
 
             return std::unexpected(SDL_GetError());
@@ -70,8 +70,8 @@ namespace sdl
 
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> imp;
 
-        friend native;
-        friend wrapper;
+        friend internal::native;
+        friend internal::wrapper;
     };
 
 }

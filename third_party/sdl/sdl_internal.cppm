@@ -2,7 +2,7 @@
 export module sdl:internal;
 export import :common;
 
-namespace sdl
+namespace sdl::internal
 {
     export struct native
     {

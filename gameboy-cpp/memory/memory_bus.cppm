@@ -115,11 +115,11 @@ namespace memory
 
         template <AccessPolicy... Policies>
         requires (sizeof...(Policies) > 1)
-        memory_bus(const memory_map_span_t map, Policies&&... policies)
+        explicit memory_bus(const memory_map_span_t map, Policies&&... policies)
             : memory_bus(map, access_policy_chain<Policies...>(std::forward<Policies>(policies)...))
         {}
 
-        memory_bus(const memory_map_span_t map)
+        explicit memory_bus(const memory_map_span_t map)
             : map{map}
             , access(std::nullopt)
         {}

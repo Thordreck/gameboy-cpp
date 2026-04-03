@@ -37,6 +37,9 @@ namespace sdl
         {
             SDL_Quit();
         }
+
+        // TODO: delete copy constructors. Implement proper move semantics
+
     };
 
 }

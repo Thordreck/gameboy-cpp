@@ -3,7 +3,7 @@ add_library(blargg_tests_utilities)
 target_compile_features(blargg_tests_utilities PUBLIC cxx_std_23)
 
 set_target_properties(blargg_tests_utilities PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(blargg_tests_utilities PUBLIC emulator memory cpu opcodes timer interrupts doctest)
+target_link_libraries(blargg_tests_utilities PUBLIC emulator::core doctest)
 target_sources(blargg_tests_utilities PUBLIC 
 	FILE_SET 
 		CXX_MODULES 

@@ -30,7 +30,7 @@ namespace sdl
             const std::size_t height)
         {
             if (SDL_Texture* imp = SDL_CreateTexture(
-                native::get_handle(renderer),
+                internal::native::get_handle(renderer),
                 static_cast<SDL_PixelFormat>(format),
                 static_cast<SDL_TextureAccess>(access),
                 width, height); imp != nullptr)
@@ -49,7 +49,7 @@ namespace sdl
         [[nodiscard]] auto native_handle() const { return imp.get(); }
 
         std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> imp;
-        friend native;
+        friend internal::native;
     };
 
     export result<void> render(
@@ -66,7 +66,7 @@ namespace sdl
             .transform([] (const auto& rect) { return reinterpret_cast<const SDL_FRect*>(&rect); })
             .value_or(nullptr);
 
-        if (!SDL_RenderTexture(native::get_handle(renderer), native::get_handle(texture), src_rect, dst_rect))
+        if (!SDL_RenderTexture(internal::native::get_handle(renderer), internal::native::get_handle(texture), src_rect, dst_rect))
         {
             return std::unexpected{ SDL_GetError() };
         }
@@ -100,11 +100,11 @@ namespace sdl
 
     private:
         explicit texture_lock(texture& texture) noexcept
-            : texture { native::get_handle(texture) }
+            : texture { internal::native::get_handle(texture) }
         {}
 
         SDL_Texture* texture;
-        friend wrapper;
+        friend internal::wrapper;
     };
 
     export result<std::tuple<texture_lock, surface_view>> lock_to_surface(
@@ -112,7 +112,7 @@ namespace sdl
         const std::optional<rect>& rect = std::nullopt)
     {
         SDL_Surface* sdl_surface = nullptr;
-        SDL_Texture* sdl_texture = native::get_handle(texture);
+        SDL_Texture* sdl_texture = internal::native::get_handle(texture);
 
         const SDL_Rect* sdl_rect = rect
             .transform([] (const auto& r) { return reinterpret_cast<const SDL_Rect*>(&r); })
@@ -124,8 +124,8 @@ namespace sdl
         }
 
         return std::make_tuple(
-            wrapper::create<texture_lock>(texture),
-            wrapper::create<surface_view>(sdl_surface));
+            internal::wrapper::create<texture_lock>(texture),
+            internal::wrapper::create<surface_view>(sdl_surface));
     }
 
 }

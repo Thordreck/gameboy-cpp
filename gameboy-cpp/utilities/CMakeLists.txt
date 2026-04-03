@@ -17,6 +17,8 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/assert.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/fixed_size_queue.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/fixed_capacity_vector.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/io.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/clock.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

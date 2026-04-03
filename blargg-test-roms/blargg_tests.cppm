@@ -10,7 +10,7 @@ import timer;
 import memory;
 import opcodes;
 import graphics;
-import emulator;
+import emulator.core;
 import interrupts;
 
 namespace
@@ -81,14 +81,15 @@ namespace blargg
 
 		// graphics
 		std::array<memory::memory_data_t, graphics::vram_size> vram {};
+		std::array<memory::memory_data_t, 0x7F> hram {};
 
 		memory_lcd lcd_imp {};
 		graphics::lcd lcd(lcd_imp);
 		graphics::pixel_processing_unit ppu(lcd);
 
 		// Memory
-		emulator::vram_memory_page vram_page { vram };
-		emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
+		emulator::vram_memory_page_t vram_page { vram };
+		emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu, hram };
 
 		std::array<memory::memory_data_t, vram_page.start> fallback_memory_1{};
 		std::array<memory::memory_data_t, 0x5F00> fallback_memory_2{};
@@ -112,9 +113,7 @@ namespace blargg
 		memory::connect(ppu_memory_bus, cpu, timers, ppu);
 
 		// cpu runner
-		emulator::default_instructions_provider instructions{};
-		emulator::default_interrupt_handler interrupts_handler{};
-		emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
+		emulator::default_cpu_runner runner{ cpu };
 
 		// results
 		std::string result{};

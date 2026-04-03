@@ -20,7 +20,7 @@ namespace sdl
         {
             if (SDL_Surface* imp = SDL_CreateSurface(width, height, static_cast<SDL_PixelFormat>(format)); imp != nullptr)
             {
-                return wrapper::create<surface>(imp);
+                return internal::wrapper::create<surface>(imp);
             }
 
             return std::unexpected(SDL_GetError());
@@ -36,8 +36,8 @@ namespace sdl
 
         std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> imp;
 
-        friend native;
-        friend wrapper;
+        friend internal::native;
+        friend internal::wrapper;
     };
 
     export class surface_view
@@ -50,8 +50,8 @@ namespace sdl
 
         SDL_Surface* imp;
 
-        friend native;
-        friend wrapper;
+        friend internal::native;
+        friend internal::wrapper;
 
         // TODO: better way to expose this
     public:

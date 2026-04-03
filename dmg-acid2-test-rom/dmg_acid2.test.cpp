@@ -5,7 +5,7 @@ import cpu;
 import timer;
 import memory;
 import graphics;
-import emulator;
+import emulator.core;
 import stb_image;
 
 namespace
@@ -61,6 +61,8 @@ TEST_CASE("acid.PPU generates output equals to reference image")
 
     // graphics
     std::array<memory::memory_data_t, graphics::vram_size> vram {};
+    std::array<memory::memory_data_t, 0x7F> hram {};
+    std::array<memory::memory_data_t, graphics::oam_size> oam_memory;
 
     memory_lcd lcd_imp {};
     graphics::lcd lcd(lcd_imp);
@@ -69,9 +71,9 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     graphics::pixel_processing_unit ppu(lcd);
 
     // memory
-    emulator::vram_memory_page vram_page { vram };
-    emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu };
-    emulator::oam_memory_page oam_memory_page { oam_dma };
+    emulator::vram_memory_page_t vram_page { vram };
+    emulator::io_hram_interrupt_memory_page io_hram_interrupt_page{ timers, interrupts, ppu, hram };
+    emulator::oam_memory_page oam_memory_page { oam_dma, oam_memory };
 
     std::array<memory::memory_data_t, 0x4000> rom_bank_0{};
     std::array<memory::memory_data_t, 0x4000> rom_bank_n{};
@@ -114,9 +116,7 @@ TEST_CASE("acid.PPU generates output equals to reference image")
     memory::connect(raw_memory_bus, oam_dma);
 
     // cpu runner
-    emulator::default_instructions_provider instructions{};
-    emulator::default_interrupt_handler interrupts_handler{};
-    emulator::cpu_runner runner{ cpu, instructions, interrupts_handler };
+    emulator::default_cpu_runner runner{ cpu };
 
     // The rom draws a first frame where the ppu is disabled as soon as vblank
     // is detected. The actual test image is generated the second time the frame

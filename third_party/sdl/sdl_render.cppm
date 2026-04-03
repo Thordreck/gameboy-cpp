@@ -36,7 +36,13 @@ namespace sdl
         {}
 
         std::string_view sdl_name;
-        friend wrapper;
+        friend internal::wrapper;
+    };
+
+    export enum class renderer_vsync : std::int8_t
+    {
+        disabled = SDL_RENDERER_VSYNC_DISABLED,
+        adaptive = SDL_RENDERER_VSYNC_ADAPTIVE,
     };
 
     export class renderer
@@ -48,7 +54,7 @@ namespace sdl
                 .transform([] (const auto& value) { return value.name().data(); })
                 .value_or(nullptr);
 
-            if (SDL_Renderer* imp = SDL_CreateRenderer(native::get_handle(window), driver_name); imp != nullptr)
+            if (SDL_Renderer* imp = SDL_CreateRenderer(internal::native::get_handle(window), driver_name); imp != nullptr)
             {
                 return renderer(imp);
             }
@@ -60,7 +66,7 @@ namespace sdl
         {
             if (const char* name = SDL_GetRendererName(imp.get()); name != nullptr)
             {
-                return wrapper::create<render_driver>(name);
+                return internal::wrapper::create<render_driver>(name);
             }
 
             return std::unexpected(SDL_GetError());
@@ -96,6 +102,21 @@ namespace sdl
             return {};
         }
 
+        [[nodiscard]] result<void> set_vsync(const renderer_vsync vsync)
+        {
+            return set_vsync(std::to_underlying(vsync));
+        }
+
+        [[nodiscard]] result<void> set_vsync(const int vsync)
+        {
+            if (!SDL_SetRenderVSync(imp.get(), vsync))
+            {
+                return std::unexpected(SDL_GetError());
+            }
+
+            return {};
+        }
+
     private:
         explicit renderer(SDL_Renderer* imp) noexcept
             : imp { imp, SDL_DestroyRenderer }
@@ -104,7 +125,7 @@ namespace sdl
         [[nodiscard]] auto native_handle() const { return imp.get(); }
 
         std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> imp;
-        friend native;
+        friend internal::native;
     };
 
 }
