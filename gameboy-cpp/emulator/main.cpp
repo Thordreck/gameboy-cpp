@@ -13,17 +13,12 @@ int main()
 
     std::jthread emulation_thread
     {
-        [&engine](const std::stop_token ct)
+        [&engine](const std::stop_token& ct)
         {
             while (!ct.stop_requested())
             {
-                // TODO: OS scheduling usually works at milliseconds, not nanoseconds. We need an alternative way
-                // fort hsi loop
                 using namespace std::chrono_literals;
-                constexpr auto master_clock_period = 238ns;
-
-                const auto elapsed = utils::execution_time([&engine] () { engine.tick(); });
-                //std::this_thread::sleep_for(master_clock_period - elapsed);
+                utils::execute_for([&engine] () { engine.tick(); }, 238ns);
             }
         }
     };
@@ -33,7 +28,7 @@ int main()
         ui.render();
 
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(16ms); // ~60 FPS
+        utils::execute_for([&ui] () { ui.render(); }, 16ms);
     }
 
     emulation_thread.request_stop();
