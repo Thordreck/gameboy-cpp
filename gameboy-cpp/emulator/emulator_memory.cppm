@@ -3,6 +3,7 @@ export module emulator.core:memory;
 export import std;
 export import timer;
 export import memory;
+export import joypad;
 export import graphics;
 export import utilities;
 export import interrupts;
@@ -83,11 +84,13 @@ namespace emulator
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
-            const memory::memory_span_t<0x7F> hram)
+            const memory::memory_span_t<0x7F> hram,
+            joypad::joypad& joypad)
             : timers{timers}
             , interrupts{interrupts}
             , ppu{ppu}
             , hram { hram }
+            , joypad { joypad }
         {}
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
@@ -109,8 +112,7 @@ namespace emulator
             case graphics::lcd_cy_address: return ppu.lyc();
             case interrupts::if_address: return interrupts.flag;
             case interrupts::ie_address: return interrupts.enable;
-                // TODO: JOYP register. Set to 0xF for now
-            case 0xFF00: return 0xFF;
+            case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             default: return fallback_memory[address - start];
             }
         }
@@ -147,6 +149,9 @@ namespace emulator
                 break;
             case graphics::lcd_y_address: // readonly
                 break;
+            case graphics::oam_dma_transfer_address:
+                // TODO: implement oam dam transfer
+                break;
             case graphics::lcd_cy_address:
                 ppu.set_lyc(value);
                 break;
@@ -155,6 +160,9 @@ namespace emulator
                 break;
             case interrupts::ie_address:
                 interrupts.enable = value;
+                break;
+            case joypad::joypad_memory_address:
+                joypad::write_joypad_register(joypad, value);
                 break;
             default:
                 fallback_memory[address - start] = value;
@@ -166,6 +174,7 @@ namespace emulator
         interrupts::interrupt_registers& interrupts;
         graphics::pixel_processing_unit& ppu;
         memory::memory_span_t<0x7F> hram;
+        joypad::joypad& joypad;
 
         // TODO: replace by remaining missing io registers
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
@@ -179,7 +188,8 @@ namespace emulator
             const graphics::oam_dma& oam_dma,
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,
-            graphics::pixel_processing_unit& ppu)
+            graphics::pixel_processing_unit& ppu,
+            joypad::joypad& joypad)
                 : rom_bank_0_page { memory.rom_bank_0 }
                 , rom_bank_n_page { memory.rom_bank_n }
                 , vram_memory_page { memory.vram }
@@ -188,7 +198,7 @@ namespace emulator
                 , work_ram_1_page { memory.work_ram_1 }
                 , echo_ram_page { memory.echo_ram }
                 , oam_memory_page { oam_dma, memory.oam }
-                , ihi_page { timers, interrupts, ppu, memory.hram }
+                , ihi_page { timers, interrupts, ppu, memory.hram, joypad }
         {
             map = memory::build_memory_map(
                 rom_bank_0_page,
@@ -226,17 +236,18 @@ namespace emulator
             cpu::cpu& cpu,
             timer::timer_system& timers,
             graphics::pixel_processing_unit& ppu,
-            graphics::oam_dma& oam_dma)
+            graphics::oam_dma& oam_dma,
+            joypad::joypad_system& joypad)
                 : vram_policy { ppu }
                 , oam_dma_policy { oam_dma  }
                 , oam_ppu_policy { ppu, oam_dma  }
-                , oam_bus { map }
-                , cpu_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy }
-                , ppu_bus { map, oam_ppu_policy }
+                , no_policy_bus { map }
+                , cpu_policy_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy }
+                , ppu_policy_bus { map, oam_ppu_policy }
         {
-            memory::connect(cpu_bus, cpu, timers);
-            memory::connect(ppu_bus, ppu);
-            memory::connect(oam_bus, oam_dma);
+            memory::connect(cpu_policy_bus, cpu, timers);
+            memory::connect(ppu_policy_bus, ppu);
+            memory::connect(no_policy_bus, oam_dma, joypad);
         }
 
     private:
@@ -244,9 +255,9 @@ namespace emulator
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
 
-        memory::memory_bus oam_bus;
-        memory::memory_bus cpu_bus;
-        memory::memory_bus ppu_bus;
+        memory::memory_bus no_policy_bus;
+        memory::memory_bus cpu_policy_bus;
+        memory::memory_bus ppu_policy_bus;
     };
 
 }

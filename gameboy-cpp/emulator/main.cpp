@@ -6,29 +6,30 @@ import std;
 int main()
 {
     using namespace emulator;
+    using namespace std::chrono_literals;
 
     engine engine{};
-    engine_ui_adapter adapter{engine};
-    ui ui{adapter};
 
+    // TODO: move to its own submodule
     std::jthread emulation_thread
     {
         [&engine](const std::stop_token& ct)
         {
             while (!ct.stop_requested())
             {
-                using namespace std::chrono_literals;
                 utils::execute_for([&engine] () { engine.tick(); }, 238ns);
             }
         }
     };
 
+    engine_input_source input_source{engine};
+    engine_ui_adapter ui_adapter{engine};
+    ui ui{ ui_adapter };
+
     while (!ui.quit_app_requested())
     {
+        input_source.update();
         ui.render();
-
-        using namespace std::chrono_literals;
-        utils::execute_for([&ui] () { ui.render(); }, 16ms);
     }
 
     emulation_thread.request_stop();

@@ -29,4 +29,6 @@ target_sources(sdl PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_texture.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_rect.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_events.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/sdl_scancode.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/sdl_keyboard.cppm
 )

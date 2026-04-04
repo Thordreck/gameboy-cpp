@@ -5,7 +5,7 @@ add_library(emulator::core ALIAS emulator-core)
 target_compile_features(emulator-core PUBLIC cxx_std_23)
 
 set_target_properties(emulator-core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-core PUBLIC cpu timer memory opcodes interrupts graphics utilities)
+target_link_libraries(emulator-core PUBLIC cpu timer memory opcodes interrupts graphics joypad utilities)
 target_sources(emulator-core PUBLIC
 	FILE_SET 
 		CXX_MODULES 
@@ -13,6 +13,7 @@ target_sources(emulator-core PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_core.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_cpu.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
 )
 
 # UI

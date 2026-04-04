@@ -21,6 +21,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/opcodes)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/interrupts)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/timer)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/graphics)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/joypad)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

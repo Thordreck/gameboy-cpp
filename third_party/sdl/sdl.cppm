@@ -10,5 +10,7 @@ export import :surface;
 export import :texture;
 export import :rect;
 export import :events;
+export import :scancode;
+export import :keyboard;
 export import :internal;
 

@@ -2,9 +2,11 @@
 export module emulator.core;
 export import :memory;
 export import :cpu;
+export import :joypad;
 
 import cpu;
 import timer;
+import joypad;
 import graphics;
 import interrupts;
 
@@ -21,8 +23,8 @@ namespace emulator
             : lcd_adapter { lcd_memory }
             , lcd_ { lcd_adapter }
             , ppu_ { lcd_ }
-            , memory_map { memory_blocks, oam_dma, timers, interrupts, ppu_ }
-            , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma }
+            , memory_map { memory_blocks, oam_dma, timers, interrupts, ppu_, joypad_imp }
+            , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma , joypad }
             , cpu_runner { cpu }
         {
             cpu.pc() = 0x100;
@@ -32,10 +34,8 @@ namespace emulator
 
         ~engine() { stop(); }
 
-        // TODO: rethink what methods should be exposed
         [[nodiscard]] lcd_view_t lcd() const { return lcd_memory; }
-        [[nodiscard]] graphics::ppu_mode ppu_mode() const { return ppu_.mode(); }
-        [[nodiscard]] int scanline() const { return ppu_.scanline(); }
+        [[nodiscard]] joypad_input_state& joypad_state() { return joypad_input_state; }
 
         void tick()
         {
@@ -45,6 +45,7 @@ namespace emulator
                 timers.tick();
                 ppu_.tick();
                 oam_dma.tick();
+                joypad.tick();
             }
         }
 
@@ -55,6 +56,7 @@ namespace emulator
             timers = {};
             interrupts = {};
             oam_dma = {};
+            joypad = {};
             lcd_memory.fill({});
 
             cpu.pc() = 0x100;
@@ -83,6 +85,11 @@ namespace emulator
         timer::timer_system timers {};
         interrupts::interrupt_registers interrupts {};
         graphics::oam_dma oam_dma {};
+
+        joypad::joypad_system joypad {};
+        joypad_input_state joypad_input_state {};
+        joypad_input_state_provider joypad_state_adapter { joypad_input_state };
+        joypad::joypad joypad_imp { joypad_state_adapter };
 
         lcd_memory_t lcd_memory {};
         graphics::raw_memory_lcd lcd_adapter;
