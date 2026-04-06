@@ -1,4 +1,3 @@
-
 import emulator;
 import utilities;
 import std;
@@ -17,22 +16,28 @@ int main()
         {
             while (!ct.stop_requested())
             {
-                utils::execute_for_precise([&engine] () { engine.tick(); }, 238ns);
+                utils::execute_for(
+                    [&engine]() { engine.tick(); }
+                    , 238ns
+                    , [] (const auto& d) { utils::sleep_precise(d); });
             }
         }
     };
 
     const engine_input_source input_source{engine};
     engine_ui_adapter ui_adapter{engine};
-    ui ui{ ui_adapter };
+    ui ui{ui_adapter};
 
     while (!ui.quit_app_requested())
     {
-        utils::execute_for([&] ()
-        {
-            input_source.update();
-            ui.render();
-        }, 16ms);
+        utils::execute_for(
+            [&]()
+            {
+                input_source.update();
+                ui.render();
+            }
+            , 16ms
+            , [](const auto& d) { std::this_thread::sleep_for(d); });
     }
 
     emulation_thread.request_stop();
