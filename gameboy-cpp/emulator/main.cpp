@@ -17,19 +17,22 @@ int main()
         {
             while (!ct.stop_requested())
             {
-                utils::execute_for([&engine] () { engine.tick(); }, 238ns);
+                utils::execute_for_precise([&engine] () { engine.tick(); }, 238ns);
             }
         }
     };
 
-    engine_input_source input_source{engine};
+    const engine_input_source input_source{engine};
     engine_ui_adapter ui_adapter{engine};
     ui ui{ ui_adapter };
 
     while (!ui.quit_app_requested())
     {
-        input_source.update();
-        ui.render();
+        utils::execute_for([&] ()
+        {
+            input_source.update();
+            ui.render();
+        }, 16ms);
     }
 
     emulation_thread.request_stop();

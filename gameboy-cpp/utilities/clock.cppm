@@ -17,7 +17,7 @@ namespace utils
     }
 
     export template <std::regular_invocable Function, typename Rep, typename Period>
-    void execute_for(Function&& f, const std::chrono::duration<Rep, Period>& duration)
+    void execute_for_precise(Function&& f, const std::chrono::duration<Rep, Period>& duration)
     {
         using namespace std::chrono_literals;
         using clock = std::chrono::high_resolution_clock;
@@ -41,6 +41,18 @@ namespace utils
         while (clock::now() < target_end_time)
         {
             std::this_thread::yield();
+        }
+    }
+
+    export template <std::regular_invocable Function, typename Rep, typename Period>
+    void execute_for(Function&& f, const std::chrono::duration<Rep, Period>& duration)
+    {
+        const auto elapsed = measure_execution(std::forward<Function>(f));
+
+        if (elapsed < duration)
+        {
+            const auto remaining_time = duration - elapsed;
+            std::this_thread::sleep_for(remaining_time);
         }
     }
 

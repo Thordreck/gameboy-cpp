@@ -45,6 +45,14 @@ namespace sdl
         adaptive = SDL_RENDERER_VSYNC_ADAPTIVE,
     };
 
+    export std::optional<render_driver> get_render_driver_by_name(const std::string_view name)
+    {
+        const auto available_drivers = render_driver::get_available();
+        const auto found_it = std::ranges::find(available_drivers, name, &render_driver::name);
+
+        return found_it != available_drivers.end() ? std::make_optional(*found_it) : std::nullopt;
+    }
+
     export class renderer
     {
     public:

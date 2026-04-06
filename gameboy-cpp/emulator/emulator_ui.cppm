@@ -36,7 +36,7 @@ namespace emulator
             imgui::check_version();
             imgui::set_dark_style();
 
-            utils::panic_on_error(sdl_renderer.set_vsync(1));
+            utils::panic_on_error(sdl_renderer.set_vsync(sdl::renderer_vsync::disabled));
         }
 
         // TODO: rethink interface
