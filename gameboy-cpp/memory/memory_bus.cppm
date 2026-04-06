@@ -42,7 +42,7 @@ namespace memory
     {
     public:
         template <AccessPolicy Policy>
-        requires (sizeof(std::decay_t<Policy>) <= 32)
+        requires (sizeof(std::decay_t<Policy>) <= 64)
             && (alignof(std::decay_t<Policy>) <= alignof(std::max_align_t))
             && std::destructible<std::decay_t<Policy>>
         explicit access_policy(Policy&& policy)
@@ -85,7 +85,7 @@ namespace memory
     class access_policy_chain
     {
     public:
-        access_policy_chain(Policies&&... policies)
+        explicit access_policy_chain(Policies&&... policies)
             : policies { std::forward<Policies>(policies)... }
         {}
 
@@ -168,4 +168,14 @@ namespace memory
     {
         (connectables.connect(bus), ...);
     }
+
+    export template <memory_address_t start, memory_address_t end>
+    requires (start <= end)
+    class read_only_memory_policy
+    {
+    public:
+        [[nodiscard]] bool can_read(const memory_address_t _) const { return true; }
+        [[nodiscard]] bool can_write(const memory_address_t address) const { return !is_in_region<start, end>(address); }
+    };
+
 }

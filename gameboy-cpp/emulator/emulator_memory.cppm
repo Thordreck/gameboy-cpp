@@ -39,6 +39,8 @@ namespace emulator
     export using work_ram_1_page_t = memory::span_map<0x1000, 0xD000, 0xDFFF>;
     export using echo_ram_page_t = memory::span_map<0x1E00, 0xE000, 0xFDFF>;
 
+    export using rom_read_only_policy_t = memory::read_only_memory_policy<0x0000, 0x7FFF>;
+
     // OAM + not-usable memory region
     // TODO: oam corruption bug
     export class oam_memory_page
@@ -245,21 +247,22 @@ namespace emulator
                 : vram_policy { ppu }
                 , oam_dma_policy { oam_dma  }
                 , oam_ppu_policy { ppu, oam_dma  }
-                , no_policy_bus { map }
-                , cpu_policy_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy }
-                , ppu_policy_bus { map, oam_ppu_policy }
+                , default_policy_bus { map, rom_policy }
+                , cpu_policy_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy }
+                , ppu_policy_bus { map, oam_ppu_policy, rom_policy }
         {
             memory::connect(cpu_policy_bus, cpu, timers);
             memory::connect(ppu_policy_bus, ppu);
-            memory::connect(no_policy_bus, oam_dma, joypad);
+            memory::connect(default_policy_bus, oam_dma, joypad);
         }
 
     private:
+        rom_read_only_policy_t rom_policy {};
         graphics::vram_access_policy vram_policy;
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
 
-        memory::memory_bus no_policy_bus;
+        memory::memory_bus default_policy_bus;
         memory::memory_bus cpu_policy_bus;
         memory::memory_bus ppu_policy_bus;
     };
