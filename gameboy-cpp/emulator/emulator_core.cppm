@@ -36,6 +36,7 @@ namespace emulator
 
         [[nodiscard]] lcd_view_t lcd() const { return lcd_memory; }
         [[nodiscard]] joypad_input_state& joypad_state() { return joypad_input_state; }
+        [[nodiscard]] memory::memory_bus memory_bus() { return memory::memory_bus{ memory_map.get() }; }
 
         void tick()
         {

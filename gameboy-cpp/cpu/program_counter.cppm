@@ -11,7 +11,7 @@ namespace cpu
 
 		operator type_t() const { return value(); }
 
-		type_t value() const { return value_;  }
+		[[nodiscard]] type_t value() const { return value_;  }
 
 		program_counter& operator=(const type_t new_value)
 		{
