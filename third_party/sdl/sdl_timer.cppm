@@ -11,4 +11,9 @@ namespace sdl
         SDL_Delay(ms.count());
     }
 
+    export void delay_precise(const std::chrono::nanoseconds& ns)
+    {
+        SDL_DelayPrecise(ns.count());
+    }
+
 }
