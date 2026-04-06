@@ -123,10 +123,8 @@ namespace graphics
             is_transferring = true;
         }
 
-        [[nodiscard]] bool is_transfer_active() const
-        {
-            return is_transferring;
-        }
+        [[nodiscard]] bool is_transfer_active() const { return is_transferring; }
+        [[nodiscard]] memory::memory_address_t start_address() const { return start; }
 
         void tick()
         {

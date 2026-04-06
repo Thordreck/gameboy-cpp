@@ -85,12 +85,14 @@ namespace emulator
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
             const memory::memory_span_t<0x7F> hram,
-            joypad::joypad& joypad)
+            joypad::joypad& joypad,
+            graphics::oam_dma& oam_dma)
             : timers{timers}
             , interrupts{interrupts}
             , ppu{ppu}
             , hram { hram }
             , joypad { joypad }
+            , oam_dma { oam_dma }
         {}
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
@@ -110,6 +112,7 @@ namespace emulator
             case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
+            case graphics::oam_dma_transfer_address: return oam_dma.start_address() / 0x100;
             case interrupts::if_address: return interrupts.flag;
             case interrupts::ie_address: return interrupts.enable;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
@@ -150,7 +153,7 @@ namespace emulator
             case graphics::lcd_y_address: // readonly
                 break;
             case graphics::oam_dma_transfer_address:
-                // TODO: implement oam dam transfer
+                oam_dma.start_transfer(value * static_cast<memory::memory_address_t>(0x100));
                 break;
             case graphics::lcd_cy_address:
                 ppu.set_lyc(value);
@@ -175,6 +178,7 @@ namespace emulator
         graphics::pixel_processing_unit& ppu;
         memory::memory_span_t<0x7F> hram;
         joypad::joypad& joypad;
+        graphics::oam_dma& oam_dma;
 
         // TODO: replace by remaining missing io registers
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
@@ -185,7 +189,7 @@ namespace emulator
     public:
         memory_map(
             memory_blocks& memory,
-            const graphics::oam_dma& oam_dma,
+            graphics::oam_dma& oam_dma,
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
@@ -198,7 +202,7 @@ namespace emulator
                 , work_ram_1_page { memory.work_ram_1 }
                 , echo_ram_page { memory.echo_ram }
                 , oam_memory_page { oam_dma, memory.oam }
-                , ihi_page { timers, interrupts, ppu, memory.hram, joypad }
+                , ihi_page { timers, interrupts, ppu, memory.hram, joypad, oam_dma }
         {
             map = memory::build_memory_map(
                 rom_bank_0_page,
