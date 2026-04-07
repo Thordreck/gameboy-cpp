@@ -40,6 +40,7 @@ target_sources(emulator PUBLIC
 		FILES
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/emulator_adapters.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_utils.cppm
 )
 
 add_executable(gameboy-cpp)

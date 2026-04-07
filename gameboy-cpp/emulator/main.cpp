@@ -1,5 +1,7 @@
+
 import emulator;
 import utilities;
+import sdl;
 import std;
 
 int main()
@@ -16,10 +18,9 @@ int main()
         {
             while (!ct.stop_requested())
             {
-                utils::execute_for(
-                    [&engine]() { engine.tick(); }
-                    , 238ns
-                    , [] (const auto& d) { utils::sleep_precise(d); });
+                utils::execute_for([&engine] { run_frame(engine); }
+                    , frame_duration
+                    , [](const auto& d) { sdl::delay_precise(d); });
             }
         }
     };
@@ -31,7 +32,7 @@ int main()
     while (!ui.quit_app_requested())
     {
         utils::execute_for(
-            [&]()
+            [&]
             {
                 input_source.update();
                 ui.render();

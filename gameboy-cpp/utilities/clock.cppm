@@ -35,7 +35,6 @@ namespace utils
         }
     }
 
-
     export template <
         std::regular_invocable Function,
         typename Rep,
@@ -52,19 +51,5 @@ namespace utils
             std::forward<SleepFunction>(sleep_function)(remaining_time);
         }
     }
-
-    /*
-    export template <std::regular_invocable Function, typename Rep, typename Period>
-    void execute_for(Function&& f, const std::chrono::duration<Rep, Period>& duration)
-    {
-        const auto elapsed = measure_execution(std::forward<Function>(f));
-
-        if (elapsed < duration)
-        {
-            const auto remaining_time = duration - elapsed;
-            std::this_thread::sleep_for(remaining_time);
-        }
-    }
-    */
 
 }
