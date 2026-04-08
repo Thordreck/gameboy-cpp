@@ -1,3 +1,6 @@
+module;
+#include "profiling.hpp"
+
 export module memory:bus;
 
 export import std;
@@ -13,8 +16,8 @@ namespace memory
         { instance.can_write(address) } -> std::convertible_to<bool>;
     };
 
-    using access_policy_can_read_fn_t = bool(*)(const void*, const memory_address_t);
-    using access_policy_can_write_fn_t = bool(*)(const void*, const memory_address_t);
+    using access_policy_can_read_fn_t = bool(*)(const void*, memory_address_t);
+    using access_policy_can_write_fn_t = bool(*)(const void*, memory_address_t);
     using access_destroy_fn_t = void(*)(void*);
 
     template <AccessPolicy T>
@@ -78,7 +81,7 @@ namespace memory
         access_policy_can_write_fn_t can_write_func;
         access_destroy_fn_t destroy_func;
 
-        alignas(std::max_align_t) std::array<std::byte, 32> context;
+        alignas(std::max_align_t) std::array<std::byte, 64> context;
     };
 
     template<AccessPolicy... Policies>
@@ -91,70 +94,86 @@ namespace memory
 
         [[nodiscard]] bool can_read(const memory_address_t address) const
         {
-            return std::apply([address] (const auto&... policy) { return (... && policy.can_read(address)); }, policies);
+            return can_read_impl(address, std::index_sequence_for<Policies...>{});
         }
 
         [[nodiscard]] bool can_write(const memory_address_t address) const
         {
-            return std::apply([address] (const auto&... policy) { return (... && policy.can_write(address)); }, policies);
+            return can_write_impl(address, std::index_sequence_for<Policies...>{});
         }
 
     private:
+        template<std::size_t... I>
+        [[nodiscard]] bool can_read_impl(const memory_address_t address, std::index_sequence<I...>) const
+        {
+            return (... && std::get<I>(policies).can_read(address));
+        }
+
+        template<std::size_t... I>
+        [[nodiscard]] bool can_write_impl(const memory_address_t address, std::index_sequence<I...>) const
+        {
+            return (... && std::get<I>(policies).can_write(address));
+        }
+
         using tuple_t = std::tuple<std::decay_t<Policies>...>;
         tuple_t policies;
+    };
+
+
+    struct free_access_policy
+    {
+        [[nodiscard]] bool can_read(const memory_address_t) const { return true; }
+        [[nodiscard]] bool can_write(const memory_address_t) const { return true; }
     };
 
     export class memory_bus
     {
     public:
         template <AccessPolicy Policy>
-        memory_bus(const memory_map_span_t map, Policy&& policy)
+        explicit memory_bus(const memory_map_span_t map, Policy&& policy)
             : map{map}
-            , access(std::in_place, std::forward<Policy>(policy))
+            , access(std::forward<Policy>(policy))
         {}
 
         template <AccessPolicy... Policies>
         requires (sizeof...(Policies) > 1)
         explicit memory_bus(const memory_map_span_t map, Policies&&... policies)
-            : memory_bus(map, access_policy_chain<Policies...>(std::forward<Policies>(policies)...))
+            : map{map}
+            , access(access_policy_chain<Policies...>(std::forward<Policies>(policies)...))
         {}
 
         explicit memory_bus(const memory_map_span_t map)
             : map{map}
-            , access(std::nullopt)
+            , access(free_access_policy {})
         {}
 
         [[nodiscard]] memory_data_t read(const memory_address_t address) const
         {
-            const bool has_access = access
-                .transform([address] (const auto& policy){ return policy.can_read(address); })
-                .value_or(true);
-
-            if (!has_access)
             {
-                return 0xFF;
+                PROFILER_SCOPE("Memory bus policy");
+                if (!access.can_read(address))
+                {
+                    return 0xFF;
+                }
             }
 
-            const memory_map_page page = map[address >> 8];
+            PROFILER_SCOPE("Memory bus read");
+            const memory_map_page& page = map[address >> 8];
             return page.read_func(page.context, address);
         }
 
         void write(const memory_address_t address, const memory_data_t value)
         {
-            const bool has_access = access
-                .transform([address] (const auto& policy){ return policy.can_write(address); })
-                .value_or(true);
-
-            if (has_access)
+            if (access.can_write(address))
             {
-                const memory_map_page page = map[address >> 8];
+                const memory_map_page& page = map[address >> 8];
                 page.write_func(page.context, address, value);
             }
         }
 
     private:
         memory_map_span_t map;
-        std::optional<access_policy> access;
+        access_policy access;
     };
 
     export template <typename T>

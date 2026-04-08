@@ -1,0 +1,21 @@
+set(PROFILING_BACKEND "None" CACHE STRING "Profiling backend")
+set_property(CACHE PROFILING_BACKEND PROPERTY STRINGS Tracy None)
+
+add_library(profiling-backend STATIC)
+target_compile_features(profiling-backend PUBLIC cxx_std_23)
+set_target_properties(profiling-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+add_library(profiling::backend ALIAS profiling-backend)
+
+if(PROFILING_BACKEND STREQUAL "Tracy")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/tracy ${CMAKE_BINARY_DIR}/third_party/tracy)
+    target_compile_definitions(profiling-backend PUBLIC PROFILING_TRACY)
+    target_link_libraries(profiling-backend PUBLIC Tracy::TracyClient)
+    target_include_directories(profiling-backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+    target_compile_definitions(profiling-backend PUBLIC PROFILING_NONE)
+    target_include_directories(profiling-backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+add_library(profiling INTERFACE)
+target_link_libraries(profiling INTERFACE profiling::backend)
+target_include_directories(profiling INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

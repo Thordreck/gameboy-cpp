@@ -34,6 +34,16 @@
         "BUILD_TESTING": "OFF",
         "CMAKE_VERBOSE_MAKEFILE": "OFF"
       }
+    },
+    {
+      "name": "win-64-tracy",
+      "displayName": "Tracy Profiling",
+      "inherits": "win-64-release",
+      "binaryDir": "${sourceDir}/build/release-tracy",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PROFILING_BACKEND": "Tracy"
+      }
     }
   ],
   "buildPresets": [
@@ -46,6 +56,11 @@
       "name": "win-64-release",
       "displayName": "Release",
       "configurePreset": "win-64-release"
+    },
+    {
+      "name": "win-64-release-tracy",
+      "displayName": "Tracy Profiling",
+      "configurePreset": "win-64-tracy"
     }
   ],
   "testPresets": [

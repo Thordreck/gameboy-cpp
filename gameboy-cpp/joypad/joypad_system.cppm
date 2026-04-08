@@ -1,3 +1,5 @@
+module;
+#include "profiling.hpp"
 
 export module joypad:system;
 
@@ -12,12 +14,7 @@ namespace joypad
 {
     static bool detect_input_bits_falling_edge(const memory::memory_data_t previous, const memory::memory_data_t current)
     {
-        using namespace utils;
-
-        return bit_falling_edge<3>(previous, current)
-            || bit_falling_edge<2>(previous, current)
-            || bit_falling_edge<1>(previous, current)
-            || bit_falling_edge<0>(previous, current);
+        return (previous & ~current & 0x0F) != 0;
     }
 
     export class joypad_system
@@ -25,8 +22,7 @@ namespace joypad
     public:
         void tick()
         {
-            utils::assert_not_nullptr(memory);
-
+            PROFILER_SCOPE("Joypad System");
             const auto current_register_value = memory->read(joypad_memory_address);
 
             if (detect_input_bits_falling_edge(prev_register_value, current_register_value))

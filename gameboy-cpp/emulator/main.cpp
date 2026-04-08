@@ -1,3 +1,4 @@
+#include "profiling.hpp"
 
 import emulator;
 import utilities;
@@ -9,6 +10,7 @@ int main()
     using namespace emulator;
     using namespace std::chrono_literals;
 
+    PROFILER_SESSION();
     engine engine{};
 
     // TODO: move to its own submodule
@@ -16,8 +18,12 @@ int main()
     {
         [&engine](const std::stop_token& ct)
         {
+            PROFILER_THREAD("Engine Thread");
+
             while (!ct.stop_requested())
             {
+                PROFILER_SCOPE("Engine Frame");
+
                 utils::execute_for([&engine] { run_frame(engine); }
                     , frame_duration
                     , [](const auto& d) { sdl::delay_precise(d); });
@@ -31,6 +37,8 @@ int main()
 
     while (!ui.quit_app_requested())
     {
+        PROFILER_SCOPE("UI Frame");
+
         utils::execute_for(
             [&]
             {
