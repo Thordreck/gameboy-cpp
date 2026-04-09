@@ -138,8 +138,7 @@ namespace graphics
         {
             PROFILER_SCOPE("OAM DMA::tick()");
 
-            // TODO: remove this branch. It shouldn't happen
-            if (!is_transferring) { return; }
+            if(!is_transferring) [[unlikely]] { return; }
 
             std::uint32_t remaining_ticks = num_ticks;
             while (is_transferring && remaining_ticks-- > 0)
