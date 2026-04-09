@@ -33,7 +33,7 @@ namespace timer
 		std::uint8_t value() const { return counter; }
 		operator std::uint8_t() const { return value(); }
 
-		tima& operator=(std::uint8_t new_value) 
+		tima& operator=(const std::uint8_t new_value)
 		{ 
 			counter = new_value; 
 			return *this;

@@ -1,3 +1,6 @@
+module;
+#include "profiling.hpp"
+
 export module graphics:ppu;
 export import memory;
 export import :lcd;
@@ -130,6 +133,8 @@ namespace graphics
 
         void tick()
         {
+            PROFILER_SCOPE("PPU::tick()");
+
             if (!enabled)
             {
                 return;

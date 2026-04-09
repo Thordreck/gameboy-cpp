@@ -1,3 +1,5 @@
+module;
+#include "profiling.hpp"
 
 export module emulator.core;
 export import :memory;
@@ -24,7 +26,7 @@ namespace emulator
             , lcd_ { lcd_adapter }
             , ppu_ { lcd_ }
             , memory_map { memory_blocks, oam_dma, timers, interrupts, ppu_, joypad_imp }
-            , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma , joypad }
+            , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma, joypad_imp }
             , cpu_runner { cpu }
         {
             cpu.pc() = 0x100;
@@ -35,18 +37,18 @@ namespace emulator
         ~engine() { stop(); }
 
         [[nodiscard]] lcd_view_t lcd() const { return lcd_memory; }
-        [[nodiscard]] joypad_input_state& joypad_state() { return joypad_input_state; }
+        [[nodiscard]] joypad_input_sink joypad() { return joypad_input_sink{ joypad_imp }; }
         [[nodiscard]] memory::memory_bus memory_bus() { return memory::memory_bus{ memory_map.get() }; }
 
-        void tick()
+        void tick(const std::uint32_t num_ticks = 1)
         {
             if (rom_loaded)
             {
-                cpu_runner.tick();
-                timers.tick();
+                PROFILER_SCOPE("Engine::tick()");
+                cpu_runner.tick(num_ticks);
+                timers.tick(num_ticks);
                 ppu_.tick();
                 oam_dma.tick();
-                joypad.tick();
             }
         }
 
@@ -57,7 +59,6 @@ namespace emulator
             timers = {};
             interrupts = {};
             oam_dma = {};
-            joypad = {};
             lcd_memory.fill({});
 
             cpu.pc() = 0x100;
@@ -87,10 +88,7 @@ namespace emulator
         interrupts::interrupt_registers interrupts {};
         graphics::oam_dma oam_dma {};
 
-        joypad::joypad_system joypad {};
-        joypad_input_state joypad_input_state {};
-        joypad_input_state_provider joypad_state_adapter { joypad_input_state };
-        joypad::joypad joypad_imp { joypad_state_adapter };
+        joypad::joypad joypad_imp {};
 
         lcd_memory_t lcd_memory {};
         graphics::raw_memory_lcd lcd_adapter;

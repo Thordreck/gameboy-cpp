@@ -1,3 +1,5 @@
+module;
+#include "profiling.hpp"
 
 export module graphics:oam;
 export import memory;
@@ -128,6 +130,7 @@ namespace graphics
 
         void tick()
         {
+            PROFILER_SCOPE("OAM DMA::tick()");
             if (is_transferring && ++current_tick % 4 == 0)
             {
                 using namespace memory;

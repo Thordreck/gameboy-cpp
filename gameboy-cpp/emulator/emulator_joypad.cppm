@@ -1,3 +1,4 @@
+
 export module emulator.core:joypad;
 
 import std;
@@ -5,46 +6,34 @@ import joypad;
 
 namespace emulator
 {
-    export struct joypad_input_state
+    template<joypad::JoypadWritableInput Joypad>
+    void set_input_state_imp(void* context, const joypad::const_input_state_view_t state)
     {
-        bool start{};
-        bool select{};
-        bool up{};
-        bool down{};
-        bool left{};
-        bool right{};
-        bool b{};
-        bool a{};
-    };
+        Joypad* joypad = static_cast<Joypad*>(context);
+        joypad->set_state(state);
+    }
 
-    export class joypad_input_state_provider
+    export using joypad_set_input_state_fn_t = void(*)(void*, joypad::const_input_state_view_t);
+
+    export class joypad_input_sink
     {
     public:
-        explicit joypad_input_state_provider(joypad_input_state& input_state)
-            : state{input_state}
-        {
-        }
+        template<joypad::JoypadWritableInput Imp>
+        explicit joypad_input_sink(Imp& imp)
+            : imp { &imp }
+            , set_input_state_fn { set_input_state_imp<Imp> }
+        {}
 
-        [[nodiscard]] bool is_input_pressed(const joypad::joypad_input input) const
+        template<typename... States>
+        requires (std::same_as<States, bool> && ...) && (sizeof...(States) == joypad::num_joypad_inputs)
+        void set_input_state(const States... values) const
         {
-            using enum joypad::joypad_input;
-
-            switch (input)
-            {
-            case start: return state.start;
-            case select: return state.select;
-            case up: return state.up;
-            case down: return state.down;
-            case left: return state.left;
-            case right: return state.right;
-            case b: return state.b;
-            case a: return state.a;
-            default: std::unreachable();
-            }
+            set_input_state_fn(imp, std::array { values...} );
         }
 
     private:
-        joypad_input_state& state;
+        void* imp;
+        joypad_set_input_state_fn_t set_input_state_fn;
     };
 
 }

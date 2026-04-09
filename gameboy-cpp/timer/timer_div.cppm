@@ -17,7 +17,7 @@ namespace timer
 
 		operator std::uint16_t() const { return value(); }
 
-		div& operator=(const uint16_t value)
+		div& operator=(const std::uint16_t value)
 		{
 			counter = value;
 			return *this;

@@ -29,29 +29,28 @@ namespace emulator
     {
     public:
         explicit engine_input_source(engine& engine)
-            : engine { engine }
+            : sink { engine.joypad() }
+            , source { sdl::get_keyboard_state() }
         {}
 
         void update() const
         {
-            using namespace sdl;
-            using enum scancode;
-            const keyboard_state keyboard = get_keyboard_state();
+            using enum sdl::scancode;
 
-            joypad_input_state& input = engine.joypad_state();
-
-            input.a      = keyboard.is_pressed(x).value_or(false);
-            input.b      = keyboard.is_pressed(z).value_or(false);
-            input.start  = keyboard.is_pressed(enter).value_or(false);
-            input.select = keyboard.is_pressed(right_shift).value_or(false);
-            input.up     = keyboard.is_pressed(up).value_or(false);
-            input.down   = keyboard.is_pressed(down).value_or(false);
-            input.left   = keyboard.is_pressed(left).value_or(false);
-            input.right  = keyboard.is_pressed(right).value_or(false);
+            sink.set_input_state(
+                source[enter],
+                source[right_shift],
+                source[up],
+                source[down],
+                source[left],
+                source[right],
+                source[x],
+                source[z]);
         }
 
     private:
-        engine& engine;
+        joypad_input_sink sink;
+        sdl::keyboard_state source;
     };
 
 }

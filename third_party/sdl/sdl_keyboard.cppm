@@ -12,17 +12,20 @@ namespace sdl
     export class keyboard_state
     {
     public:
-        std::optional<bool> is_pressed(const scancode scancode) const
+        [[nodiscard]] std::optional<bool> is_pressed(const scancode scancode) const
         {
             return is_pressed(std::to_underlying(scancode));
         }
 
-        std::optional<bool> is_pressed(const scancode_t scancode) const
+        [[nodiscard]] std::optional<bool> is_pressed(const scancode_t scancode) const
         {
             return scancode < state.size()
                 ? std::make_optional(state[scancode])
                 : std::nullopt;
         }
+
+        [[nodiscard]] bool operator[](const scancode scancode) const { return state[std::to_underlying(scancode)]; }
+        [[nodiscard]] bool operator[](const scancode_t scancode) const { return state[scancode]; }
 
     private:
         explicit keyboard_state(const std::span<const bool> state)

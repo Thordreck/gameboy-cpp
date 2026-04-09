@@ -243,17 +243,17 @@ namespace emulator
             timer::timer_system& timers,
             graphics::pixel_processing_unit& ppu,
             graphics::oam_dma& oam_dma,
-            joypad::joypad_system& joypad)
+            joypad::joypad& joypad)
                 : vram_policy { ppu }
                 , oam_dma_policy { oam_dma  }
                 , oam_ppu_policy { ppu, oam_dma  }
-                , default_policy_bus { map, rom_policy }
+                , no_policy_bus { map }
                 , cpu_policy_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy }
                 , ppu_policy_bus { map, oam_ppu_policy, rom_policy }
         {
             memory::connect(cpu_policy_bus, cpu, timers);
             memory::connect(ppu_policy_bus, ppu);
-            memory::connect(default_policy_bus, oam_dma, joypad);
+            memory::connect(no_policy_bus, oam_dma, joypad);
         }
 
     private:
@@ -262,7 +262,7 @@ namespace emulator
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
 
-        memory::memory_bus default_policy_bus;
+        memory::memory_bus no_policy_bus;
         memory::memory_bus cpu_policy_bus;
         memory::memory_bus ppu_policy_bus;
     };

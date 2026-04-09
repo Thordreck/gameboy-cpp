@@ -1,3 +1,6 @@
+module;
+#include "profiling.hpp"
+
 export module emulator.core:cpu;
 
 export import std;
@@ -95,28 +98,42 @@ namespace emulator
 			, interrupts { }
 		{}
 
-		void tick()
+		void tick(const std::uint32_t num_ticks)
 		{
-			if (const bool should_reset_m_cycle = handle_tick())
+			PROFILER_SCOPE("CPU Runner:tick()");
+			std::uint32_t remaining_ticks = num_ticks;
+
+			while (remaining_ticks-- > 0)
 			{
-				cpu.cycle() = {};
+				// Work is only done at the end of each m cycle
+				if (!cpu::is_end_of_any_machine_cycle(cpu.cycle()))
+				{
+					++cpu.cycle();
+				}
+				else if (const bool should_reset_m_cycle = handle_end_m_cycle())
+				{
+					cpu.cycle() = {};
+				}
+				else
+				{
+					++cpu.cycle();
+				}
 			}
-			else 
-			{
-				++cpu.cycle();
-			}
+		}
+		[[nodiscard]] std::uint32_t tick_batch() const
+		{
+			return active_interrupt
+				.transform([](const auto& interrupt) { return interrupt.num_cycles(); })
+				.value_or(
+					active_instruction
+						.transform([](const auto& interrupt) { return interrupt.num_cycles(); })
+						.value_or(4));
 		}
 
 	private:
-		bool handle_tick()
+		bool handle_end_m_cycle()
 		{
-			// Work is only done at the end of each m cycle
-			if (!cpu::is_end_of_any_machine_cycle(cpu.cycle()))
-			{
-				return false;
-			}
-			
-			// Halt 
+			// Halt
 			if (cpu.halt_state().enabled)
 			{
 				if (!interrupts::is_any_interrupt_pending(cpu))

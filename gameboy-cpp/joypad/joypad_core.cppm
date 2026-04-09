@@ -1,40 +1,47 @@
+
 export module joypad:core;
+
 import :common;
+import :memory;
+
+import std;
+import interrupts;
 
 namespace joypad
 {
-    using joypad_imp_is_input_pressed_func_t = bool(*)(const void*, joypad_input);
-
-    template <JoypadInputProvider Imp>
-    static [[nodiscard]] bool is_input_pressed_imp(const void* imp, const joypad_input input)
+    static bool detect_input_bits_falling_edge(const memory::memory_data_t previous, const memory::memory_data_t current)
     {
-        const Imp* joypad = static_cast<const Imp*>(imp);
-        return joypad->is_input_pressed(input);
+        return (previous & ~current & 0x0F) != 0;
     }
 
     export class joypad
     {
     public:
-        template <JoypadInputProvider Imp>
-        explicit joypad(Imp& imp)
-            : imp{&imp}
-              , is_input_pressed_func{is_input_pressed_imp<Imp>}
-        {
-        }
-
         void set_source(const joypad_source new_source) { source = new_source; }
         [[nodiscard]] joypad_source get_source() const { return source; }
 
-        [[nodiscard]] bool is_input_pressed(const joypad_input input) const
+        [[nodiscard]] const_input_state_view_t get_state() const { return state; }
+
+        void set_state(const const_input_state_view_t new_input_state)
         {
-            return is_input_pressed_func(imp, input);
+            const auto prev_state = read_joypad_register(*this);
+            std::ranges::copy(new_input_state, state.begin());
+            const auto current_state = read_joypad_register(*this);
+
+            if (detect_input_bits_falling_edge(prev_state, read_joypad_register(*this)))
+            {
+                using namespace interrupts;
+                request<joypad_interrupt>(*memory);
+            }
         }
 
-    private:
-        void* imp;
-        joypad_imp_is_input_pressed_func_t is_input_pressed_func;
+        void connect(memory::memory_bus& bus) { memory = &bus; }
 
-        joypad_source source{joypad_source::none};
+    private:
+        joypad_source source{ joypad_source::none };
+        std::array<bool, num_joypad_inputs> state {};
+
+        memory::memory_bus* memory { nullptr };
     };
 
 }
