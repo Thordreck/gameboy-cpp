@@ -1,5 +1,5 @@
 #pragma once
 
 #define PROFILER_SESSION()
-#define PROFILER_SCOPE()
-#define PROFILER_THREAD()
+#define PROFILER_SCOPE(name)
+#define PROFILER_THREAD(name)
