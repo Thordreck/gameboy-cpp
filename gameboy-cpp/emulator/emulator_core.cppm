@@ -48,7 +48,7 @@ namespace emulator
                 cpu_runner.tick(num_ticks);
                 timers.tick(num_ticks);
                 ppu_.tick();
-                oam_dma.tick();
+                oam_dma.tick(num_ticks);
             }
         }
 

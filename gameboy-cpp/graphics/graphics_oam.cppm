@@ -117,44 +117,60 @@ namespace graphics
     export class oam_dma
     {
     public:
-        void start_transfer(const memory::memory_address_t start_address)
-        {
-            current_byte = 0;
-            current_tick = 0;
-            start = start_address;
-            is_transferring = true;
-        }
-
         [[nodiscard]] bool is_transfer_active() const { return is_transferring; }
         [[nodiscard]] memory::memory_address_t start_address() const { return start; }
 
-        void tick()
+        [[nodiscard]] std::uint8_t active() const { return is_transfer_active(); }
+        [[nodiscard]] std::uint32_t tick_batch() const
+        {
+            return active() ? 4 : std::numeric_limits<std::uint32_t>::max();
+        }
+
+        void start_transfer(const memory::memory_address_t start_address)
+        {
+            is_transferring = true;
+            current_byte = 0;
+            current_tick = 0;
+            start = start_address;
+        }
+
+        void tick(const std::uint32_t num_ticks)
         {
             PROFILER_SCOPE("OAM DMA::tick()");
-            if (is_transferring && ++current_tick % 4 == 0)
+
+            // TODO: remove this branch. It shouldn't happen
+            if (!is_transferring) { return; }
+
+            std::uint32_t remaining_ticks = num_ticks;
+            while (is_transferring && remaining_ticks-- > 0)
             {
-                using namespace memory;
-                utils::assert_not_nullptr(memory);
-
-                const memory_address_t source_address = start + current_byte;
-                const memory_address_t target_address = oam_start_address + current_byte;
-                const memory_data_t byte_to_copy = memory->read(source_address);
-
-                memory->write(target_address, byte_to_copy);
-
-                if (++current_byte >= oam_size)
+                if (++current_tick % 4 == 0)
                 {
-                    is_transferring = false;
+                    execute_transfer_step(start, current_byte, *memory);
+                    is_transferring = ++current_byte < oam_size;
                 }
             }
         }
 
-        void connect(memory::memory_bus& bus)
-        {
-            memory = &bus;
-        }
+        void connect(memory::memory_bus& bus) { memory = &bus; }
 
     private:
+        void set_is_transfer_active(const bool value) { is_transferring = value; }
+
+        static void execute_transfer_step(
+            const memory::memory_address_t start,
+            const std::uint8_t current_byte,
+            memory::memory_bus& memory)
+        {
+            using namespace memory;
+
+            const memory_address_t source_address = start + current_byte;
+            const memory_address_t target_address = oam_start_address + current_byte;
+            const memory_data_t byte_to_copy = memory.read(source_address);
+
+            memory.write(target_address, byte_to_copy);
+        }
+
         memory::memory_bus* memory { nullptr };
 
         bool is_transferring {};
