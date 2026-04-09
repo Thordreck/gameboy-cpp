@@ -11,5 +11,4 @@ target_sources(joypad PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/joypad_common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/joypad_memory.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/joypad_core.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/joypad_system.cppm
 )
