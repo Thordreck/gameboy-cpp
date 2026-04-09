@@ -1,5 +1,5 @@
 
-export module emulator.scheduler;
+export module emulator.core:scheduler;
 import std;
 
 namespace emulator
@@ -7,48 +7,31 @@ namespace emulator
     export template<typename T>
     concept BatchSchedulable = requires(const T& const_instance, T& instance, const std::uint32_t ticks)
     {
+        { const_instance.active() } -> std::convertible_to<bool>;
         { const_instance.tick_batch() } -> std::convertible_to<std::uint32_t>;
-        { instance.tick(ticks) } -> std::convertible_to<std::uint32_t>;
+        { instance.tick(ticks) } -> std::same_as<void>;
     };
+
+    template<BatchSchedulable... Components>
+    static std::uint32_t get_next_tick_batch(const Components&... components)
+    {
+        std::uint32_t min_ticks = std::numeric_limits<std::uint32_t>::max();
+        ((min_ticks = std::min(min_ticks, components.tick_batch())), ...);
+
+        return min_ticks;
+    }
 
     export template<BatchSchedulable... Components>
-    class batch_scheduler
+    void batch_schedule(const std::uint32_t ticks, Components&... components)
     {
-    public:
-        explicit batch_scheduler(Components&... components)
-            : components(components...)
-        {}
+        std::uint32_t remaining_ticks = ticks;
 
-        void tick(const std::uint32_t ticks)
+        while (remaining_ticks > 0)
         {
-            std::uint32_t remaining_ticks = ticks;
-
-            while (remaining_ticks > 0)
-            {
-                const std::uint32_t batch = std::min(get_next_tick_batch(), remaining_ticks);
-                std::apply([batch] (auto& c) { c.tick(batch); }, components);
-
-                remaining_ticks -= batch;
-            }
+            const std::uint32_t batch = std::min(get_next_tick_batch(components...), remaining_ticks);
+            ((components.active() && (components.tick(batch), true)), ...);
+            remaining_ticks -= batch;
         }
-
-    private:
-        std::uint32_t get_next_tick_batch()
-        {
-            std::uint32_t min_ticks = std::numeric_limits<std::uint32_t>::max();
-
-            std::apply(
-                [&](auto&... c)
-                {
-                    ((min_ticks = std::min(min_ticks, c.tick_step())), ...);
-                },
-                components
-            );
-
-            return min_ticks;
-        }
-
-        std::tuple<Components&...> components;
-    };
+    }
 
 }

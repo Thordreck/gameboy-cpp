@@ -5,6 +5,7 @@ export module emulator.core;
 export import :memory;
 export import :cpu;
 export import :joypad;
+export import :scheduler;
 
 import cpu;
 import timer;
@@ -40,15 +41,21 @@ namespace emulator
         [[nodiscard]] joypad_input_sink joypad() { return joypad_input_sink{ joypad_imp }; }
         [[nodiscard]] memory::memory_bus memory_bus() { return memory::memory_bus{ memory_map.get() }; }
 
-        void tick(const std::uint32_t num_ticks = 1)
+        void tick(const std::uint32_t num_ticks)
         {
-            if (rom_loaded)
+            PROFILER_SCOPE("Engine::tick()");
+
+            // TODO: rethink this
+            if (rom_loaded) [[likely]]
             {
-                PROFILER_SCOPE("Engine::tick()");
+                batch_schedule(num_ticks, cpu_runner, timers, ppu_, oam_dma);
+
+                /*
                 cpu_runner.tick(num_ticks);
                 timers.tick(num_ticks);
-                ppu_.tick();
+                ppu_.tick(num_ticks);
                 oam_dma.tick(num_ticks);
+                */
             }
         }
 

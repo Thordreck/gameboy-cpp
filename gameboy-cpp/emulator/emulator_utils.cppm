@@ -12,10 +12,7 @@ namespace emulator
 
     export void run_frame(engine& engine)
     {
-        for (std::size_t i = 0; i < num_ticks_per_frame; ++i)
-        {
-            engine.tick();
-        }
+        engine.tick(num_ticks_per_frame);
     }
 
 }

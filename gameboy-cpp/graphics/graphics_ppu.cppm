@@ -131,33 +131,50 @@ namespace graphics
         bool [[nodiscard]] is_enabled() const { return enabled; }
         ppu_interrupt_sources [[nodiscard]] interrupts() const { return interrupt_sources; }
 
-        void tick()
+        [[nodiscard]] std::uint8_t active() const { return is_enabled(); }
+        [[nodiscard]] std::uint32_t tick_batch() const
         {
-            PROFILER_SCOPE("PPU::tick()");
-
-            if (!enabled)
-            {
-                return;
-            }
+            if (!active()) [[unlikely]] { return std::numeric_limits<std::uint32_t>::max(); }
 
             switch (current_mode)
             {
-            case ppu_mode::h_blank:
-                h_blank();
-                break;
-            case ppu_mode::v_blank:
-                v_blank();
-                break;
-            case ppu_mode::oam_scan:
-                scan_oam();
-                break;
-            case ppu_mode::drawing:
-                draw();
-                break;
+            case ppu_mode::h_blank: return 456 - scanline_cycle;
+            case ppu_mode::v_blank: return 456 - scanline_cycle;
+            case ppu_mode::oam_scan: return 80 - scanline_cycle;
+            case ppu_mode::drawing: return std::min(289 + 80 - 5, 5);
             default: std::unreachable();
             }
+        }
 
-            update_stat_line();
+        void tick(const std::uint32_t num_ticks)
+        {
+            PROFILER_SCOPE("PPU::tick()");
+
+            if (!enabled) [[unlikely]] { return; }
+
+            std::uint32_t remaining_ticks = num_ticks;
+
+            while (remaining_ticks-- > 0)
+            {
+                switch (current_mode)
+                {
+                case ppu_mode::h_blank:
+                    h_blank();
+                    break;
+                case ppu_mode::v_blank:
+                    v_blank();
+                    break;
+                case ppu_mode::oam_scan:
+                    scan_oam();
+                    break;
+                case ppu_mode::drawing:
+                    draw();
+                    break;
+                default: std::unreachable();
+                }
+
+                update_stat_line();
+            }
         }
 
         void set_enabled(const bool enabled)
@@ -362,10 +379,7 @@ namespace graphics
 
         void update_stat_line()
         {
-            if (!enabled)
-            {
-                return;
-            }
+            if (!enabled) [[unlikely]] { return; }
 
             const bool new_stat_line
                 = (current_scanline == scanline_compare && interrupt_sources.lyc_select)

@@ -98,6 +98,19 @@ namespace emulator
 			, interrupts { }
 		{}
 
+		// TODO: this should be controlled by the halt state.
+		[[nodiscard]] bool active() const { return true; }
+
+		[[nodiscard]] std::uint32_t tick_batch() const
+		{
+			return active_interrupt
+				.transform([](const auto& interrupt) { return interrupt.num_cycles() * 4; })
+				.value_or(
+					active_instruction
+						.transform([this](const auto& instr) { return instr.num_cycles(cpu) * 4; })
+						.value_or(4));
+		}
+
 		void tick(const std::uint32_t num_ticks)
 		{
 			PROFILER_SCOPE("CPU Runner:tick()");
@@ -119,15 +132,6 @@ namespace emulator
 					++cpu.cycle();
 				}
 			}
-		}
-		[[nodiscard]] std::uint32_t tick_batch() const
-		{
-			return active_interrupt
-				.transform([](const auto& interrupt) { return interrupt.num_cycles(); })
-				.value_or(
-					active_instruction
-						.transform([](const auto& interrupt) { return interrupt.num_cycles(); })
-						.value_or(4));
 		}
 
 	private:

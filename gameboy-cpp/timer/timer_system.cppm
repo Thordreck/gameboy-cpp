@@ -40,6 +40,7 @@ namespace timer
         tac& control() { return timer_control; }
         const tac& control() const { return timer_control; }
 
+        [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
             return overflow_detected
