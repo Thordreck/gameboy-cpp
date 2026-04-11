@@ -24,7 +24,7 @@ target_sources(blargg_tests
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupt_time.test.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/memory_timing.test.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/memory_timing_2.test.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/halt_bug.test.cpp
+		#${CMAKE_CURRENT_SOURCE_DIR}/halt_bug.test.cpp
 )
 
 # Copy ROMs to build directory

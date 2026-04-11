@@ -39,22 +39,10 @@ namespace timer
 			return *this;
 		}
 
-		bool tick(
-			const std::uint16_t prev_div,
-			const std::uint16_t current_div,
-			const tac_clock selected_clock)
+		bool tick()
 		{
-			const bool prev_bit_set = is_tac_clock_bit_set(prev_div, selected_clock);
-			const bool current_bit_set = is_tac_clock_bit_set(current_div, selected_clock);
-
-			bool overflow = false;
-
-			// Falling edge
-			if (prev_bit_set && !current_bit_set)
-			{
-				overflow = utils::check_add_overflow<std::uint8_t>(counter, 1);
-				counter++;
-			}
+			const bool overflow = utils::check_add_overflow<std::uint8_t>(counter, 1);
+			counter++;
 
 			return overflow;
 		}

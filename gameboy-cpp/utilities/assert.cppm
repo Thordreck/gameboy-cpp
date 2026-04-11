@@ -13,7 +13,7 @@ namespace utils
 
 	export template<typename Callable>
 	requires requires(Callable c) { { c() } -> std::convertible_to<bool>; }
-	void assert(Callable&& condition, std::source_location loc = std::source_location::current())
+	void assert(Callable&& condition, const std::source_location& loc = std::source_location::current())
 	{
 		if constexpr (debug)
 		{

@@ -3,36 +3,10 @@ export module cpu:ime;
 
 namespace cpu
 {
-	export class ime
+	export struct ime_state
 	{
-	public:
-		ime()
-			: enabled{ false }
-			, requested{ false }
-		{}
-
-		[[nodiscard]] bool is_enabled() const { return enabled; }
-		[[nodiscard]] bool is_requested() const { return requested; }
-
-		void request() 
-		{ 
-			requested = true; 
-		}
-
-		void enable()
-		{
-			enabled = true;
-			requested = false;
-		}
-
-		void disable()
-		{
-			enabled = false;
-			requested = false;
-		}
-
-	private:
-		bool enabled;
-		bool requested;
+		bool enabled { false };
+		bool requested { false };
+		bool enabling { false };
 	};
 }

@@ -11,20 +11,20 @@ export import :dispatch;
 namespace interrupts
 {
 	export template <InterruptDescriptor interrupt>
-	bool is_pending(const cpu::cpu& cpu)
+	bool is_pending(const cpu::cpu_state& cpu)
 	{
-		return is_enabled<interrupt>(cpu.memory()) && is_requested<interrupt>(cpu.memory());
+		return is_enabled<interrupt>(*cpu.memory) && is_requested<interrupt>(*cpu.memory);
 	}
 
 	template <InterruptDescriptor interrupt>
-	std::optional<interrupt_dispatcher> try_service(cpu::cpu& cpu)
+	std::optional<interrupt_dispatcher> try_service(cpu::cpu_state& cpu)
 	{
 		if (is_pending<interrupt>(cpu))
 		{
 			return interrupt_dispatcher
 			{
 				dispatcher<interrupt>::execute,
-				dispatcher<interrupt>::num_cycles
+				dispatcher<interrupt>::num_steps
 			};
 		}
 
@@ -32,7 +32,7 @@ namespace interrupts
 	}
 
 	template<InterruptDescriptor... Interrupts>
-	std::optional<interrupt_dispatcher> service_first_pending_by_priority(cpu::cpu& cpu)
+	std::optional<interrupt_dispatcher> service_first_pending_by_priority(cpu::cpu_state& cpu)
 	{
 		std::optional<interrupt_dispatcher> handler = std::nullopt;
 
@@ -40,12 +40,12 @@ namespace interrupts
 		return handler;
 	}
 
-	export bool is_any_interrupt_pending(const cpu::cpu& cpu)
+	export bool is_any_interrupt_pending(const cpu::cpu_state& cpu)
 	{
-		return (cpu.memory().read(ie_address) & ie_mask) & (cpu.memory().read(if_address) & if_mask);
+		return (cpu.memory->read(ie_address) & ie_mask) & (cpu.memory->read(if_address) & if_mask);
 	}
 
-	export std::optional<interrupt_dispatcher> service_first_pending_interrupt(cpu::cpu& cpu)
+	export std::optional<interrupt_dispatcher> service_first_pending_interrupt(cpu::cpu_state& cpu)
 	{
 		return service_first_pending_by_priority<
 			vblank_interrupt,

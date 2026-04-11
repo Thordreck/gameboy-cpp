@@ -10,222 +10,224 @@ export import interrupts;
 
 namespace emulator
 {
-	export template<typename T>
-	concept InstructionsProvider = requires(
-		T& provider, 
-		const opcodes::opcode_t opcode)
-	{
-		{ provider.get(opcode) } -> std::convertible_to<std::optional<opcodes::instruction>>;
-	};
+    export class cpu_runner
+    {
+        enum class state : std::uint8_t
+        {
+            fetch_decode,
+            fetch_decode_prefixed,
+            execute,
+            execute_prefixed,
+            halt,
+            interrupt,
+        };
 
-	export class default_instructions_provider
-	{
-	public:
-		default_instructions_provider()
-			: prefix_mode{ false }
-		{}
+    public:
+        explicit cpu_runner(cpu::cpu_state& cpu)
+            : cpu{cpu}
+        {}
 
-		std::optional<opcodes::instruction> get(const opcodes::opcode_t opcode)
-		{
-			if (!prefix_mode && opcode == opcodes::prefix_opcode)
-			{
-				prefix_mode = true;
-				return std::nullopt;
-			}
+        [[nodiscard]] bool active() const { return true; }
+        [[nodiscard]] std::uint32_t tick_batch() const { return remaining_cycles_in_state; }
 
-			opcodes::instruction instruction = prefix_mode
-				? opcodes::default_prefixed_instruction_table[opcode]
-				: opcodes::default_instruction_table[opcode];
+        void tick(std::uint32_t num_ticks)
+        {
+            PROFILER_SCOPE("CPU Runner:tick()");
 
-			prefix_mode = false;
-			return instruction;
-		}
+            while (num_ticks > 0)
+            {
+                const std::uint32_t consumed_ticks = step(num_ticks);
+                num_ticks -= consumed_ticks;
+            }
+        }
 
-	private:
-		bool prefix_mode;
-	};
+    private:
+        std::uint32_t step(const std::uint32_t num_ticks)
+        {
+            using enum state;
 
-	export template<typename T>
-	concept InterruptsHandler = requires(
-		T& handler, 
-		cpu::cpu& cpu)
-	{
-		{ handler.enable_ime_if_requested(cpu) } -> std::same_as<void>;
-		{ handler.service_interrupt(cpu) } -> std::convertible_to<std::optional<interrupts::interrupt_dispatcher>>;
-	};
+            switch (current_state)
+            {
+            case fetch_decode: return handle_fetch_decode(num_ticks);
+            case fetch_decode_prefixed: return handle_fetch_decode_prefixed(num_ticks);
+            case execute: return handle_execute<opcodes::dispatch>(num_ticks);
+            case execute_prefixed: return handle_execute<opcodes::dispatch_prefixed>(num_ticks);
+            case halt: return handle_halt(num_ticks);
+            case interrupt: return handle_interrupt(num_ticks);
+            default: std::unreachable();
+            }
+        }
 
-	export class default_interrupt_handler
-	{
-	public:
-		default_interrupt_handler()
-			: should_enable_ime{ false  }
-		{}
+        std::uint32_t handle_fetch_decode(const std::uint32_t num_ticks)
+        {
+            const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
+            remaining_cycles_in_state -= ticks_consumed;
 
-		void enable_ime_if_requested(cpu::cpu& cpu)
-		{
-			if (!cpu.ime_flag().is_requested())
-			{
-				return;
-			}
+            if (remaining_cycles_in_state == 0)
+            {
+                current_opcode = cpu.memory->read(cpu.pc++);
+                const bool prefix_mode = current_opcode == opcodes::prefix_opcode;
 
-			if (should_enable_ime)
-			{
-				cpu.ime_flag().enable();
-			}
+                using enum state;
+                current_state = prefix_mode ? fetch_decode_prefixed : execute;
+                remaining_cycles_in_state = current_state == execute ? opcodes::get_num_steps(cpu, current_opcode) * 4 : 4;
+                current_execution_cycle = 0;
+            }
 
-			should_enable_ime = !should_enable_ime;
-		}
+            return ticks_consumed;
+        }
 
-		static std::optional<interrupts::interrupt_dispatcher> service_interrupt(cpu::cpu& cpu)
-		{
-			return cpu.ime_flag().is_enabled()
-				? interrupts::service_first_pending_interrupt(cpu)
-				: std::nullopt;
-		}
+        std::uint32_t handle_fetch_decode_prefixed(const std::uint32_t num_ticks)
+        {
+            const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
+            remaining_cycles_in_state -= ticks_consumed;
 
-	private:
-		bool should_enable_ime;
-	};
+            if (remaining_cycles_in_state == 0)
+            {
+                current_opcode = cpu.memory->read(cpu.pc++);
+                current_state = state::execute_prefixed;
+                remaining_cycles_in_state = opcodes::get_num_steps_prefixed(cpu, current_opcode) * 4;
+                current_execution_cycle = 0;
+            }
 
-	export template<InstructionsProvider instructions_provider, InterruptsHandler interrupts_handler>
-	requires std::is_default_constructible_v<instructions_provider> && std::is_default_constructible_v<interrupts_handler>
-	class cpu_runner
-	{
-	public:
-		explicit cpu_runner(cpu::cpu& cpu)
-			: cpu{ cpu }
-			, instructions { }
-			, interrupts { }
-		{}
+            return ticks_consumed;
+        }
 
-		// TODO: this should be controlled by the halt state.
-		[[nodiscard]] bool active() const { return true; }
+        template <auto Dispatcher>
+        requires std::invocable<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t>
+            && std::same_as<std::invoke_result_t<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t>, void>
+        std::uint32_t handle_execute(const std::uint32_t num_ticks)
+        {
+            const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
+            remaining_cycles_in_state -= ticks_consumed;
 
-		[[nodiscard]] std::uint32_t tick_batch() const
-		{
-			return active_interrupt
-				.transform([](const auto& interrupt) { return interrupt.num_cycles() * 4; })
-				.value_or(
-					active_instruction
-						.transform([this](const auto& instr) { return instr.num_cycles(cpu) * 4; })
-						.value_or(4));
-		}
+            std::uint32_t ticks_left = ticks_consumed;
 
-		void tick(const std::uint32_t num_ticks)
-		{
-			PROFILER_SCOPE("CPU Runner:tick()");
-			std::uint32_t remaining_ticks = num_ticks;
+            while (ticks_left > 0)
+            {
+                const std::uint32_t next_boundary = (current_execution_cycle / 4 + 1) * 4;
+                const std::uint32_t ticks_to_boundary = next_boundary - current_execution_cycle;
+                const std::uint32_t chunk = std::min(ticks_left, ticks_to_boundary);
 
-			while (remaining_ticks-- > 0)
-			{
-				// Work is only done at the end of each m cycle
-				if (!cpu::is_end_of_any_machine_cycle(cpu.cycle()))
-				{
-					++cpu.cycle();
-				}
-				else if (const bool should_reset_m_cycle = handle_end_m_cycle())
-				{
-					cpu.cycle() = {};
-				}
-				else
-				{
-					++cpu.cycle();
-				}
-			}
-		}
+                current_execution_cycle += chunk;
+                ticks_left -= chunk;
 
-	private:
-		bool handle_end_m_cycle()
-		{
-			// Halt
-			if (cpu.halt_state().enabled)
-			{
-				if (!interrupts::is_any_interrupt_pending(cpu))
-				{
-					return true;
-				}
+                if (current_execution_cycle % 4 == 0)
+                {
+                    const opcodes::step_t step = current_execution_cycle / 4 - 1;
+                    Dispatcher(cpu, current_opcode, step);
+                }
+            }
 
-				active_interrupt = cpu.halt_state().ime_flag_set
-					? interrupts.service_interrupt(cpu)
-					: std::nullopt;
+            if (remaining_cycles_in_state != 0)
+            {
+                return ticks_consumed;
+            }
 
-				cpu.halt_state() = {};
-			}
-			
-			// Interrupts
-			if (active_interrupt.has_value())
-			{
-				const interrupts::interrupt_dispatcher dispatcher = active_interrupt.value();
-				dispatcher.execute(cpu);
+            if (cpu.ime.requested)
+            {
+                cpu.ime.enabled = cpu.ime.enabling;
+                cpu.ime.enabling = !cpu.ime.enabling;
+                cpu.ime.requested = !cpu.ime.enabled;
+            }
 
-				if (interrupts::is_interrupt_dispatched(cpu, dispatcher))
-				{
-					active_interrupt.reset();
-					return true;
-				}
+            if (cpu.ime.enabled && interrupts::is_any_interrupt_pending(cpu))
+            {
+                current_state = state::interrupt;
+                current_execution_cycle = 0;
+                remaining_cycles_in_state = 5 * 4;
+            }
+            else if (cpu.halt.enabled)
+            {
+                current_state = state::halt;
+                remaining_cycles_in_state = std::numeric_limits<std::uint32_t>::max();
+            }
+            else
+            {
+                current_state = state::fetch_decode;
+                remaining_cycles_in_state = 4;
+                handle_fetch_decode(remaining_cycles_in_state);
+            }
 
-				return false;
-			}
+            return ticks_consumed;
+        }
 
-			// Fetch
-			if (!active_instruction.has_value())
-			{
-				fetch_decode_opcode();
-				return true;
-			}
+        std::uint32_t handle_interrupt(const std::uint32_t num_ticks)
+        {
+            // TODO: remove optional usage
+            if (!active_interrupt.has_value())
+            {
+                active_interrupt = interrupts::service_first_pending_interrupt(cpu);
+            }
 
-			// Execution
-			const opcodes::instruction instruction = active_instruction.value();
-			instruction.execute(cpu);
+            const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
+            remaining_cycles_in_state -= ticks_consumed;
 
-			if (!opcodes::is_instruction_done(cpu, instruction))
-			{
-				return false;
-			}
+            std::uint32_t ticks_left = ticks_consumed;
 
-			active_instruction.reset();
+            while (ticks_left > 0)
+            {
+                const std::uint32_t next_boundary = (current_execution_cycle / 4 + 1) * 4;
+                const std::uint32_t ticks_to_boundary = next_boundary - current_execution_cycle;
+                const std::uint32_t chunk = std::min(ticks_left, ticks_to_boundary);
 
-			// Halt bug
-			if (cpu.halt_state().enabled
-				&& !cpu.halt_state().ime_flag_set
-				&& cpu.halt_state().interrupts_pending)
-			{
-				const opcodes::opcode_t next_opcode = cpu.memory().read(cpu.pc());
-				active_instruction = instructions.get(next_opcode);
-				cpu.halt_state() = {};
+                current_execution_cycle += chunk;
+                ticks_left -= chunk;
 
-				return true;
-			}
+                if (current_execution_cycle % 4 == 0)
+                {
+                    const opcodes::step_t step = current_execution_cycle / 4 - 1;
+                    active_interrupt.value().execute(cpu, step);
+                }
+            }
 
-			interrupts.enable_ime_if_requested(cpu);
-			active_interrupt = cpu.ime_flag().is_enabled()
-				? interrupts.service_interrupt(cpu)
-				: std::nullopt;
+            if (remaining_cycles_in_state == 0)
+            {
+                current_state = state::fetch_decode;
+                remaining_cycles_in_state = 4;
+                active_interrupt.reset();
+            }
 
-			if (!active_interrupt.has_value())
-			{
-				fetch_decode_opcode();
-			}
+            return ticks_consumed;
+        }
 
-			return true;
-		}
+        std::uint32_t handle_halt(const std::uint32_t num_ticks)
+        {
+            if (!interrupts::is_any_interrupt_pending(cpu))
+            {
+                return num_ticks;
+            }
 
-		void fetch_decode_opcode()
-		{
-			const opcodes::opcode_t next_opcode = cpu.memory().read(cpu.pc()++);
-			active_instruction = instructions.get(next_opcode);
-		}
+            cpu.halt.enabled = false;
+            using enum state;
 
-	private:
-		cpu::cpu& cpu;
+            // interrupts
+            if (cpu.halt.ime_flag_set)
+            {
+                current_state = interrupt;
+                remaining_cycles_in_state = 5 * 4;
 
-		std::optional<interrupts::interrupt_dispatcher> active_interrupt {};
-		std::optional<opcodes::instruction> active_instruction {};
+                const std::uint32_t available_ticks = std::min(num_ticks, remaining_cycles_in_state);
+                return handle_interrupt(available_ticks);
+            }
 
-		instructions_provider instructions;
-		interrupts_handler interrupts;
-	};
+            // Fetch-decode next instruction
+            current_state = fetch_decode;
+            remaining_cycles_in_state = 4;
 
-	export using default_cpu_runner = cpu_runner<default_instructions_provider, default_interrupt_handler>;
+            const std::uint32_t available_ticks = std::min(num_ticks, remaining_cycles_in_state);
+            return handle_fetch_decode(available_ticks);
+        }
 
+        cpu::cpu_state& cpu;
+
+        state current_state { state::fetch_decode };
+        std::uint8_t current_execution_cycle {};
+        std::uint32_t remaining_cycles_in_state { 4 };
+
+        std::uint8_t current_opcode {};
+
+        // TODO: remove once interrupt system is reworked
+        std::optional<interrupts::interrupt_dispatcher> active_interrupt {};
+    };
 }

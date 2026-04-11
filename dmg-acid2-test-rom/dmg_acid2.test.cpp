@@ -25,12 +25,12 @@ TEST_CASE("acid.PPU generates output equals to reference image")
         engine.load_rom(rom_data);
     }
 
-    constexpr std::uint32_t num_ticks_per_frame { 70224 };
     constexpr std::uint8_t num_frames { 10 };
 
-    for (std::uint32_t i = 0; i < num_ticks_per_frame * num_frames; ++i)
+    for (std::uint32_t i = 0; i < num_frames; ++i)
     {
-        engine.tick();
+        constexpr std::uint32_t num_ticks_per_frame { 70224 };
+        engine.tick(num_ticks_per_frame);
     }
 
     const std::filesystem::path output_filepath = std::filesystem::temp_directory_path() / "test.png";

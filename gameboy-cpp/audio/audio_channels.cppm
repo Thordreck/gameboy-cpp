@@ -10,7 +10,6 @@ namespace audio
         [[nodiscard]] bool is_enabled() const { return enabled; }
         void set_enabled(const bool value) { enabled = value; }
 
-        [[nodiscard]]
     private:
         bool enabled { true };
     };

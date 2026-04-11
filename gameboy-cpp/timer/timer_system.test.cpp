@@ -43,7 +43,7 @@ TEST_CASE("timers.Divider register increases correctly with tac enabled")
 
 	memory::connect(bus, timers);
 
-	auto tick_timer = [&timers] { timers.tick(); };
+	auto tick_timer = [&timers] { timers.tick(1); };
 
 	CHECK_EQ(static_cast<std::uint16_t>(timers.divider()), 0x00);
 
@@ -66,7 +66,7 @@ TEST_CASE("timers.Divider register increases correctly with tac disabled")
 
 	memory::connect(bus, timers);
 
-	auto tick_timer = [&timers] { timers.tick(); };
+	auto tick_timer = [&timers] { timers.tick(1); };
 
 	CHECK_EQ(static_cast<std::uint16_t>(timers.divider()), 0x00);
 
@@ -90,7 +90,7 @@ TEST_CASE_TEMPLATE("timers.Tima is incremented properly based on clock selected"
 
 	memory::connect(bus, timers);
 
-	auto tick_timer = [&timers] { timers.tick(); };
+	auto tick_timer = [&timers] { timers.tick(1); };
 	CHECK_EQ(timers.counter(), 0x00);
 
 	repeat<test::ticks_to_increment>(tick_timer);
@@ -113,7 +113,7 @@ TEST_CASE_TEMPLATE("timers.When tima overflows an interrupt is requested after a
 	timers.control().clock = test::clock_select;
 
 	memory::connect(bus, timers);
-	auto tick_timer = [&timers] { timers.tick(); };
+	auto tick_timer = [&timers] { timers.tick(1); };
 
 	constexpr size_t ticks_to_overflow 
 		= test::ticks_to_increment 
@@ -154,7 +154,7 @@ TEST_CASE_TEMPLATE("timers.Tima does not increment when tac is disabled", test, 
 	timers.control().clock = test::clock_select;
 
 	memory::connect(bus, timers);
-	auto tick_timer = [&timers] { timers.tick(); };
+	auto tick_timer = [&timers] { timers.tick(1); };
 
 	repeat<test::ticks_to_increment>(tick_timer);
 	CHECK_EQ(timers.counter().value(), 0x0);

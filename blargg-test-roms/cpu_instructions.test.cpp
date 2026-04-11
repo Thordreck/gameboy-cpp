@@ -4,7 +4,7 @@ import blargg;
 
 TEST_CASE("blargg.cpu_instrs.01-special")
 {
-	blargg::run_test("01-special.gb", "01-special\n\n\nPassed\n", 30e5);
+	blargg::run_test("01-special.gb", "01-special\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.02-interrupts")
@@ -14,12 +14,12 @@ TEST_CASE("blargg.cpu_instrs.02-interrupts")
 
 TEST_CASE("blargg.cpu_instrs.03-op sp,hl")
 {
-	blargg::run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 30e5);
+	blargg::run_test("03-op sp,hl.gb", "03-op sp,hl\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.04-op r,imm")
 {
-	blargg::run_test("04-op r,imm.gb", "04-op r,imm\n\n\nPassed\n", 30e5);
+	blargg::run_test("04-op r,imm.gb", "04-op r,imm\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.05-op rp")

@@ -19,7 +19,7 @@ namespace
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when enabled but not requested", test, interrupt_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -30,7 +30,7 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when enable
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when requested but not enabled", test, interrupt_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -41,7 +41,7 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when reques
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when not requested nor enabled", test, interrupt_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -51,7 +51,7 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are not flagged as pending when not re
 
 TEST_CASE_TEMPLATE("interrupts.Interrupts are flagged as pending when enabled and requested", test, interrupt_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -63,7 +63,7 @@ TEST_CASE_TEMPLATE("interrupts.Interrupts are flagged as pending when enabled an
 
 TEST_CASE_TEMPLATE("interrupts.Any serviceable interrupt is detected through is_any_interrupt_pending", test, interrupt_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -77,7 +77,7 @@ TEST_CASE("interrupts.Interrupts are serviced in order by priority")
 {
 	using namespace interrupts;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);

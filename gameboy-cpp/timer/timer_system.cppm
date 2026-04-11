@@ -43,20 +43,31 @@ namespace timer
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
-            return overflow_detected
-                       ? ticks_until_interrupt
-                       : timer_control.enabled
-                       ? number_of_ticks_for_tima_increment(divider_register, timer_control.clock)
-                       : std::numeric_limits<std::uint32_t>::max();
+            if (overflow_detected)
+            {
+                return ticks_until_interrupt;
+            }
+
+            if (!timer_control.enabled)
+            {
+                return std::numeric_limits<std::uint32_t>::max();
+            }
+
+            return number_of_ticks_for_tima_increment(divider_register, timer_control.clock);
         }
 
         void tick(const std::uint32_t num_ticks)
         {
             PROFILER_SCOPE("Timer System::tick()");
 
-            for (std::uint32_t i = 0; i < num_ticks; ++i)
+            std::uint32_t remaining_ticks = num_ticks;
+
+            while (remaining_ticks > 0)
             {
-                tick();
+                const std::uint32_t batch = std::min(remaining_ticks, tick_batch());
+                advance(batch);
+
+                remaining_ticks -= batch;
             }
         }
 
@@ -69,26 +80,44 @@ namespace timer
         void connect(memory::memory_bus& bus) { memory = &bus; }
 
     private:
-        void tick()
+        void advance(const std::uint32_t tick_batch)
         {
-            if (overflow_detected && --ticks_until_interrupt <= 0)
+            if (overflow_detected)
             {
-                timer_counter = timer_modulo.value;
-                overflow_detected = false;
+                ticks_until_interrupt -= std::min(tick_batch, static_cast<std::uint32_t>(ticks_until_interrupt));
 
-                using namespace interrupts;
-                request<timer_interrupt>(*memory);
+                if (ticks_until_interrupt == 0)
+                {
+                    timer_counter = timer_modulo.value;
+                    overflow_detected = false;
+
+                    using namespace interrupts;
+                    request<timer_interrupt>(*memory);
+                }
+
+                divider_register = divider_register + tick_batch;
+                return;
             }
 
-            // Div
+            if (!timer_control.enabled)
+            {
+                divider_register = divider_register + tick_batch;
+                return;
+            }
+
+            const std::uint8_t bit = get_tack_clock_bit_index(timer_control.clock);
+            const std::uint16_t mask = (1u << (bit + 1)) - 1;
+
             const std::uint16_t prev_div = divider_register;
-            divider_register.tick();
-            const std::uint16_t current_div = divider_register;
+            const std::uint16_t lower = prev_div & mask;
+            const bool falling_edge = (lower + tick_batch) > mask;
+
+            divider_register = divider_register + tick_batch;
 
             // Tima
-            if (!overflow_detected && timer_control.enabled)
+            if (falling_edge)
             {
-                overflow_detected = timer_counter.tick(prev_div, current_div, timer_control.clock);
+                overflow_detected = timer_counter.tick();
                 ticks_until_interrupt = overflow_detected ? 4 : 0;
             }
         }

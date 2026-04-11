@@ -1,0 +1,565 @@
+
+export module opcodes:dispatcher;
+
+export import std;
+export import cpu;
+
+export import :bit;
+export import :misc;
+export import :jump;
+export import :load;
+export import :stack;
+export import :carry;
+export import :interrupt;
+export import :arithmetic;
+export import :subroutine;
+
+namespace opcodes
+{
+	#define OPCODE_FUNCTION_LIST(X) \
+		X(0x00, nop) \
+		X(0x01, ld_bc_n16) \
+		X(0x02, ld_bc_a) \
+		X(0x03, inc_bc) \
+		X(0x04, inc_b) \
+		X(0x05, dec_b) \
+		X(0x06, ld_b_n8) \
+		X(0x07, rlca) \
+		X(0x08, ld_n16_sp) \
+		X(0x09, add_hl_bc) \
+		X(0x0A, ld_a_bc) \
+		X(0x0B, dec_bc) \
+		X(0x0C, inc_c) \
+		X(0x0D, dec_c) \
+		X(0x0E, ld_c_n8) \
+		X(0x0F, rrca) \
+		X(0x10, stop_n8) \
+		X(0x11, ld_de_n16) \
+		X(0x12, ld_de_a) \
+		X(0x13, inc_de) \
+		X(0x14, inc_d) \
+		X(0x15, dec_d) \
+		X(0x16, ld_d_n8) \
+		X(0x17, rla) \
+		X(0x18, jr_n16) \
+		X(0x19, add_hl_de) \
+		X(0x1A, ld_a_de) \
+		X(0x1B, dec_de) \
+		X(0x1C, inc_e) \
+		X(0x1D, dec_e) \
+		X(0x1E, ld_e_n8) \
+		X(0x1F, rra) \
+		X(0x20, jr_nz_n16) \
+		X(0x21, ld_hl_n16) \
+		X(0x22, ld_hli_a) \
+		X(0x23, inc_hl) \
+		X(0x24, inc_h) \
+		X(0x25, dec_h) \
+		X(0x26, ld_h_n8) \
+		X(0x27, daa) \
+		X(0x28, jr_z_n16) \
+		X(0x29, add_hl_hl) \
+		X(0x2A, ld_a_hli) \
+		X(0x2B, dec_hl) \
+		X(0x2C, inc_l) \
+		X(0x2D, dec_l) \
+		X(0x2E, ld_l_n8) \
+		X(0x2F, cpl) \
+		X(0x30, jr_nc_n16) \
+		X(0x31, ld_sp_n16) \
+		X(0x32, ld_hld_a) \
+		X(0x33, inc_sp) \
+		X(0x34, inc_indirect_hl) \
+		X(0x35, dec_ind_hl) \
+		X(0x36, ld_hl_n8) \
+		X(0x37, scf) \
+		X(0x38, jr_c_n16) \
+		X(0x39, add_hl_sp) \
+		X(0x3A, ld_a_hld) \
+		X(0x3B, dec_sp) \
+		X(0x3C, inc_a) \
+		X(0x3D, dec_a) \
+		X(0x3E, ld_a_n8) \
+		X(0x3F, ccf) \
+		X(0x40, ld_b_b) \
+		X(0x41, ld_b_c) \
+		X(0x42, ld_b_d) \
+		X(0x43, ld_b_e) \
+		X(0x44, ld_b_h) \
+		X(0x45, ld_b_l) \
+		X(0x46, ld_b_hl) \
+		X(0x47, ld_b_a) \
+		X(0x48, ld_c_b) \
+		X(0x49, ld_c_c) \
+		X(0x4A, ld_c_d) \
+		X(0x4B, ld_c_e) \
+		X(0x4C, ld_c_h) \
+		X(0x4D, ld_c_l) \
+		X(0x4E, ld_c_hl) \
+		X(0x4F, ld_c_a) \
+		X(0x50, ld_d_b) \
+		X(0x51, ld_d_c) \
+		X(0x52, ld_d_d) \
+		X(0x53, ld_d_e) \
+		X(0x54, ld_d_h) \
+		X(0x55, ld_d_l) \
+		X(0x56, ld_d_hl) \
+		X(0x57, ld_d_a) \
+		X(0x58, ld_e_b) \
+		X(0x59, ld_e_c) \
+		X(0x5A, ld_e_d) \
+		X(0x5B, ld_e_e) \
+		X(0x5C, ld_e_h) \
+		X(0x5D, ld_e_l) \
+		X(0x5E, ld_e_hl) \
+		X(0x5F, ld_e_a) \
+		X(0x60, ld_h_b) \
+		X(0x61, ld_h_c) \
+		X(0x62, ld_h_d) \
+		X(0x63, ld_h_e) \
+		X(0x64, ld_h_h) \
+		X(0x65, ld_h_l) \
+		X(0x66, ld_h_hl) \
+		X(0x67, ld_h_a) \
+		X(0x68, ld_l_b) \
+		X(0x69, ld_l_c) \
+		X(0x6A, ld_l_d) \
+		X(0x6B, ld_l_e) \
+		X(0x6C, ld_l_h) \
+		X(0x6D, ld_l_l) \
+		X(0x6E, ld_l_hl) \
+		X(0x6F, ld_l_a) \
+		X(0x70, ld_hl_b) \
+		X(0x71, ld_hl_c) \
+		X(0x72, ld_hl_d) \
+		X(0x73, ld_hl_e) \
+		X(0x74, ld_hl_h) \
+		X(0x75, ld_hl_l) \
+		X(0x76, halt) \
+		X(0x77, ld_hl_a) \
+		X(0x78, ld_a_b) \
+		X(0x79, ld_a_c) \
+		X(0x7A, ld_a_d) \
+		X(0x7B, ld_a_e) \
+		X(0x7C, ld_a_h) \
+		X(0x7D, ld_a_l) \
+		X(0x7E, ld_a_hl) \
+		X(0x7F, ld_a_a) \
+		X(0x80, add_a_b) \
+		X(0x81, add_a_c) \
+		X(0x82, add_a_d) \
+		X(0x83, add_a_e) \
+		X(0x84, add_a_h) \
+		X(0x85, add_a_l) \
+		X(0x86, add_a_hl) \
+		X(0x87, add_a_a) \
+		X(0x88, adc_a_b) \
+		X(0x89, adc_a_c) \
+		X(0x8A, adc_a_d) \
+		X(0x8B, adc_a_e) \
+		X(0x8C, adc_a_h) \
+		X(0x8D, adc_a_l) \
+		X(0x8E, adc_a_hl) \
+		X(0x8F, adc_a_a) \
+		X(0x90, sub_a_b) \
+		X(0x91, sub_a_c) \
+		X(0x92, sub_a_d) \
+		X(0x93, sub_a_e) \
+		X(0x94, sub_a_h) \
+		X(0x95, sub_a_l) \
+		X(0x96, sub_a_hl) \
+		X(0x97, sub_a_a) \
+		X(0x98, sbc_a_b) \
+		X(0x99, sbc_a_c) \
+		X(0x9A, sbc_a_d) \
+		X(0x9B, sbc_a_e) \
+		X(0x9C, sbc_a_h) \
+		X(0x9D, sbc_a_l) \
+		X(0x9E, sbc_a_hl) \
+		X(0x9F, sbc_a_a) \
+		X(0xA0, and_a_b) \
+		X(0xA1, and_a_c) \
+		X(0xA2, and_a_d) \
+		X(0xA3, and_a_e) \
+		X(0xA4, and_a_h) \
+		X(0xA5, and_a_l) \
+		X(0xA6, and_a_hl) \
+		X(0xA7, and_a_a) \
+		X(0xA8, xor_a_b) \
+		X(0xA9, xor_a_c) \
+		X(0xAA, xor_a_d) \
+		X(0xAB, xor_a_e) \
+		X(0xAC, xor_a_h) \
+		X(0xAD, xor_a_l) \
+		X(0xAE, xor_a_hl) \
+		X(0xAF, xor_a_a) \
+		X(0xB0, or_a_b) \
+		X(0xB1, or_a_c) \
+		X(0xB2, or_a_d) \
+		X(0xB3, or_a_e) \
+		X(0xB4, or_a_h) \
+		X(0xB5, or_a_l) \
+		X(0xB6, or_a_hl) \
+		X(0xB7, or_a_a) \
+		X(0xB8, cp_a_b) \
+		X(0xB9, cp_a_c) \
+		X(0xBA, cp_a_d) \
+		X(0xBB, cp_a_e) \
+		X(0xBC, cp_a_h) \
+		X(0xBD, cp_a_l) \
+		X(0xBE, cp_a_hl) \
+		X(0xBF, cp_a_a) \
+		X(0xC0, ret_nz) \
+		X(0xC1, pop_bc) \
+		X(0xC2, jp_nz_n16) \
+		X(0xC3, jp_n16) \
+		X(0xC4, call_nz_n16) \
+		X(0xC5, push_bc) \
+		X(0xC6, add_a_n8) \
+		X(0xC7, rst_00) \
+		X(0xC8, ret_z) \
+		X(0xC9, ret) \
+		X(0xCA, jp_z_n16) \
+		X(0xCC, call_z_n16) \
+		X(0xCD, call_n16) \
+		X(0xCE, adc_a_n8) \
+		X(0xCF, rst_08) \
+		X(0xD0, ret_nc) \
+		X(0xD1, pop_de) \
+		X(0xD2, jp_nc_n16) \
+		X(0xD4, call_nc_n16) \
+		X(0xD5, push_de) \
+		X(0xD6, sub_a_n8) \
+		X(0xD7, rst_10) \
+		X(0xD8, ret_c) \
+		X(0xD9, reti) \
+		X(0xDA, jp_c_n16) \
+		X(0xDC, call_c_n16) \
+		X(0xDE, sbc_a_n8) \
+		X(0xDF, rst_18) \
+		X(0xE0, ldh_n16_a) \
+		X(0xE1, pop_hl) \
+		X(0xE2, ldh_c_a) \
+		X(0xE5, push_hl) \
+		X(0xE6, and_a_n8) \
+		X(0xE7, rst_20) \
+		X(0xE8, add_sp_e8) \
+		X(0xE9, jp_hl) \
+		X(0xEA, ld_n16_a) \
+		X(0xEE, xor_a_n8) \
+		X(0xEF, rst_28) \
+		X(0xF0, ldh_a_n16) \
+		X(0xF1, pop_af) \
+		X(0xF2, ldh_a_c) \
+		X(0xF3, di) \
+		X(0xF5, push_af) \
+		X(0xF6, or_a_n8) \
+		X(0xF7, rst_30) \
+		X(0xF8, ld_hl_sp_e8) \
+		X(0xF9, ld_sp_hl) \
+		X(0xFA, ld_a_n16) \
+		X(0xFB, ei) \
+		X(0xFE, cp_a_n8) \
+		X(0xFF, rst_38)
+
+	#define PREFIXED_OPCODE_FUNCTION_LIST(X) \
+		X(0x00, prefix_rlc_b) \
+		X(0x01, prefix_rlc_c) \
+		X(0x02, prefix_rlc_d) \
+		X(0x03, prefix_rlc_e) \
+		X(0x04, prefix_rlc_h) \
+		X(0x05, prefix_rlc_l) \
+		X(0x06, prefix_rlc_hl) \
+		X(0x07, prefix_rlc_a) \
+		X(0x08, prefix_rrc_b) \
+		X(0x09, prefix_rrc_c) \
+		X(0x0A, prefix_rrc_d) \
+		X(0x0B, prefix_rrc_e) \
+		X(0x0C, prefix_rrc_h) \
+		X(0x0D, prefix_rrc_l) \
+		X(0x0E, prefix_rrc_hl) \
+		X(0x0F, prefix_rrc_a) \
+		X(0x10, prefix_rl_b) \
+		X(0x11, prefix_rl_c) \
+		X(0x12, prefix_rl_d) \
+		X(0x13, prefix_rl_e) \
+		X(0x14, prefix_rl_h) \
+		X(0x15, prefix_rl_l) \
+		X(0x16, prefix_rl_hl) \
+		X(0x17, prefix_rl_a) \
+		X(0x18, rr_b) \
+		X(0x19, rr_c) \
+		X(0x1A, rr_d) \
+		X(0x1B, rr_e) \
+		X(0x1C, rr_h) \
+		X(0x1D, rr_l) \
+		X(0x1E, rr_hl) \
+		X(0x1F, rr_a) \
+		X(0x20, sla_b) \
+		X(0x21, sla_c) \
+		X(0x22, sla_d) \
+		X(0x23, sla_e) \
+		X(0x24, sla_h) \
+		X(0x25, sla_l) \
+		X(0x26, sla_hl) \
+		X(0x27, sla_a) \
+		X(0x28, sra_b) \
+		X(0x29, sra_c) \
+		X(0x2A, sra_d) \
+		X(0x2B, sra_e) \
+		X(0x2C, sra_h) \
+		X(0x2D, sra_l) \
+		X(0x2E, sra_hl) \
+		X(0x2F, sra_a) \
+		X(0x30, swap_b) \
+		X(0x31, swap_c) \
+		X(0x32, swap_d) \
+		X(0x33, swap_e) \
+		X(0x34, swap_h) \
+		X(0x35, swap_l) \
+		X(0x36, swap_hl) \
+		X(0x37, swap_a) \
+		X(0x38, srl_b) \
+		X(0x39, srl_c) \
+		X(0x3A, srl_d) \
+		X(0x3B, srl_e) \
+		X(0x3C, srl_h) \
+		X(0x3D, srl_l) \
+		X(0x3E, srl_hl) \
+		X(0x3F, srl_a) \
+		X(0x40, bit_0_b) \
+		X(0x41, bit_0_c) \
+		X(0x42, bit_0_d) \
+		X(0x43, bit_0_e) \
+		X(0x44, bit_0_h) \
+		X(0x45, bit_0_l) \
+		X(0x46, bit_0_hl) \
+		X(0x47, bit_0_a) \
+		X(0x48, bit_1_b) \
+		X(0x49, bit_1_c) \
+		X(0x4A, bit_1_d) \
+		X(0x4B, bit_1_e) \
+		X(0x4C, bit_1_h) \
+		X(0x4D, bit_1_l) \
+		X(0x4E, bit_1_hl) \
+		X(0x4F, bit_1_a) \
+		X(0x50, bit_2_b) \
+		X(0x51, bit_2_c) \
+		X(0x52, bit_2_d) \
+		X(0x53, bit_2_e) \
+		X(0x54, bit_2_h) \
+		X(0x55, bit_2_l) \
+		X(0x56, bit_2_hl) \
+		X(0x57, bit_2_a) \
+		X(0x58, bit_3_b) \
+		X(0x59, bit_3_c) \
+		X(0x5A, bit_3_d) \
+		X(0x5B, bit_3_e) \
+		X(0x5C, bit_3_h) \
+		X(0x5D, bit_3_l) \
+		X(0x5E, bit_3_hl) \
+		X(0x5F, bit_3_a) \
+		X(0x60, bit_4_b) \
+		X(0x61, bit_4_c) \
+		X(0x62, bit_4_d) \
+		X(0x63, bit_4_e) \
+		X(0x64, bit_4_h) \
+		X(0x65, bit_4_l) \
+		X(0x66, bit_4_hl) \
+		X(0x67, bit_4_a) \
+		X(0x68, bit_5_b) \
+		X(0x69, bit_5_c) \
+		X(0x6A, bit_5_d) \
+		X(0x6B, bit_5_e) \
+		X(0x6C, bit_5_h) \
+		X(0x6D, bit_5_l) \
+		X(0x6E, bit_5_hl) \
+		X(0x6F, bit_5_a) \
+		X(0x70, bit_6_b) \
+		X(0x71, bit_6_c) \
+		X(0x72, bit_6_d) \
+		X(0x73, bit_6_e) \
+		X(0x74, bit_6_h) \
+		X(0x75, bit_6_l) \
+		X(0x76, bit_6_hl) \
+		X(0x77, bit_6_a) \
+		X(0x78, bit_7_b) \
+		X(0x79, bit_7_c) \
+		X(0x7A, bit_7_d) \
+		X(0x7B, bit_7_e) \
+		X(0x7C, bit_7_h) \
+		X(0x7D, bit_7_l) \
+		X(0x7E, bit_7_hl) \
+		X(0x7F, bit_7_a) \
+		X(0x80, res_0_b) \
+		X(0x81, res_0_c) \
+		X(0x82, res_0_d) \
+		X(0x83, res_0_e) \
+		X(0x84, res_0_h) \
+		X(0x85, res_0_l) \
+		X(0x86, res_0_hl) \
+		X(0x87, res_0_a) \
+		X(0x88, res_1_b) \
+		X(0x89, res_1_c) \
+		X(0x8A, res_1_d) \
+		X(0x8B, res_1_e) \
+		X(0x8C, res_1_h) \
+		X(0x8D, res_1_l) \
+		X(0x8E, res_1_hl) \
+		X(0x8F, res_1_a) \
+		X(0x90, res_2_b) \
+		X(0x91, res_2_c) \
+		X(0x92, res_2_d) \
+		X(0x93, res_2_e) \
+		X(0x94, res_2_h) \
+		X(0x95, res_2_l) \
+		X(0x96, res_2_hl) \
+		X(0x97, res_2_a) \
+		X(0x98, res_3_b) \
+		X(0x99, res_3_c) \
+		X(0x9A, res_3_d) \
+		X(0x9B, res_3_e) \
+		X(0x9C, res_3_h) \
+		X(0x9D, res_3_l) \
+		X(0x9E, res_3_hl) \
+		X(0x9F, res_3_a) \
+		X(0xA0, res_4_b) \
+		X(0xA1, res_4_c) \
+		X(0xA2, res_4_d) \
+		X(0xA3, res_4_e) \
+		X(0xA4, res_4_h) \
+		X(0xA5, res_4_l) \
+		X(0xA6, res_4_hl) \
+		X(0xA7, res_4_a) \
+		X(0xA8, res_5_b) \
+		X(0xA9, res_5_c) \
+		X(0xAA, res_5_d) \
+		X(0xAB, res_5_e) \
+		X(0xAC, res_5_h) \
+		X(0xAD, res_5_l) \
+		X(0xAE, res_5_hl) \
+		X(0xAF, res_5_a) \
+		X(0xB0, res_6_b) \
+		X(0xB1, res_6_c) \
+		X(0xB2, res_6_d) \
+		X(0xB3, res_6_e) \
+		X(0xB4, res_6_h) \
+		X(0xB5, res_6_l) \
+		X(0xB6, res_6_hl) \
+		X(0xB7, res_6_a) \
+		X(0xB8, res_7_b) \
+		X(0xB9, res_7_c) \
+		X(0xBA, res_7_d) \
+		X(0xBB, res_7_e) \
+		X(0xBC, res_7_h) \
+		X(0xBD, res_7_l) \
+		X(0xBE, res_7_hl) \
+		X(0xBF, res_7_a) \
+		X(0xC0, set_0_b) \
+		X(0xC1, set_0_c) \
+		X(0xC2, set_0_d) \
+		X(0xC3, set_0_e) \
+		X(0xC4, set_0_h) \
+		X(0xC5, set_0_l) \
+		X(0xC6, set_0_hl) \
+		X(0xC7, set_0_a) \
+		X(0xC8, set_1_b) \
+		X(0xC9, set_1_c) \
+		X(0xCA, set_1_d) \
+		X(0xCB, set_1_e) \
+		X(0xCC, set_1_h) \
+		X(0xCD, set_1_l) \
+		X(0xCE, set_1_hl) \
+		X(0xCF, set_1_a) \
+		X(0xD0, set_2_b) \
+		X(0xD1, set_2_c) \
+		X(0xD2, set_2_d) \
+		X(0xD3, set_2_e) \
+		X(0xD4, set_2_h) \
+		X(0xD5, set_2_l) \
+		X(0xD6, set_2_hl) \
+		X(0xD7, set_2_a) \
+		X(0xD8, set_3_b) \
+		X(0xD9, set_3_c) \
+		X(0xDA, set_3_d) \
+		X(0xDB, set_3_e) \
+		X(0xDC, set_3_h) \
+		X(0xDD, set_3_l) \
+		X(0xDE, set_3_hl) \
+		X(0xDF, set_3_a) \
+		X(0xE0, set_4_b) \
+		X(0xE1, set_4_c) \
+		X(0xE2, set_4_d) \
+		X(0xE3, set_4_e) \
+		X(0xE4, set_4_h) \
+		X(0xE5, set_4_l) \
+		X(0xE6, set_4_hl) \
+		X(0xE7, set_4_a) \
+		X(0xE8, set_5_b) \
+		X(0xE9, set_5_c) \
+		X(0xEA, set_5_d) \
+		X(0xEB, set_5_e) \
+		X(0xEC, set_5_h) \
+		X(0xED, set_5_l) \
+		X(0xEE, set_5_hl) \
+		X(0xEF, set_5_a) \
+		X(0xF0, set_6_b) \
+		X(0xF1, set_6_c) \
+		X(0xF2, set_6_d) \
+		X(0xF3, set_6_e) \
+		X(0xF4, set_6_h) \
+		X(0xF5, set_6_l) \
+		X(0xF6, set_6_hl) \
+		X(0xF7, set_6_a) \
+		X(0xF8, set_7_b) \
+		X(0xF9, set_7_c) \
+		X(0xFA, set_7_d) \
+		X(0xFB, set_7_e) \
+		X(0xFC, set_7_h) \
+		X(0xFD, set_7_l) \
+		X(0xFE, set_7_hl) \
+		X(0xFF, set_7_a) \
+
+#define DISPATCH_OPCODE(OP, INSTR) \
+		case OP: INSTR::execute(cpu, step); break; \
+
+	export void dispatch(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step)
+	{
+		switch (opcode)
+		{
+			OPCODE_FUNCTION_LIST(DISPATCH_OPCODE);
+			default: std::unreachable();
+		}
+	}
+
+	export void dispatch_prefixed(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step)
+	{
+		switch (opcode)
+		{
+			PREFIXED_OPCODE_FUNCTION_LIST(DISPATCH_OPCODE);
+			default: std::unreachable();
+		}
+	}
+
+	#define GET_OPCODE_STEPS(OP, INSTR) \
+		case OP: return INSTR::num_steps(cpu); \
+
+	export [[nodiscard]] step_t get_num_steps(const cpu::cpu_state& cpu, const opcode_t opcode)
+	{
+		switch (opcode)
+		{
+			OPCODE_FUNCTION_LIST(GET_OPCODE_STEPS);
+			default: std::unreachable();
+		}
+	}
+
+	export [[nodiscard]] step_t get_num_steps_prefixed(const cpu::cpu_state& cpu, const opcode_t opcode)
+	{
+		switch (opcode)
+		{
+			PREFIXED_OPCODE_FUNCTION_LIST(GET_OPCODE_STEPS);
+			default: std::unreachable();
+		}
+	}
+
+}

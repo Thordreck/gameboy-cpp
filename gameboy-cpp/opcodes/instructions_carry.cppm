@@ -4,37 +4,31 @@ export module opcodes:carry;
 export import cpu;
 export import std;
 
+import :common;
+
 namespace opcodes
 {
-	using namespace cpu::literals;
-
 	export struct ccf
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+		static constexpr step_t num_steps(const cpu::cpu_state&) { return 1; }
 
-		static void execute(cpu::cpu& cpu)
+		static void execute(cpu::cpu_state& cpu, const step_t)
 		{
-			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
-			{
-				cpu.reg().n_flag() = false;
-				cpu.reg().h_flag() = false;
-				cpu.reg().c_flag() = !cpu.reg().c_flag();
-			}
+			cpu.reg.n_flag() = false;
+			cpu.reg.h_flag() = false;
+			cpu.reg.c_flag() = !cpu.reg.c_flag();
 		}
 	};
 
 	export struct scf
 	{
-		static constexpr auto num_cycles(const cpu::cpu&) { return 1_m_cycle; }
+		static constexpr step_t num_steps(const cpu::cpu_state&) { return 1; }
 
-		static void execute(cpu::cpu& cpu)
+		static void execute(cpu::cpu_state& cpu, const step_t)
 		{
-			if (cpu::is_end_of_machine_cycle<0>(cpu.cycle()))
-			{
-				cpu.reg().n_flag() = false;
-				cpu.reg().h_flag() = false;
-				cpu.reg().c_flag() = true;
-			}
+			cpu.reg.n_flag() = false;
+			cpu.reg.h_flag() = false;
+			cpu.reg.c_flag() = true;
 		}
 	};
 }

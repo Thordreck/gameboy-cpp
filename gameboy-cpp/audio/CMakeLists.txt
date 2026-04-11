@@ -8,6 +8,7 @@ target_sources(audio PUBLIC
         CXX_MODULES
         FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/audio.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_memory.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_channels.cppm

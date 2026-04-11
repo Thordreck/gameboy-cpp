@@ -239,7 +239,7 @@ namespace emulator
     public:
         memory_buses(
             const memory::memory_map_span_t map,
-            cpu::cpu& cpu,
+            cpu::cpu_state& cpu,
             timer::timer_system& timers,
             graphics::pixel_processing_unit& ppu,
             graphics::oam_dma& oam_dma,

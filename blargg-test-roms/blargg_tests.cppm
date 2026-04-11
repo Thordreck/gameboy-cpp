@@ -50,12 +50,11 @@ namespace blargg
 
 		// results
 		std::string result{};
-		const size_t max_num_timer_cycles = max_num_machine_cycles * 4;
 		memory::memory_bus bus = engine.memory_bus();
 
-		for (size_t i = 0; i < max_num_timer_cycles; i++)
+		for (size_t t_cycle = 0; t_cycle < max_num_machine_cycles; t_cycle++)
 		{
-			engine.tick();
+			engine.tick(4);
 
 			if (const auto character = read_io_result_output(bus); character.has_value())
 			{

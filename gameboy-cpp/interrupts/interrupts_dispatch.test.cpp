@@ -19,7 +19,7 @@ namespace
 
 TEST_CASE_TEMPLATE("interrupts.IME flag is disabled when interrupt is dispatched", test, dispatch_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -36,7 +36,7 @@ TEST_CASE_TEMPLATE("interrupts.IF flag is unset when interrupt is dispatched", t
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -51,7 +51,7 @@ TEST_CASE_TEMPLATE("interrupts.IF flag is unset when interrupt is dispatched", t
 
 TEST_CASE_TEMPLATE("interrupts.PC is set to handler when interrupt is dispatched", test, dispatch_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -65,7 +65,7 @@ TEST_CASE_TEMPLATE("interrupts.Previous pc is push to stack when interrupt is di
 {
 	constexpr std::uint16_t stack_origin = 0xFFFE;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -83,7 +83,7 @@ TEST_CASE_TEMPLATE("interrupts.Dispatch takes 5 machine cycles", test, dispatch_
 {
 	constexpr std::uint16_t stack_origin = 0xFFFE;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);

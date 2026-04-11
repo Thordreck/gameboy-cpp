@@ -21,7 +21,7 @@ TEST_CASE_TEMPLATE("interrupts.Enabled interrupts have their ie flag set", test,
 {
 	constexpr std::uint16_t ie_address = 0xFFFF;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -34,7 +34,7 @@ TEST_CASE_TEMPLATE("interrupts.Disabled interrupts have their flag unset", test,
 {
 	constexpr std::uint16_t ie_address = 0xFFFF;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -46,7 +46,7 @@ TEST_CASE_TEMPLATE("interrupts.Disabled interrupts have their flag unset", test,
 
 TEST_CASE_TEMPLATE("interrupts.Enabled interrupts are detected as is_enabled", test, enable_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -57,7 +57,7 @@ TEST_CASE_TEMPLATE("interrupts.Enabled interrupts are detected as is_enabled", t
 
 TEST_CASE_TEMPLATE("interrupts.Disabled interrupts are not detected as is_enabled", test, enable_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);

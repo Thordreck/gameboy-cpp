@@ -48,21 +48,21 @@ TEST_CASE("subroutine.call_n16 pushes pc into stack and jumps to direction")
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.pc() = pc_start;
-	cpu.sp() = stack_origin;
-	cpu.memory().write(pc_start, 0xFF);
-	cpu.memory().write(pc_start + 1, 0xAA);
+	cpu.pc = pc_start;
+	cpu.sp = stack_origin;
+	cpu.memory->write(pc_start, 0xFF);
+	cpu.memory->write(pc_start + 1, 0xAA);
 
-	tests::execute_all_machine_cycles<opcodes::call_n16>(cpu);
+	tests::execute_all_instruction_steps<opcodes::call_n16>(cpu);
 
-	CHECK_EQ(cpu.pc(), 0XAAFF);
-	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0xCF);
-	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0xAB);
+	CHECK_EQ(cpu.pc, 0XAAFF);
+	CHECK_EQ(cpu.memory->read(stack_origin - 2), 0xCF);
+	CHECK_EQ(cpu.memory->read(stack_origin - 1), 0xAB);
 }
 
 TEST_CASE_TEMPLATE("subroutine.call_cc_n16 executes jump when condition is met", test, call_cc_n16_successful_jump_test_cases)
@@ -70,22 +70,22 @@ TEST_CASE_TEMPLATE("subroutine.call_cc_n16 executes jump when condition is met",
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.pc() = pc_start;
-	cpu.sp() = stack_origin;
-	cpu.memory().write(pc_start, 0xFF);
-	cpu.memory().write(pc_start + 1, 0xAA);
+	cpu.pc = pc_start;
+	cpu.sp = stack_origin;
+	cpu.memory->write(pc_start, 0xFF);
+	cpu.memory->write(pc_start + 1, 0xAA);
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc(), 0XAAFF);
-	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0xCF);
-	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0xAB);
+	CHECK_EQ(cpu.pc, 0XAAFF);
+	CHECK_EQ(cpu.memory->read(stack_origin - 2), 0xCF);
+	CHECK_EQ(cpu.memory->read(stack_origin - 1), 0xAB);
 }
 
 TEST_CASE_TEMPLATE("subroutine.call_cc_n16 does not execute jump when condition is met", test, call_cc_n16_unsuccessful_jump_test_cases)
@@ -93,22 +93,22 @@ TEST_CASE_TEMPLATE("subroutine.call_cc_n16 does not execute jump when condition 
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.pc() = pc_start;
-	cpu.sp() = stack_origin;
-	cpu.memory().write(pc_start, 0xFF);
-	cpu.memory().write(pc_start + 1, 0xAA);
+	cpu.pc = pc_start;
+	cpu.sp = stack_origin;
+	cpu.memory->write(pc_start, 0xFF);
+	cpu.memory->write(pc_start + 1, 0xAA);
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc(), pc_start + 2);
-	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0);
-	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0);
+	CHECK_EQ(cpu.pc, pc_start + 2);
+	CHECK_EQ(cpu.memory->read(stack_origin - 2), 0);
+	CHECK_EQ(cpu.memory->read(stack_origin - 1), 0);
 }
 
 TEST_CASE("subroutine.ret updates pc with value from stack")
@@ -116,17 +116,17 @@ TEST_CASE("subroutine.ret updates pc with value from stack")
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.sp() = stack_origin - 2;
-	cpu.memory().write(stack_origin - 1, 0xAB);
-	cpu.memory().write(stack_origin - 2, 0xCD);
+	cpu.sp = stack_origin - 2;
+	cpu.memory->write(stack_origin - 1, 0xAB);
+	cpu.memory->write(stack_origin - 2, 0xCD);
 
-	tests::execute_all_machine_cycles<opcodes::ret>(cpu);
-	CHECK_EQ(cpu.pc(), expected_pc);
+	tests::execute_all_instruction_steps<opcodes::ret>(cpu);
+	CHECK_EQ(cpu.pc, expected_pc);
 }
 
 TEST_CASE_TEMPLATE("subroutine.ret_cc updates pc if condition is satisfied", test, ret_cc_successful_jump_test_cases)
@@ -134,18 +134,18 @@ TEST_CASE_TEMPLATE("subroutine.ret_cc updates pc if condition is satisfied", tes
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.sp() = stack_origin - 2;
-	cpu.memory().write(stack_origin - 1, 0xAB);
-	cpu.memory().write(stack_origin - 2, 0xCD);
+	cpu.sp = stack_origin - 2;
+	cpu.memory->write(stack_origin - 1, 0xAB);
+	cpu.memory->write(stack_origin - 2, 0xCD);
 
 	test::set_condition(cpu);
 	test::execute(cpu);
-	CHECK_EQ(cpu.pc(), expected_pc);
+	CHECK_EQ(cpu.pc, expected_pc);
 }
 
 TEST_CASE_TEMPLATE("subroutine.ret_cc does not update pc if condition is not satisfied", test, ret_cc_unsuccessful_jump_test_cases)
@@ -153,20 +153,20 @@ TEST_CASE_TEMPLATE("subroutine.ret_cc does not update pc if condition is not sat
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t expected_pc = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.sp() = stack_origin - 2;
-	cpu.memory().write(stack_origin - 1, 0xAB);
-	cpu.memory().write(stack_origin - 2, 0xCD);
+	cpu.sp = stack_origin - 2;
+	cpu.memory->write(stack_origin - 1, 0xAB);
+	cpu.memory->write(stack_origin - 2, 0xCD);
 
 	test::set_condition(cpu);
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc(), 0);
-	CHECK_EQ(cpu.sp(), stack_origin - 2);
+	CHECK_EQ(cpu.pc, 0);
+	CHECK_EQ(cpu.sp, stack_origin - 2);
 }
 
 TEST_CASE_TEMPLATE("subroutine.rst_vec updates sp properly", test, rst_vec_test_cases)
@@ -174,30 +174,30 @@ TEST_CASE_TEMPLATE("subroutine.rst_vec updates sp properly", test, rst_vec_test_
 	constexpr cpu::register_16::type_t stack_origin = 0xFFFE;
 	constexpr cpu::program_counter::type_t pc_start = 0xABCD;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.pc() = pc_start;
-	cpu.sp() = stack_origin;
+	cpu.pc = pc_start;
+	cpu.sp = stack_origin;
 
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.memory().read(stack_origin - 2), 0xCD);
-	CHECK_EQ(cpu.memory().read(stack_origin - 1), 0xAB);
-	CHECK_EQ(cpu.sp(), stack_origin - 2);
+	CHECK_EQ(cpu.memory->read(stack_origin - 2), 0xCD);
+	CHECK_EQ(cpu.memory->read(stack_origin - 1), 0xAB);
+	CHECK_EQ(cpu.sp, stack_origin - 2);
 }
 
 TEST_CASE_TEMPLATE("subroutine.rst_vec updates pc properly", test, rst_vec_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
 
-	cpu.sp() = 0xFFFE;
+	cpu.sp = 0xFFFE;
 	test::execute(cpu);
 
-	CHECK_EQ(cpu.pc(), test::vector);
+	CHECK_EQ(cpu.pc, test::vector);
 }

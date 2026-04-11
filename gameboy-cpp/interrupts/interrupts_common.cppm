@@ -60,27 +60,20 @@ namespace interrupts
 	export using joypad_interrupt = interrupt<joypad_ie_flag, joypad_if_flag, joypad_handler_address>;
 
 	export template<typename T>
-	concept InterruptDispatcher = requires(cpu::cpu & cpu)
+	concept InterruptDispatcher = requires(cpu::cpu_state & cpu)
 	{
-		{ T::num_cycles() } -> std::convertible_to<cpu::machine_cycle>;
+		{ T::num_steps() } -> std::convertible_to<std::uint8_t>;
 		{ T::execute(cpu) } -> std::same_as<void>;
 	};
 
-	export using interrupt_dispatcher_execute_fn_t = void(*)(cpu::cpu&);
-	export using interrupt_dispatcher_cycles_fn_t = cpu::machine_cycle(*)();
+	export using interrupt_dispatcher_execute_fn_t = void(*)(cpu::cpu_state&, std::uint8_t);
+	export using interrupt_dispatcher_steps_fn_t = std::uint8_t(*)();
 
 	export struct interrupt_dispatcher
 	{
 		interrupt_dispatcher_execute_fn_t execute;
-		interrupt_dispatcher_cycles_fn_t num_cycles;
+		interrupt_dispatcher_steps_fn_t num_steps;
 	};
-
-	export template<InterruptDispatcher interrupt_dispatcher>
-	bool is_interrupt_dispatched(const cpu::cpu& cpu, const interrupt_dispatcher& dispatcher)
-	{
-		using namespace cpu::literals;
-		return cpu.cycle().m_cycle() >= (dispatcher.num_cycles() - 1_m_cycle);
-	}
 
 	export struct interrupt_registers
 	{

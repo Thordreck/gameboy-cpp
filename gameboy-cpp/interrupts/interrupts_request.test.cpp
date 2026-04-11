@@ -20,7 +20,7 @@ TEST_CASE_TEMPLATE("interrupts.Requested interrupts have their if flag set", tes
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -33,7 +33,7 @@ TEST_CASE_TEMPLATE("interrupts.Unrequestd interrupts have their flag unset", tes
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
 
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -45,7 +45,7 @@ TEST_CASE_TEMPLATE("interrupts.Unrequestd interrupts have their flag unset", tes
 
 TEST_CASE_TEMPLATE("interrupts.Requested interrupts are detected as is_requested", test, request_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);
@@ -56,7 +56,7 @@ TEST_CASE_TEMPLATE("interrupts.Requested interrupts are detected as is_requested
 
 TEST_CASE_TEMPLATE("interrupts.Unrequested interrupts are not detected as is_requested", test, request_test_cases)
 {
-	cpu::cpu cpu{ };
+	cpu::cpu_state cpu{ };
 	tests::mock_memory_bus memory{};
 
 	memory::connect(memory.bus(), cpu);

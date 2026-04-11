@@ -23,19 +23,18 @@ namespace tests
 	export using joypad_interrupt_test_case = interrupt_test_case<interrupts::joypad_interrupt, 0x60, 0x10, 0x10>;
 
 	export template<interrupts::InterruptDispatcher interrupt_dispatcher>
-	void execute_complete_dispatch(interrupt_dispatcher dispatcher, cpu::cpu& cpu)
+	void execute_complete_dispatch(interrupt_dispatcher dispatcher, cpu::cpu_state& cpu)
 	{
-		cpu.cycle() = {};
+		const std::uint8_t num_steps = dispatcher.num_steps();
 
-		while (cpu.cycle().m_cycle() < dispatcher.num_cycles())
+		for (std::uint8_t step = 0; step < num_steps; ++step)
 		{
 			dispatcher.execute(cpu);
-			cpu.cycle()++;
 		}
 	}
 
 	export template<interrupts::InterruptDescriptor interrupt>
-	void execute_complete_dispatch(cpu::cpu& cpu)
+	void execute_complete_dispatch(cpu::cpu_state& cpu)
 	{
 		using dispatcher_t = typename interrupts::dispatcher<interrupt>;
 		execute_complete_dispatch<dispatcher_t>({}, cpu);

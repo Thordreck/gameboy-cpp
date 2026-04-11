@@ -30,8 +30,8 @@ namespace emulator
             , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma, joypad_imp }
             , cpu_runner { cpu }
         {
-            cpu.pc() = 0x100;
-            cpu.sp() = 0xFFFE;
+            cpu.pc = 0x100;
+            cpu.sp = 0xFFFE;
             timers.divider() = 0xAB;
         }
 
@@ -49,13 +49,6 @@ namespace emulator
             if (rom_loaded) [[likely]]
             {
                 batch_schedule(num_ticks, cpu_runner, timers, ppu_, oam_dma);
-
-                /*
-                cpu_runner.tick(num_ticks);
-                timers.tick(num_ticks);
-                ppu_.tick(num_ticks);
-                oam_dma.tick(num_ticks);
-                */
             }
         }
 
@@ -68,8 +61,8 @@ namespace emulator
             oam_dma = {};
             lcd_memory.fill({});
 
-            cpu.pc() = 0x100;
-            cpu.sp() = 0xFFFE;
+            cpu.pc = 0x100;
+            cpu.sp = 0xFFFE;
             timers.divider() = 0xAB;
         }
 
@@ -90,7 +83,7 @@ namespace emulator
         }
 
     private:
-        cpu::cpu cpu {};
+        cpu::cpu_state cpu {};
         timer::timer_system timers {};
         interrupts::interrupt_registers interrupts {};
         graphics::oam_dma oam_dma {};
@@ -106,7 +99,7 @@ namespace emulator
         memory_map memory_map;
         memory_buses memory_buses;
 
-        default_cpu_runner cpu_runner;
+        cpu_runner cpu_runner;
 
         // TODO: rethink this
         bool rom_loaded { false };
