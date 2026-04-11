@@ -125,11 +125,11 @@ namespace graphics
             , sprite_fetcher(sprite_fifo)
         {}
 
-        std::uint8_t [[nodiscard]] scanline() const { return current_scanline; }
-        std::uint8_t [[nodiscard]] lyc() const { return scanline_compare; }
-        ppu_mode [[nodiscard]] mode() const { return current_mode; }
-        bool [[nodiscard]] is_enabled() const { return enabled; }
-        ppu_interrupt_sources [[nodiscard]] interrupts() const { return interrupt_sources; }
+        [[nodiscard]] std::uint8_t scanline() const { return current_scanline; }
+        [[nodiscard]] std::uint8_t lyc() const { return scanline_compare; }
+        [[nodiscard]] ppu_mode mode() const { return current_mode; }
+        [[nodiscard]] bool is_enabled() const { return enabled; }
+        [[nodiscard]] ppu_interrupt_sources interrupts() const { return interrupt_sources; }
 
         [[nodiscard]] std::uint8_t active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
