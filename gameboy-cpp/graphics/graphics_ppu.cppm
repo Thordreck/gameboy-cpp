@@ -141,7 +141,7 @@ namespace graphics
             case ppu_mode::h_blank: return 456 - scanline_cycle;
             case ppu_mode::v_blank: return 456 - scanline_cycle;
             case ppu_mode::oam_scan: return 80 - scanline_cycle;
-            case ppu_mode::drawing: return std::min(289 + 80 - 5, 5);
+            case ppu_mode::drawing: return 1;
             default: std::unreachable();
             }
         }
