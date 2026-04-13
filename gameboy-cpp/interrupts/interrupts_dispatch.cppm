@@ -5,15 +5,16 @@ export import cpu;
 export import utilities;
 export import :common;
 export import :request;
+import memory;
 
 namespace interrupts
 {
-    export template <InterruptDescriptor interrupt>
-    struct dispatcher
+    export struct dispatcher
     {
         static constexpr std::uint8_t num_steps() { return 5; }
 
-        static void execute(cpu::cpu_state& cpu, const std::uint8_t step)
+        template<InterruptDescriptor Interrupt, memory::Memory Memory>
+        static void execute(const Interrupt& interrupt, cpu::cpu_state& cpu, const std::uint8_t step, Memory& memory)
         {
             switch (step)
             {
@@ -22,19 +23,19 @@ namespace interrupts
                     cpu.ime.enabled = false;
                     cpu.ime.requested = false;
                     cpu.ime.enabling = false;
-                    clear_request<interrupt>(*cpu.memory);
+                    clear_request(interrupt, memory);
                 }
                 break;
             case 1:
                 break;
             case 2:
-                cpu.memory->write(--cpu.sp, utils::most_significant_byte(cpu.pc.value()));
+                memory.write(--cpu.sp, utils::most_significant_byte(cpu.pc.value()));
                 break;
             case 3:
-                cpu.memory->write(--cpu.sp, utils::less_significant_byte(cpu.pc.value()));
+                memory.write(--cpu.sp, utils::less_significant_byte(cpu.pc.value()));
                 break;
             case 4:
-                cpu.pc = interrupt::handler_address;
+                cpu.pc = interrupt.handler_address();
                 break;
             default: std::unreachable();
             }

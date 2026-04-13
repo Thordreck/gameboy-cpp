@@ -1,139 +1,172 @@
-
 export module memory:map;
-export import std;
 export import :common;
+export import std;
 
 namespace memory
 {
-	export using memory_region_read_fn_t = memory_data_t(*)(const void*, const memory_address_t);
-	export using memory_region_write_fn_t = void(*)(void*, const memory_address_t, const memory_data_t);
+    export constexpr std::uint16_t memory_map_page_size = 256;
+    export constexpr std::uint16_t memory_map_num_pages = memory_size / memory_map_page_size;
 
-	export constexpr std::uint16_t memory_map_page_size = 256;
-	export constexpr std::uint16_t memory_map_num_pages = memory_size / memory_map_page_size;
+    export template <typename T>
+    concept MappedRegion =
+        std::convertible_to<decltype(T::start), memory_address_t>
+        && std::convertible_to<decltype(T::end), memory_address_t>
+        && (T::start <= T::end)
+        && ((T::end - T::start + 1) % memory_map_page_size == 0);
 
-	export struct memory_map_page
-	{
-		memory_region_read_fn_t read_func;
-		memory_region_write_fn_t write_func;
-		void* context;
-	};
+    export template <typename T>
+    concept MappedMemoryRegion = Memory<T> && MappedRegion<T>;
 
-	export using memory_map_span_t = std::span<memory_map_page, memory_map_num_pages>;
-	export using memory_map_array_t = std::array<memory_map_page, memory_map_num_pages>;
+    template <MappedRegion... Regions>
+    static consteval bool regions_cover_all_memory_addresses_with_no_overlap()
+    {
+        std::array regions{std::pair{Regions::start, Regions::end}...};
+        std::ranges::sort(regions, [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
 
-	export template<typename T>
-	concept MappedRegion =
-		std::convertible_to<decltype(T::start), memory_address_t>
-		&& std::convertible_to<decltype(T::end), memory_address_t>
-		&& (T::start <= T::end)
-		&& ((T::end - T::start + 1) % memory_map_page_size == 0);
+        std::size_t current = 0;
 
-	export template<typename T>
-	concept MappedMemoryRegion = Memory<T> && MappedRegion<T>;
+        for (auto [start, end] : regions)
+        {
+            if (start != current)
+            {
+                return false;
+            }
 
-	template<ReadOnlyMemory T>
-	static memory_data_t read_mapped_region(const void* context, const memory_address_t address)
-	{
-		const T* self = static_cast<const T*>(context);
-		return self->read(address);
-	}
+            current = end + 1;
+        }
 
-	template<WriteOnlyMemory T>
-	static void write_mapped_region(void* context, const memory_address_t address, const memory_data_t value)
-	{
-		T* self = static_cast<T*>(context);
-		self->write(address, value);
-	}
+        return current == memory_size;
+    }
 
-	template<MappedMemoryRegion... Regions>
-	static consteval bool regions_cover_all_memory_addresses_with_no_overlap()
-	{
-		std::array regions{ std::pair { Regions::start, Regions::end }... };
-		std::ranges::sort(regions, [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
+    template <MappedRegion... Regions>
+    static auto build_regions_index_mapping(const std::tuple<Regions&...>& regions)
+    {
+        std::array<std::uint8_t, memory_map_num_pages> mapping {};
 
-		std::size_t current = 0;
+        const auto fill_mappings = [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+        {
+            ([&]
+            {
+                using region_t = std::decay_t<decltype(std::get<Is>(regions))>;
+                constexpr std::size_t num_pages = (region_t::end - region_t::start + 1) / memory_map_page_size;
 
-		for (auto [start, end] : regions)
-		{
-			if (start != current)
-			{
-				return false;
-			}
+                constexpr std::uint8_t initial_page_pos = region_t::start >> 8;
+                const auto initial_fill_pos = std::next(mapping.begin(), initial_page_pos);
 
-			current = end + 1;
-		}
+                std::ranges::fill_n(initial_fill_pos, num_pages, Is);
+            }(), ...);
+        };
 
-		return current == memory_size;
-	}
+        fill_mappings(std::make_index_sequence<sizeof...(Regions)>{});
+        return mapping;
+    }
 
-	export template<MappedMemoryRegion... Regions>
-	auto build_memory_map(Regions&... regions)
-	{
-		static_assert(
-			regions_cover_all_memory_addresses_with_no_overlap<Regions...>(), 
-			"Mapped memory regions must cover all memory addresses with no overlap");
+    export template <MappedMemoryRegion... Regions>
+    class memory_map
+    {
+        static_assert(
+            regions_cover_all_memory_addresses_with_no_overlap<Regions...>(),
+            "Mapped memory regions must cover all memory addresses with no overlap");
 
-		memory_map_array_t mapping{};
+    public:
+        explicit memory_map(Regions&... memory_regions)
+            : regions{memory_regions...}
+            , mapping{build_regions_index_mapping(regions)}
+        {}
 
-		auto fill_region = [&]<typename T>(T& region)
-		{
-			using region_t = std::remove_reference_t<T>;
-			constexpr size_t num_pages = (region_t::end - region_t::start + 1) / memory_map_page_size;
+        memory_map(const memory_map&) = delete;
+        memory_map& operator=(const memory_map&) = delete;
 
-			const memory_map_page page
-			{
-				read_mapped_region<region_t>,
-				write_mapped_region<region_t>,
-				&region,
-			};
+        [[nodiscard]] memory_data_t read(const memory_address_t address) const
+        {
+            const std::uint8_t region_index = mapping[address >> 8];
+            return read_dispatch(region_index, address);
+        }
 
-			constexpr size_t initial_page_pos = region_t::start >> 8;
-			const auto initial_fill_pos = std::next(mapping.begin(), initial_page_pos);
+        void write(const memory_address_t address, const memory_data_t value)
+        {
+            const std::uint8_t region_index = mapping[address >> 8];
+            write_dispatch(region_index, address, value);
+        }
 
-			std::ranges::fill_n(initial_fill_pos, num_pages, page);
-		};
+    private:
+        template<std::size_t I = 0>
+        [[nodiscard]] memory_data_t read_dispatch(const std::uint8_t index, const memory_address_t address) const
+        {
+            if constexpr (I >= std::tuple_size_v<decltype(regions)>)
+            {
+                std::unreachable();
+            }
+            else
+            {
+                return index == I
+                    ? std::get<I>(regions).read(address)
+                    : read_dispatch<I + 1>(index, address);
+            }
+        }
 
-		(fill_region(regions), ...); 
-		return mapping;
-	}
+        template<std::size_t I = 0>
+        void write_dispatch(const std::uint8_t index, const memory_address_t address, const memory_data_t value)
+        {
+            if constexpr (I >= std::tuple_size_v<decltype(regions)>)
+            {
+                std::unreachable();
+            }
+            else
+            {
+                if (index == I)
+                {
+                    std::get<I>(regions).write(address, value);
+                }
+                else
+                {
+                    write_dispatch<I + 1>(index, address, value);
+                }
+            }
+        }
 
-	export template<size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1> 
-	requires (size == (end_address - start_address + 1))
-	class span_map
-	{
-	public:
-		static constexpr auto start = start_address;
-		static constexpr auto end = end_address;
+        std::tuple<Regions&...> regions;
+        std::array<std::uint8_t, memory_map_num_pages> mapping;
+    };
 
-		explicit span_map(std::span<memory_data_t, size> data)
-			: data{ data }
-		{}
+    export template <size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1>
+        requires (size == (end_address - start_address + 1))
+    class span_map
+    {
+    public:
+        static constexpr auto start = start_address;
+        static constexpr auto end = end_address;
 
-		[[nodiscard]] memory_data_t read(const memory_address_t address) const
-		{
-			return data[address - start];
-		}
+        explicit span_map(std::span<memory_data_t, size> data)
+            : data{data}
+        {
+        }
 
-		void write(const memory_address_t address, const memory_data_t value) 
-		{
-			data[address - start] = value;
-		}
+        [[nodiscard]] memory_data_t read(const memory_address_t address) const
+        {
+            return data[address - start];
+        }
 
-	private:
-		std::span<memory_data_t, size> data;
-	};
+        void write(const memory_address_t address, const memory_data_t value)
+        {
+            data[address - start] = value;
+        }
 
-	export template<size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1> 
-	requires (size == (end_address - start_address + 1))
-	constexpr auto map(std::span<memory_data_t, size> data)
-	{
-		return span_map<size, start_address, end_address>{ data };
-	}
+    private:
+        std::span<memory_data_t, size> data;
+    };
 
-	export template<size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1> 
-	requires (size == (end_address - start_address + 1))
-	constexpr auto map(std::array<memory_data_t, size>& data)
-	{
-		return map<size, start_address, end_address>(std::span(data));
-	}
+    export template <size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1>
+        requires (size == (end_address - start_address + 1))
+    constexpr auto map(std::span<memory_data_t, size> data)
+    {
+        return span_map<size, start_address, end_address>{data};
+    }
+
+    export template <size_t size, memory_address_t start_address = 0, memory_address_t end_address = size - 1>
+        requires (size == (end_address - start_address + 1))
+    constexpr auto map(std::array<memory_data_t, size>& data)
+    {
+        return map<size, start_address, end_address>(std::span(data));
+    }
 }

@@ -27,7 +27,7 @@ namespace emulator
             , lcd_ { lcd_adapter }
             , ppu_ { lcd_ }
             , memory_map { memory_blocks, oam_dma, timers, interrupts, ppu_, joypad_imp }
-            , memory_buses { memory_map.get(), cpu, timers, ppu_, oam_dma, joypad_imp }
+            , memory_buses { memory_map.get(), ppu_, oam_dma }
             , cpu_runner { cpu }
         {
             cpu.pc = 0x100;
@@ -39,7 +39,7 @@ namespace emulator
 
         [[nodiscard]] lcd_view_t lcd() const { return lcd_memory; }
         [[nodiscard]] joypad_input_sink joypad() { return joypad_input_sink{ joypad_imp }; }
-        [[nodiscard]] memory::memory_bus memory_bus() { return memory::memory_bus{ memory_map.get() }; }
+        [[nodiscard]] memory_map_t& memory() { return memory_map.get(); }
 
         void tick(const std::uint32_t num_ticks)
         {
@@ -48,7 +48,12 @@ namespace emulator
             // TODO: rethink this
             if (rom_loaded) [[likely]]
             {
-                batch_schedule(num_ticks, cpu_runner, timers, ppu_, oam_dma);
+                batch_schedule(
+                    num_ticks,
+                    adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus()),
+                    adapt_for_scheduler(timers, memory_buses.timers_bus()),
+                    adapt_for_scheduler(ppu_, memory_buses.ppu_bus()),
+                    adapt_for_scheduler(oam_dma, memory_buses.oam_bus()));
             }
         }
 

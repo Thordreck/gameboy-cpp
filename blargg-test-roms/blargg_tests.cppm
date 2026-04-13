@@ -7,7 +7,7 @@ import emulator.core;
 import utilities;
 import std;
 
-namespace
+namespace blargg
 {
 	template<typename TExpected, typename TError>
 	TExpected require_success(const std::expected<TExpected, TError>& result)
@@ -16,7 +16,8 @@ namespace
 		return result.value();
 	}
 
-	std::optional<std::uint8_t> read_io_result_output(memory::memory_bus& memory)
+	template<memory::Memory Memory>
+	std::optional<std::uint8_t> read_io_result_output(Memory& memory)
 	{
 		constexpr memory::memory_address_t sb = 0xFF01;
 		constexpr memory::memory_address_t sc = 0xFF02;
@@ -31,10 +32,6 @@ namespace
 		return std::nullopt;
 	}
 
-}
-
-namespace blargg
-{
 	export void run_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
@@ -50,13 +47,12 @@ namespace blargg
 
 		// results
 		std::string result{};
-		memory::memory_bus bus = engine.memory_bus();
 
 		for (size_t t_cycle = 0; t_cycle < max_num_machine_cycles; t_cycle++)
 		{
 			engine.tick(4);
 
-			if (const auto character = read_io_result_output(bus); character.has_value())
+			if (const auto character = read_io_result_output(engine.memory()); character.has_value())
 			{
 				result += character.value();
 			}

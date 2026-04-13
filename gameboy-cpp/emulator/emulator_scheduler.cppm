@@ -21,8 +21,29 @@ namespace emulator
         return min_ticks;
     }
 
+    export template<typename Component, typename... Args>
+    struct scheduler_adapter
+    {
+        Component& component;
+        std::tuple<Args&...> args;
+
+        [[nodiscard]] bool active() const { return component.active(); }
+        [[nodiscard]] std::uint32_t tick_batch() const { return component.tick_batch(); }
+
+        void tick(const std::uint32_t ticks)
+        {
+            std::apply([this, ticks] (auto&... args) { component.tick(ticks, args...); }, args);
+        }
+    };
+
+    template<typename Component, typename... Args>
+    auto adapt_for_scheduler(Component& c, Args&... args)
+    {
+        return scheduler_adapter<Component, Args...> { c, std::tie(args...) };
+    }
+
     export template<BatchSchedulable... Components>
-    void batch_schedule(const std::uint32_t ticks, Components&... components)
+    void batch_schedule(const std::uint32_t ticks, Components&&... components)
     {
         std::uint32_t remaining_ticks = ticks;
 

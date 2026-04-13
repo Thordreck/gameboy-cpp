@@ -28,6 +28,9 @@ namespace memory
 	export template<typename T>
 	concept Memory = WriteOnlyMemory<T> && ReadOnlyMemory<T>;
 
+	export template<typename T>
+	concept AnyMemory = WriteOnlyMemory<T> || ReadOnlyMemory<T> || Memory<T>;
+
 	export template<memory_address_t start, memory_address_t end>
 	requires (start <= end)
 	[[nodiscard]] bool is_in_region(const memory_address_t address)

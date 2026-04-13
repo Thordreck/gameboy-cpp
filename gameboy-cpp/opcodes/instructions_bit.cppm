@@ -4,6 +4,7 @@ export import std;
 export import cpu;
 export import utilities;
 export import :common;
+import memory;
 
 namespace opcodes
 {
@@ -36,12 +37,13 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 1:
                 {
@@ -62,11 +64,12 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             if (step == 1)
             {
-                cpu.reg.a() = cpu.reg.a() | cpu.memory->read(cpu.reg.hl());
+                cpu.reg.a() = cpu.reg.a() | memory.read(cpu.reg.hl());
 
                 cpu.reg.flags().z = cpu.reg.a() == 0;
                 cpu.reg.flags().n = false;
@@ -104,12 +107,13 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 1:
                 {
@@ -154,12 +158,13 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 1:
                 {
@@ -180,11 +185,12 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             if (step == 1)
             {
-                cpu.reg.a() = cpu.reg.a() ^ cpu.memory->read(cpu.reg.hl());
+                cpu.reg.a() = cpu.reg.a() ^ memory.read(cpu.reg.hl());
 
                 cpu.reg.flags().z = cpu.reg.a() == 0;
                 cpu.reg.flags().n = false;
@@ -223,7 +229,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -232,7 +239,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t r8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t r8 = memory.read(cpu.cache.r16);
                     const bool shifted_bit = r8 & 0x01;
                     const std::uint8_t result = r8 >> 1;
 
@@ -245,7 +252,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -273,7 +280,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -282,7 +290,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t r8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t r8 = memory.read(cpu.cache.r16);
                     const bool shifted_bit = r8 & 0x01;
                     const std::uint8_t result = (r8 >> 1) | (cpu.reg.c_flag() << 7);
 
@@ -295,7 +303,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -582,7 +590,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -591,7 +600,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t r8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t r8 = memory.read(cpu.cache.r16);
                     const std::uint8_t result = ((r8 & 0x0F) << 4) | ((r8 & 0xF0) >> 4);
 
                     cpu.reg.z_flag() = (result == 0);
@@ -603,7 +612,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -710,7 +719,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -719,7 +729,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
                     const std::uint8_t result = (n8 << 1) | shifted_bit;
 
@@ -732,7 +742,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -771,7 +781,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -780,7 +791,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t shifted_bit = n8 & 0x01;
                     const std::uint8_t result = (n8 >> 1) | (shifted_bit << 7);
 
@@ -793,7 +804,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -833,7 +844,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -844,7 +856,7 @@ namespace opcodes
                 {
                     using namespace literals;
 
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t c = cpu.reg.c_flag() ? 1_u8 : 0_u8;
                     const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
                     const std::uint8_t result = (n8 << 1) | c;
@@ -858,7 +870,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -895,7 +907,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -904,7 +917,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t shifted_bit = (n8 >> 7) & 0x01;
                     const std::uint8_t result = (n8 << 1);
 
@@ -917,7 +930,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -955,7 +968,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -964,7 +978,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t n8_7 = n8 & 0x80;
                     const std::uint8_t n8_0 = n8 & 0x01;
                     const std::uint8_t result = (n8 >> 1) | n8_7;
@@ -978,7 +992,7 @@ namespace opcodes
                 }
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -989,7 +1003,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
@@ -998,7 +1013,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     cpu.reg.a() = cpu.reg.a() & n8;
 
                     cpu.reg.flags().z = cpu.reg.a() == 0;
@@ -1018,7 +1033,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 2; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
@@ -1027,7 +1043,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    const std::uint8_t n8 = cpu.memory->read(cpu.cache.r16);
+                    const std::uint8_t n8 = memory.read(cpu.cache.r16);
 
                     cpu.reg.z_flag() = !utils::is_bit_set<index>(n8);
                     cpu.reg.n_flag() = false;
@@ -1054,7 +1070,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -1062,10 +1079,10 @@ namespace opcodes
                 cpu.cache.r16 = cpu.reg.hl();
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.cache.r16) & ~(0x1 << index);
+                cpu.cache.r8 = memory.read(cpu.cache.r16) & ~(0x1 << index);
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }
@@ -1087,7 +1104,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template <memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -1095,10 +1113,10 @@ namespace opcodes
                 cpu.cache.r16 = cpu.reg.hl();
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.cache.r16) | (0x1 << index);
+                cpu.cache.r8 = memory.read(cpu.cache.r16) | (0x1 << index);
                 break;
             case 2:
-                cpu.memory->write(cpu.reg.hl(), cpu.cache.r8);
+                memory.write(cpu.reg.hl(), cpu.cache.r8);
                 break;
             default: std::unreachable();
             }

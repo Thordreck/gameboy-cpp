@@ -33,7 +33,8 @@ namespace emulator
 
     export using rom_bank_0_page_t = memory::span_map<0x4000>;
     export using rom_bank_n_page_t = memory::span_map<0x4000, 0x4000, 0x7FFF>;
-    export using vram_memory_page_t = memory::span_map<graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
+    export using vram_memory_page_t = memory::span_map<
+        graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
     export using external_ram_page_t = memory::span_map<0x2000, 0xA000, 0xBFFF>;
     export using work_ram_0_page_t = memory::span_map<0x1000, 0xC000, 0xCFFF>;
     export using work_ram_1_page_t = memory::span_map<0x1000, 0xD000, 0xDFFF>;
@@ -53,14 +54,15 @@ namespace emulator
             const graphics::oam_dma& oam_dma,
             const std::span<memory::memory_data_t, graphics::oam_size> oam)
             : dma{oam_dma}
-            , oam { oam }
-        {}
+              , oam{oam}
+        {
+        }
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
             return memory::is_in_region<0xFEA0, 0xFEFF>(address)
-                ? 0xFF
-                : oam[address - start];
+                       ? 0xFF
+                       : oam[address - start];
         }
 
         void write(const memory::memory_address_t address, const memory::memory_data_t value)
@@ -90,12 +92,13 @@ namespace emulator
             joypad::joypad& joypad,
             graphics::oam_dma& oam_dma)
             : timers{timers}
-            , interrupts{interrupts}
-            , ppu{ppu}
-            , hram { hram }
-            , joypad { joypad }
-            , oam_dma { oam_dma }
-        {}
+              , interrupts{interrupts}
+              , ppu{ppu}
+              , hram{hram}
+              , joypad{joypad}
+              , oam_dma{oam_dma}
+        {
+        }
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
@@ -186,6 +189,17 @@ namespace emulator
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
     };
 
+    export using memory_map_t = memory::memory_map<
+        rom_bank_0_page_t,
+        rom_bank_n_page_t,
+        vram_memory_page_t,
+        external_ram_page_t,
+        work_ram_0_page_t,
+        work_ram_1_page_t,
+        echo_ram_page_t,
+        oam_memory_page,
+        io_hram_interrupt_memory_page>;
+
     export class memory_map
     {
     public:
@@ -196,29 +210,30 @@ namespace emulator
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
             joypad::joypad& joypad)
-                : rom_bank_0_page { memory.rom_bank_0 }
-                , rom_bank_n_page { memory.rom_bank_n }
-                , vram_memory_page { memory.vram }
-                , external_ram_page { memory.external_ram }
-                , work_ram_0_page { memory.work_ram_0 }
-                , work_ram_1_page { memory.work_ram_1 }
-                , echo_ram_page { memory.echo_ram }
-                , oam_memory_page { oam_dma, memory.oam }
-                , ihi_page { timers, interrupts, ppu, memory.hram, joypad, oam_dma }
+            : rom_bank_0_page{memory.rom_bank_0}
+              , rom_bank_n_page{memory.rom_bank_n}
+              , vram_memory_page{memory.vram}
+              , external_ram_page{memory.external_ram}
+              , work_ram_0_page{memory.work_ram_0}
+              , work_ram_1_page{memory.work_ram_1}
+              , echo_ram_page{memory.echo_ram}
+              , oam_memory_page{oam_dma, memory.oam}
+              , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma}
+              , map{
+                  rom_bank_0_page,
+                  rom_bank_n_page,
+                  vram_memory_page,
+                  external_ram_page,
+                  work_ram_0_page,
+                  work_ram_1_page,
+                  echo_ram_page,
+                  oam_memory_page,
+                  ihi_page
+              }
         {
-            map = memory::build_memory_map(
-                rom_bank_0_page,
-                rom_bank_n_page,
-                vram_memory_page,
-                external_ram_page,
-                work_ram_0_page,
-                work_ram_1_page,
-                echo_ram_page,
-                oam_memory_page,
-                ihi_page);
         }
 
-        [[nodiscard]] memory::memory_map_span_t get() { return map; }
+        [[nodiscard]] memory_map_t& get() { return map; }
 
     private:
         rom_bank_0_page_t rom_bank_0_page;
@@ -231,40 +246,61 @@ namespace emulator
         oam_memory_page oam_memory_page;
         io_hram_interrupt_memory_page ihi_page;
 
-        memory::memory_map_array_t map;
+        memory_map_t map;
     };
+
+    export using cpu_memory_bus_t = memory::memory_bus<
+        memory_map_t,
+        graphics::vram_access_policy,
+        graphics::oam_dma_access_policy,
+        graphics::oam_ppu_access_policy,
+        rom_read_only_policy_t>;
+
+    export using timers_memory_bus_t = memory::memory_bus<
+        memory_map_t,
+        graphics::vram_access_policy,
+        graphics::oam_dma_access_policy,
+        graphics::oam_ppu_access_policy,
+        rom_read_only_policy_t>;
+
+    export using ppu_memory_bus_t = memory::memory_bus<
+        memory_map_t,
+        rom_read_only_policy_t,
+        graphics::oam_ppu_access_policy>;
+
+    export using oam_dma_memory_bus_t = memory::memory_bus<memory_map_t>;
 
     export class memory_buses
     {
     public:
         memory_buses(
-            const memory::memory_map_span_t map,
-            cpu::cpu_state& cpu,
-            timer::timer_system& timers,
-            graphics::pixel_processing_unit& ppu,
-            graphics::oam_dma& oam_dma,
-            joypad::joypad& joypad)
-                : vram_policy { ppu }
-                , oam_dma_policy { oam_dma  }
-                , oam_ppu_policy { ppu, oam_dma  }
-                , no_policy_bus { map }
-                , cpu_policy_bus { map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy }
-                , ppu_policy_bus { map, oam_ppu_policy, rom_policy }
+            memory_map_t& map,
+            const graphics::pixel_processing_unit& ppu,
+            const graphics::oam_dma& oam_dma)
+            : vram_policy{ppu}
+              , oam_dma_policy{oam_dma}
+              , oam_ppu_policy{ppu, oam_dma}
+              , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy}
+              , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy}
+              , ppu_bus_{map, rom_policy, oam_ppu_policy}
+              , oam_dma_bus_{map}
         {
-            memory::connect(cpu_policy_bus, cpu, timers);
-            memory::connect(ppu_policy_bus, ppu);
-            memory::connect(no_policy_bus, oam_dma, joypad);
         }
 
+        [[nodiscard]] auto& cpu_bus() { return cpu_bus_; }
+        [[nodiscard]] auto& timers_bus() { return timers_bus_; }
+        [[nodiscard]] auto& ppu_bus() { return ppu_bus_; }
+        [[nodiscard]] auto& oam_bus() { return oam_dma_bus_; }
+
     private:
-        rom_read_only_policy_t rom_policy {};
+        rom_read_only_policy_t rom_policy{};
         graphics::vram_access_policy vram_policy;
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
 
-        memory::memory_bus no_policy_bus;
-        memory::memory_bus cpu_policy_bus;
-        memory::memory_bus ppu_policy_bus;
+        cpu_memory_bus_t cpu_bus_;
+        timers_memory_bus_t timers_bus_;
+        ppu_memory_bus_t ppu_bus_;
+        oam_dma_memory_bus_t oam_dma_bus_;
     };
-
 }

@@ -3,6 +3,7 @@ export module opcodes:dispatcher;
 
 export import std;
 export import cpu;
+import memory;
 
 export import :bit;
 export import :misc;
@@ -521,9 +522,23 @@ namespace opcodes
 		X(0xFF, set_7_a) \
 
 #define DISPATCH_OPCODE(OP, INSTR) \
-		case OP: INSTR::execute(cpu, step); break; \
+	case OP: execute_instruction<INSTR>(cpu, step, memory); break; \
 
-	export void dispatch(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step)
+	template<Instruction Instr, memory::AnyMemory Memory>
+	void execute_instruction(cpu::cpu_state& cpu, const step_t step, Memory&)
+	{
+		Instr::execute(cpu, step);
+	}
+
+	template<typename Instr, memory::AnyMemory Memory>
+	requires MemoryInstruction<Instr, Memory>
+	void execute_instruction(cpu::cpu_state& cpu, const step_t step, Memory& memory)
+	{
+		Instr::execute(cpu, step, memory);
+	}
+
+	export template<memory::Memory Memory>
+	void dispatch(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step, Memory& memory)
 	{
 		switch (opcode)
 		{
@@ -532,7 +547,8 @@ namespace opcodes
 		}
 	}
 
-	export void dispatch_prefixed(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step)
+	export template<memory::Memory Memory>
+	void dispatch_prefixed(cpu::cpu_state& cpu, const opcode_t opcode, const step_t step, Memory& memory)
 	{
 		switch (opcode)
 		{

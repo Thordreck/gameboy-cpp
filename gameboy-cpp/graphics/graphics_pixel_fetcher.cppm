@@ -7,14 +7,13 @@ export import :oam;
 import :registers;
 import utilities;
 
-namespace
+namespace graphics
 {
-    std::uint8_t compute_fetcher_y(const memory::memory_bus& memory,
+    template<memory::ReadOnlyMemory Memory>
+    std::uint8_t compute_fetcher_y(const Memory& memory,
                                    const bool is_window_tile,
                                    const std::uint8_t window_line)
     {
-        using namespace graphics;
-
         return is_window_tile
                    ? window_line
                    : lcd_y(memory) + scy(memory);
@@ -30,17 +29,18 @@ namespace
         return fetcher_y % 8;
     }
 
-    std::uint8_t compute_tile_x(const memory::memory_bus& memory, const std::uint8_t fetcher_x,
-                                const bool is_window_tile)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint8_t compute_tile_x(
+        const Memory& memory,
+        const std::uint8_t fetcher_x,
+        const bool is_window_tile)
     {
-        using namespace graphics;
         return is_window_tile ? fetcher_x : ((scx(memory) / 8) + fetcher_x) & 0x1F;
     }
 
-    std::uint16_t compute_tilemap_base_address(const memory::memory_bus& memory, const bool is_window_tile)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint16_t compute_tilemap_base_address(const Memory& memory, const bool is_window_tile)
     {
-        using namespace graphics;
-
         return is_window_tile
                    ? is_window_tilemap_flag_set(memory)
                          ? 0x9C00
@@ -50,19 +50,15 @@ namespace
                    : 0x9800;
     }
 
-    std::uint16_t compute_base_tile_data_address(const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint16_t compute_base_tile_data_address(const Memory& memory)
     {
-        using namespace graphics;
         return is_addressing_mode_flag_set(memory) ? 0x8000 : 0x9000;
     }
 
-    std::uint16_t compute_tile_address(
-        const memory::memory_bus& memory,
-        const std::uint8_t tile_index,
-        const std::uint8_t tile_line)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint16_t compute_tile_address(const Memory& memory, const std::uint8_t tile_index, const std::uint8_t tile_line)
     {
-        using namespace graphics;
-
         const std::uint16_t tile_base = compute_base_tile_data_address(memory);
         const bool unsigned_address_mode = is_addressing_mode_flag_set(memory);
 
@@ -71,18 +67,18 @@ namespace
                    : tile_base + static_cast<std::int8_t>(tile_index) * 16 + tile_line * 2;
     }
 
-    graphics::color_index_t decode_tile(const int index, const std::uint8_t low, const std::uint8_t high)
+    color_index_t decode_tile(const int index, const std::uint8_t low, const std::uint8_t high)
     {
         return (high >> index & 1) << 1 | low >> index & 1;
     }
 
+    template<memory::ReadOnlyMemory Memory>
     void decode_background_tile_row(
-        const memory::memory_bus& memory,
+        const Memory& memory,
         const std::uint8_t low,
         const std::uint8_t high,
-        std::span<graphics::pixel, 8> pixels)
+        std::span<pixel, 8> pixels)
     {
-        using namespace graphics;
         const bool is_bg_and_window_enabled = is_bg_and_window_display_flag_set(memory);
 
         for (int i = 7; i >= 0; i--)
@@ -96,14 +92,14 @@ namespace
     }
 
     void decode_sprite_tile_row(
-        const graphics::object& object,
+        const object& object,
         const std::uint8_t low,
         const std::uint8_t high,
-        std::span<graphics::pixel, 8> pixels)
+        std::span<pixel, 8> pixels)
     {
         for (int i = 7; i >= 0; i--)
         {
-            const graphics::color_index_t color = decode_tile(i, low, high);
+            const color_index_t color = decode_tile(i, low, high);
             const std::uint8_t palette_index = object.alternate_palette() ? 1 : 0;
             const bool background_priority = object.priority();
 
@@ -111,9 +107,9 @@ namespace
         }
     }
 
-    std::uint8_t compute_sprite_tile_line(const graphics::object& object, const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint8_t compute_sprite_tile_line(const object& object, const Memory& memory)
     {
-        using namespace graphics;
         const std::uint8_t tile_line = lcd_y(memory) - (object.y() - 16);
 
         return object.y_flip()
@@ -121,9 +117,9 @@ namespace
             : tile_line;
     }
 
-    std::uint8_t compute_sprite_tile_index(const graphics::object& object, const std::uint8_t tile_line, memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    std::uint8_t compute_sprite_tile_index(const object& object, const std::uint8_t tile_line, Memory& memory)
     {
-        using namespace graphics;
         const std::uint8_t sprite_height = get_objects_height(memory);
 
         return sprite_height < 16
@@ -133,7 +129,7 @@ namespace
                 : object.tile_index() | 0x01;
     }
 
-    graphics::pixel resolve_drawing_priority(const graphics::pixel& lhs, const graphics::pixel& rhs)
+    pixel resolve_drawing_priority(const pixel& lhs, const pixel& rhs)
     {
         // First, check opacity
         if (lhs.color_index == 0)
@@ -165,10 +161,6 @@ namespace
         return lhs_oam_index < rhs_oam_index ? lhs : rhs;
     }
 
-}
-
-namespace graphics
-{
     enum class pixel_fetch_step : std::uint8_t
     {
         get_tile_address,
@@ -194,20 +186,19 @@ namespace graphics
             step_cycle = 0;
         }
 
-        void tick(const bool is_window_active, const std::uint8_t window_line)
+        template<memory::ReadOnlyMemory Memory>
+        void tick(const bool is_window_active, const std::uint8_t window_line, const Memory& memory)
         {
-            utils::assert_not_nullptr(memory);
-
             switch (current_step)
             {
             case pixel_fetch_step::get_tile_address:
-                fetch_tile_address(is_window_active, window_line);
+                fetch_tile_address(is_window_active, window_line, memory);
                 break;
             case pixel_fetch_step::get_tile_data_low:
-                get_tile_data_low();
+                get_tile_data_low(memory);
                 break;
             case pixel_fetch_step::get_tile_data_high:
-                get_tile_data_high();
+                get_tile_data_high(memory);
                 break;
             case pixel_fetch_step::sleep:
                 sleep();
@@ -219,50 +210,51 @@ namespace graphics
             }
         }
 
-        void connect(memory::memory_bus& bus) { memory = &bus; }
-
     private:
-        void fetch_tile_address(const bool is_window_active, const std::uint8_t window_line)
+        template<memory::ReadOnlyMemory Memory>
+        void fetch_tile_address(const bool is_window_active, const std::uint8_t window_line, const Memory& memory)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            const std::uint8_t fetcher_y = compute_fetcher_y(*memory, is_window_active, window_line);
+            const std::uint8_t fetcher_y = compute_fetcher_y(memory, is_window_active, window_line);
 
-            const std::uint8_t tile_x = compute_tile_x(*memory, fetcher_x, is_window_active);
+            const std::uint8_t tile_x = compute_tile_x(memory, fetcher_x, is_window_active);
             const std::uint8_t tile_y = compute_tile_y(fetcher_y);
             const std::uint8_t tile_line = compute_tile_line(fetcher_y);
 
-            const std::uint16_t tilemap_base_address = compute_tilemap_base_address(*memory, is_window_active);
+            const std::uint16_t tilemap_base_address = compute_tilemap_base_address(memory, is_window_active);
             const std::uint16_t tilemap_address = tilemap_base_address + tile_y * 32 + tile_x;
-            const std::uint8_t tile_index = memory->read(tilemap_address);
+            const std::uint8_t tile_index = memory.read(tilemap_address);
 
-            tile_address = compute_tile_address(*memory, tile_index, tile_line);
+            tile_address = compute_tile_address(memory, tile_index, tile_line);
             advance_state();
         }
 
-        void get_tile_data_low()
+        template<memory::ReadOnlyMemory Memory>
+        void get_tile_data_low(const Memory& memory)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            tile_low_byte = memory->read(tile_address);
+            tile_low_byte = memory.read(tile_address);
             advance_state();
         }
 
-        void get_tile_data_high()
+        template<memory::ReadOnlyMemory Memory>
+        void get_tile_data_high(const Memory& memory)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            const std::uint8_t high_byte = memory->read(tile_address + 1);
-            decode_background_tile_row(*memory, tile_low_byte, high_byte, tile_row);
+            const std::uint8_t high_byte = memory.read(tile_address + 1);
+            decode_background_tile_row(memory, tile_low_byte, high_byte, tile_row);
             advance_state();
 
             // TODO: according to pandocs, there's an additional push here, but the wording used
@@ -296,9 +288,7 @@ namespace graphics
             step_cycle = 0;
         }
 
-    private:
         pixel_fifo& fifo;
-        memory::memory_bus* memory{nullptr};
 
         // Tile coordinate along the scanline (groups of 8 pixels)
         std::uint8_t fetcher_x{};
@@ -342,34 +332,32 @@ namespace graphics
             current_target = std::nullopt;
         }
 
-        void tick()
+        template<memory::ReadOnlyMemory Memory>
+        void tick(const Memory& memory)
         {
             if (!current_target.has_value())
             {
                 return;
             }
 
-            utils::assert_not_nullptr(memory);
-
             switch (current_step)
             {
             case sprite_fetch_step::get_tile_address:
-                fetch_tile_address(current_target.value());
+                fetch_tile_address(current_target.value(), memory);
                 break;
             case sprite_fetch_step::get_tile_data_low:
-                get_tile_data_low();
+                get_tile_data_low(memory);
                 break;
             case sprite_fetch_step::get_tile_data_high:
-                get_tile_data_high(current_target.value());
+                get_tile_data_high(current_target.value(), memory);
                 break;
             default: std::unreachable();
             }
         }
 
-        void connect(memory::memory_bus& bus) { memory = &bus; }
-
     private:
-        void fetch_tile_address(const object& target)
+        template<memory::ReadOnlyMemory Memory>
+        void fetch_tile_address(const object& target, const Memory& memory)
         {
             if (++step_cycle < 2)
             {
@@ -377,32 +365,34 @@ namespace graphics
             }
 
             constexpr memory::memory_address_t tile_base = 0x8000;
-            const std::uint8_t tile_line = compute_sprite_tile_line(target, *memory);
-            const std::uint8_t tile_index = compute_sprite_tile_index(target, tile_line, *memory);
+            const std::uint8_t tile_line = compute_sprite_tile_line(target, memory);
+            const std::uint8_t tile_index = compute_sprite_tile_index(target, tile_line, memory);
 
             tile_address = tile_base + tile_index * 16 + tile_line * 2;
             advance_state();
         }
 
-        void get_tile_data_low()
+        template<memory::ReadOnlyMemory Memory>
+        void get_tile_data_low(const Memory& memory)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            tile_low_byte = memory->read(tile_address);
+            tile_low_byte = memory.read(tile_address);
             advance_state();
         }
 
-        void get_tile_data_high(const object& target)
+        template<memory::ReadOnlyMemory Memory>
+        void get_tile_data_high(const object& target, const Memory& memory)
         {
             if (++step_cycle < 2)
             {
                 return;
             }
 
-            const std::uint8_t high_byte = memory->read(tile_address + 1);
+            const std::uint8_t high_byte = memory.read(tile_address + 1);
             std::array<pixel, 8> tile_row{};
             decode_sprite_tile_row(target, tile_low_byte, high_byte, tile_row);
 
@@ -441,9 +431,7 @@ namespace graphics
             step_cycle = 0;
         }
 
-    private:
         pixel_fifo& fifo;
-        memory::memory_bus* memory{nullptr};
 
         sprite_fetch_step current_step;
         std::uint8_t step_cycle{};

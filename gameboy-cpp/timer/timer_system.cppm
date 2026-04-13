@@ -56,7 +56,8 @@ namespace timer
             return number_of_ticks_for_tima_increment(divider_register, timer_control.clock);
         }
 
-        void tick(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        void tick(const std::uint32_t num_ticks, Memory& memory)
         {
             PROFILER_SCOPE("Timer System::tick()");
 
@@ -65,7 +66,7 @@ namespace timer
             while (remaining_ticks > 0)
             {
                 const std::uint32_t batch = std::min(remaining_ticks, tick_batch());
-                advance(batch);
+                advance(batch, memory);
 
                 remaining_ticks -= batch;
             }
@@ -77,10 +78,9 @@ namespace timer
             ticks_until_interrupt = 0;
         }
 
-        void connect(memory::memory_bus& bus) { memory = &bus; }
-
     private:
-        void advance(const std::uint32_t tick_batch)
+        template<memory::Memory Memory>
+        void advance(const std::uint32_t tick_batch, Memory& memory)
         {
             if (overflow_detected)
             {
@@ -92,7 +92,7 @@ namespace timer
                     overflow_detected = false;
 
                     using namespace interrupts;
-                    request<timer_interrupt>(*memory);
+                    request(timer_interrupt, memory);
                 }
 
                 divider_register = divider_register + tick_batch;
@@ -129,7 +129,5 @@ namespace timer
 
         bool overflow_detected{false};
         std::uint8_t ticks_until_interrupt{};
-
-        memory::memory_bus* memory{nullptr};
     };
 }

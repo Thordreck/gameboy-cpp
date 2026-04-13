@@ -15,32 +15,29 @@ import :pixel_fetcher;
 import :oam;
 import :object_buffer;
 
-namespace
+namespace graphics
 {
-    bool is_window_present_in_scanline(const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    bool is_window_present_in_scanline(const Memory& memory)
     {
-        using namespace graphics;
         return lcd_y(memory) >= wy(memory);
     }
 
-    bool is_window_visible(const memory::memory_bus& memory, const std::uint8_t screen_x)
+    template<memory::ReadOnlyMemory Memory>
+    bool is_window_visible(const Memory& memory, const std::uint8_t screen_x)
     {
-        using namespace graphics;
         return is_window_present_in_scanline(memory) && screen_x >= static_cast<int>(wx(memory)) - 7;
     }
 
-    bool is_window_first_line(const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    bool is_window_first_line(const Memory& memory)
     {
-        using namespace graphics;
         return lcd_y(memory) == wy(memory);
     }
 
-    const graphics::pixel& mix(
-        const graphics::pixel& background,
-        const graphics::pixel& sprite,
-        const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    const pixel& mix(const pixel& background, const pixel& sprite, const Memory& memory)
     {
-        using namespace graphics;
         const bool bg_and_windows_enabled = is_bg_and_window_display_flag_set(memory);
         const bool objects_enabled = is_obj_enabled(memory);
 
@@ -73,32 +70,25 @@ namespace
         return sprite;
     }
 
-    memory::memory_address_t get_palette_address(const graphics::pixel& pixel)
+    memory::memory_address_t get_palette_address(const pixel& pixel)
     {
-        using namespace graphics;
-
         return pixel.palette_index
             .transform([] (const auto index) { return index == 1 ? obp1_address : obp0_address; })
             .value_or(bgp_address);
     }
 
-    graphics::color get_pixel_color(const graphics::pixel& pixel, const memory::memory_bus& memory)
+    template<memory::ReadOnlyMemory Memory>
+    color get_pixel_color(const pixel& pixel, const Memory& memory, const lcd_color_palette_t palette)
     {
-        using namespace graphics;
         using namespace memory;
 
         const memory_address_t palette_address = get_palette_address(pixel);
         const memory_data_t palette_data = memory.read(palette_address);
         const std::uint8_t mapped_color_index = (palette_data >> (pixel.color_index * 2)) & 0b11;
 
-        // TODO: make this configurable
-        return grayscale_lcd_color_palette[mapped_color_index];
+        return palette[mapped_color_index];
     }
 
-}
-
-namespace graphics
-{
     export enum class ppu_mode : std::uint8_t
     {
         h_blank,
@@ -146,7 +136,8 @@ namespace graphics
             }
         }
 
-        void tick(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        void tick(const std::uint32_t num_ticks, Memory& memory)
         {
             PROFILER_SCOPE("PPU::tick()");
 
@@ -159,21 +150,21 @@ namespace graphics
                 switch (current_mode)
                 {
                 case ppu_mode::h_blank:
-                    h_blank();
+                    h_blank(memory);
                     break;
                 case ppu_mode::v_blank:
-                    v_blank();
+                    v_blank(memory);
                     break;
                 case ppu_mode::oam_scan:
-                    scan_oam();
+                    scan_oam(memory);
                     break;
                 case ppu_mode::drawing:
-                    draw();
+                    draw(memory);
                     break;
                 default: std::unreachable();
                 }
 
-                update_stat_line();
+                update_stat_line(memory);
             }
         }
 
@@ -200,23 +191,22 @@ namespace graphics
         void set_interrupts(const ppu_interrupt_sources new_config)
         {
             interrupt_sources = new_config;
-            update_stat_line();
+
+            // TODO: re-enable when interrupts do not need access to memory
+            //update_stat_line();
         }
 
         void set_lyc(const std::uint8_t lyc)
         {
             scanline_compare = lyc;
-            update_stat_line();
-        }
 
-        void connect(memory::memory_bus& bus)
-        {
-            memory::connect(bus, pixel_fetcher, sprite_fetcher);
-            memory_bus = &bus;
+            // TODO: re-enable when interrupts do not need access to memory
+            //update_stat_line();
         }
 
     private:
-        void scan_oam()
+	    template<memory::Memory Memory>
+        void scan_oam(Memory& memory)
         {
             if (scanline_cycle == 0)
             {
@@ -226,8 +216,8 @@ namespace graphics
             if (scanline_cycle % 2 == 0)
             {
                 const std::uint8_t object_index = scanline_cycle / 2;
-                const object candidate = get_object(object_index, *memory_bus);
-                const std::uint8_t objects_height = get_objects_height(*memory_bus);
+                const object candidate = get_object(object_index, memory);
+                const std::uint8_t objects_height = get_objects_height(memory);
                 const bool is_visible = is_in_scanline(candidate, objects_height, current_scanline);
 
                 if (is_visible && !sprite_buffer.is_full())
@@ -238,11 +228,12 @@ namespace graphics
 
             if (++scanline_cycle >= 80)
             {
-                update_mode(ppu_mode::drawing);
+                update_mode(ppu_mode::drawing, memory);
             }
         }
 
-        void draw()
+	    template<memory::Memory Memory>
+        void draw(Memory& memory)
         {
             // Draw start
             if (scanline_cycle++ == 80)
@@ -254,21 +245,21 @@ namespace graphics
                 sprite_fifo.clear();
 
                 pixels_drawn_in_scanline = 0;
-                pixels_to_discard = scx(*memory_bus) % 8;
+                pixels_to_discard = scx(memory) % 8;
             }
 
             // Window start
             if (!window_active_in_scanline
-                && is_window_enabled(*memory_bus)
-                && is_window_visible(*memory_bus, pixels_drawn_in_scanline))
+                && is_window_enabled(memory)
+                && is_window_visible(memory, pixels_drawn_in_scanline))
             {
                 window_active_in_scanline = true;
-                window_line = is_window_first_line(*memory_bus) ? 0 : window_line;
+                window_line = is_window_first_line(memory) ? 0 : window_line;
 
                 background_fifo.clear();
                 pixel_fetcher.reset();
                 pixels_to_discard = 0;
-                window_fetcher_penalty = wx(*memory_bus) > 0 ? 6 : 0;
+                window_fetcher_penalty = wx(memory) > 0 ? 6 : 0;
             }
 
             if (window_fetcher_penalty > 0)
@@ -278,7 +269,7 @@ namespace graphics
             }
 
             // Sprite fetch
-            const bool objects_enabled = is_obj_enabled(*memory_bus);
+            const bool objects_enabled = is_obj_enabled(memory);
 
             // TODO: sprite fetch cancelling timing
             if (!objects_enabled)
@@ -298,12 +289,12 @@ namespace graphics
             // Wait for background fifo to reach step 5
             if (sprite_fetcher.is_fetching() && background_fifo.count() < 8)
             {
-                pixel_fetcher.tick(window_active_in_scanline, window_line);
+                pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
                 return;
             }
 
             // Wait until sprite fetch completes
-            sprite_fetcher.tick();
+            sprite_fetcher.tick(memory);
 
             if (sprite_fetcher.is_fetching())
             {
@@ -311,7 +302,7 @@ namespace graphics
             }
 
             // Background/window fetch
-            pixel_fetcher.tick(window_active_in_scanline, window_line);
+            pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
 
             if (const std::optional<pixel> bg_pixel = background_fifo.try_pop(); bg_pixel.has_value())
             {
@@ -324,10 +315,11 @@ namespace graphics
                 const std::optional sprite_pixel = sprite_fifo.try_pop();
 
                 const pixel& mixed_pixel = sprite_pixel.has_value()
-                    ? mix(bg_pixel.value(), sprite_pixel.value(), *memory_bus)
+                    ? mix(bg_pixel.value(), sprite_pixel.value(), memory)
                     : bg_pixel.value();
 
-                const color pixel_color = get_pixel_color(mixed_pixel, *memory_bus);
+                // TODO: make palette configurable
+                const color pixel_color = get_pixel_color(mixed_pixel, memory, grayscale_lcd_color_palette);
                 const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
 
                 screen.set_pixel(pixel_coords, pixel_color);
@@ -336,11 +328,12 @@ namespace graphics
 
             if (pixels_drawn_in_scanline == 160)
             {
-                update_mode(ppu_mode::h_blank);
+                update_mode(ppu_mode::h_blank, memory);
             }
         }
 
-        void h_blank()
+	    template<memory::Memory Memory>
+        void h_blank(Memory& memory)
         {
             // End of scanline
             if (++scanline_cycle >= 456)
@@ -358,11 +351,12 @@ namespace graphics
                                            ? ppu_mode::oam_scan
                                            : ppu_mode::v_blank;
 
-                update_mode(next_mode);
+                update_mode(next_mode, memory);
             }
         }
 
-        void v_blank()
+	    template<memory::Memory Memory>
+        void v_blank(Memory& memory)
         {
             if (++scanline_cycle >= 456)
             {
@@ -372,12 +366,13 @@ namespace graphics
                 if (current_scanline > 153)
                 {
                     current_scanline = 0;
-                    update_mode(ppu_mode::oam_scan);
+                    update_mode(ppu_mode::oam_scan, memory);
                 }
             }
         }
 
-        void update_stat_line()
+	    template<memory::Memory Memory>
+        void update_stat_line(Memory& memory)
         {
             if (!enabled) [[unlikely]] { return; }
 
@@ -392,22 +387,23 @@ namespace graphics
 
             if (should_trigger_stat_interrupt)
             {
-                utils::assert_not_nullptr(memory_bus);
-                interrupts::request<interrupts::lcd_interrupt>(*memory_bus);
+                using namespace interrupts;
+                request(lcd_interrupt, memory);
             }
 
             stat_line = new_stat_line;
         }
 
-        void update_mode(const ppu_mode new_mode)
+	    template<memory::Memory Memory>
+        void update_mode(const ppu_mode new_mode, Memory& memory)
         {
             current_mode = new_mode;
 
             // VBlank interrupt
             if (new_mode == ppu_mode::v_blank)
             {
-                utils::assert_not_nullptr(memory_bus);
-                interrupts::request<interrupts::vblank_interrupt>(*memory_bus);
+                using namespace interrupts;
+                request(vblank_interrupt, memory);
             }
         }
 
@@ -433,7 +429,6 @@ namespace graphics
         object_fetcher sprite_fetcher;
 
         ppu_interrupt_sources interrupt_sources{};
-        memory::memory_bus* memory_bus{nullptr};
         bool stat_line{};
     };
 

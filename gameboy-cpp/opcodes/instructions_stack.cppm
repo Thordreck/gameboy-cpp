@@ -4,6 +4,7 @@ export import cpu;
 export import std;
 export import utilities;
 export import :common;
+import memory;
 
 namespace opcodes
 {
@@ -12,19 +13,20 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.sp++);
+                cpu.cache.r8 = memory.read(cpu.sp++);
                 break;
             case 2:
                 {
                     const std::uint8_t low_byte = cpu.cache.r8;
-                    const std::uint8_t high_byte = cpu.memory->read(cpu.sp++);
+                    const std::uint8_t high_byte = memory.read(cpu.sp++);
 
                     register_provider::get(cpu) = utils::encode_little_endian(low_byte, high_byte);
                 }
@@ -42,19 +44,20 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.sp++);
+                cpu.cache.r8 = memory.read(cpu.sp++);
                 break;
             case 2:
                 {
                     const std::uint8_t low_byte = cpu.cache.r8;
-                    const std::uint8_t high_byte = cpu.memory->read(cpu.sp++);
+                    const std::uint8_t high_byte = memory.read(cpu.sp++);
                     const std::uint16_t popped_result = utils::encode_little_endian(low_byte, high_byte);
 
                     cpu.reg.a() = popped_result >> 8;
@@ -71,7 +74,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::WriteOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -81,10 +85,10 @@ namespace opcodes
                 cpu.cache.r16 = register_provider::get(cpu);
                 break;
             case 2:
-                cpu.memory->write(--cpu.sp, utils::most_significant_byte(cpu.cache.r16));
+                memory.write(--cpu.sp, utils::most_significant_byte(cpu.cache.r16));
                 break;
             case 3:
-                cpu.memory->write(--cpu.sp, utils::less_significant_byte(cpu.cache.r16));
+                memory.write(--cpu.sp, utils::less_significant_byte(cpu.cache.r16));
                 break;
             default: std::unreachable();
             }
@@ -99,7 +103,8 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::WriteOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
             {
@@ -111,13 +116,13 @@ namespace opcodes
             case 2:
                 {
                     const std::uint16_t value = cpu.cache.r16;
-                    cpu.memory->write(--cpu.sp, utils::most_significant_byte(value));
+                    memory.write(--cpu.sp, utils::most_significant_byte(value));
                 }
                 break;
             case 3:
                 {
                     const std::uint16_t value = cpu.cache.r16;
-                    cpu.memory->write(--cpu.sp, utils::less_significant_byte(value));
+                    memory.write(--cpu.sp, utils::less_significant_byte(value));
                 }
                 break;
             default: std::unreachable();
@@ -129,19 +134,20 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 2:
                 {
                     const std::uint8_t low_byte = cpu.cache.r8;
-                    const std::uint8_t high_byte = cpu.memory->read(cpu.pc++);
+                    const std::uint8_t high_byte = memory.read(cpu.pc++);
 
                     cpu.sp = utils::encode_little_endian(low_byte, high_byte);
                 }
@@ -155,14 +161,15 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 2:
                 {
@@ -193,14 +200,15 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 2:
                 {

@@ -1,6 +1,5 @@
 export module cpu:common;
 
-export import memory;
 export import :program_counter;
 export import :registers;
 export import :stack_pointer;
@@ -18,9 +17,5 @@ namespace cpu
 		ime_state ime {};
 		temp_cache cache {};
 		halt_context halt {};
-
-		// TODO: rethink this
-		memory::memory_bus* memory { nullptr };
-		void connect(memory::memory_bus& bus) { memory = &bus; }
 	};
 }

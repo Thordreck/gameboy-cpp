@@ -10,48 +10,38 @@ export import :dispatch;
 
 namespace interrupts
 {
-	export template <InterruptDescriptor interrupt>
-	bool is_pending(const cpu::cpu_state& cpu)
+	export template <InterruptDescriptor Interrupt, memory::ReadOnlyMemory Memory>
+	bool is_pending(const Interrupt& interrupt, const Memory& memory)
 	{
-		return is_enabled<interrupt>(*cpu.memory) && is_requested<interrupt>(*cpu.memory);
+		return is_enabled(interrupt, memory) && is_requested(interrupt, memory);
 	}
 
-	template <InterruptDescriptor interrupt>
-	std::optional<interrupt_dispatcher> try_service(cpu::cpu_state& cpu)
+	export template<memory::ReadOnlyMemory Memory>
+	bool is_any_interrupt_pending(const Memory& memory)
 	{
-		if (is_pending<interrupt>(cpu))
+		return (memory.read(ie_address) & ie_mask) & (memory.read(if_address) & if_mask);
+	}
+
+	export template<memory::ReadOnlyMemory Memory>
+	std::optional<interrupt> get_first_pending_interrupt(const Memory& memory)
+	{
+		constexpr std::array interrupts_by_priority
 		{
-			return interrupt_dispatcher
-			{
-				dispatcher<interrupt>::execute,
-				dispatcher<interrupt>::num_steps
-			};
-		}
-
-		return std::nullopt;
-	}
-
-	template<InterruptDescriptor... Interrupts>
-	std::optional<interrupt_dispatcher> service_first_pending_by_priority(cpu::cpu_state& cpu)
-	{
-		std::optional<interrupt_dispatcher> handler = std::nullopt;
-
-		((handler = try_service<Interrupts>(cpu)) || ...);
-		return handler;
-	}
-
-	export bool is_any_interrupt_pending(const cpu::cpu_state& cpu)
-	{
-		return (cpu.memory->read(ie_address) & ie_mask) & (cpu.memory->read(if_address) & if_mask);
-	}
-
-	export std::optional<interrupt_dispatcher> service_first_pending_interrupt(cpu::cpu_state& cpu)
-	{
-		return service_first_pending_by_priority<
 			vblank_interrupt,
 			lcd_interrupt,
 			timer_interrupt,
 			serial_interrupt,
-			joypad_interrupt>(cpu);
+			joypad_interrupt
+		};
+
+		for (const auto& interrupt : interrupts_by_priority)
+		{
+			if (is_pending(interrupt, memory))
+			{
+				return interrupt;
+			}
+		}
+
+		return std::nullopt;
 	}
 }

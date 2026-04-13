@@ -45,14 +45,15 @@ namespace graphics
         std::optional<std::uint8_t> oam_index {};
     };
 
-    export using lcd_color_palette = std::array<color, 4>;
+    export constexpr std::uint8_t palette_num_colors = 4;
+    export using lcd_color_palette_t = std::span<const color, palette_num_colors>;
 
-    export constexpr lcd_color_palette grayscale_lcd_color_palette =
+    export constexpr std::array grayscale_lcd_color_palette =
     {
         white, light_gray, dark_gray, black
     };
 
-    export constexpr lcd_color_palette green_lcd_color_palette =
+    export constexpr std::array green_lcd_color_palette =
     {
         almost_black, dark_green, light_green, lightest_green
     };

@@ -92,7 +92,8 @@ namespace graphics
         object_memory_t memory {};
     };
 
-    export object get_object(const std::uint8_t index, const memory::memory_bus& memory)
+    export template <memory::ReadOnlyMemory Memory>
+    object get_object(const std::uint8_t index, const Memory& memory)
     {
         const memory::memory_address_t initial_address = oam_start_address + index * object_memory_byte_size;
         const auto bytes =
@@ -134,7 +135,8 @@ namespace graphics
             start = start_address;
         }
 
-        void tick(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        void tick(const std::uint32_t num_ticks, Memory& memory)
         {
             PROFILER_SCOPE("OAM DMA::tick()");
 
@@ -145,21 +147,20 @@ namespace graphics
             {
                 if (++current_tick % 4 == 0)
                 {
-                    execute_transfer_step(start, current_byte, *memory);
+                    execute_transfer_step(start, current_byte, memory);
                     is_transferring = ++current_byte < oam_size;
                 }
             }
         }
 
-        void connect(memory::memory_bus& bus) { memory = &bus; }
-
     private:
         void set_is_transfer_active(const bool value) { is_transferring = value; }
 
+        template<memory::Memory Memory>
         static void execute_transfer_step(
             const memory::memory_address_t start,
             const std::uint8_t current_byte,
-            memory::memory_bus& memory)
+            Memory& memory)
         {
             using namespace memory;
 
@@ -169,8 +170,6 @@ namespace graphics
 
             memory.write(target_address, byte_to_copy);
         }
-
-        memory::memory_bus* memory { nullptr };
 
         bool is_transferring {};
         std::uint16_t current_tick {};

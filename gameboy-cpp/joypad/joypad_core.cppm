@@ -26,22 +26,18 @@ namespace joypad
         {
             const auto prev_state = read_joypad_register(*this);
             std::ranges::copy(new_input_state, state.begin());
-            const auto current_state = read_joypad_register(*this);
 
             if (detect_input_bits_falling_edge(prev_state, read_joypad_register(*this)))
             {
+                // TODO: implement interrupts as a simple class without having to pass through the memory bus.
                 using namespace interrupts;
-                request<joypad_interrupt>(*memory);
+                //request<joypad_interrupt>(*memory);
             }
         }
-
-        void connect(memory::memory_bus& bus) { memory = &bus; }
 
     private:
         joypad_source source{ joypad_source::none };
         std::array<bool, num_joypad_inputs> state {};
-
-        memory::memory_bus* memory { nullptr };
     };
 
 }

@@ -2,6 +2,7 @@ export module opcodes:misc;
 
 export import cpu;
 import interrupts;
+import memory;
 import :common;
 
 namespace opcodes
@@ -27,11 +28,12 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 1; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t, const Memory& memory)
         {
             cpu.halt.enabled = true;
             cpu.halt.ime_flag_set = cpu.ime.enabled;
-            cpu.halt.interrupts_pending = interrupts::is_any_interrupt_pending(cpu);
+            cpu.halt.interrupts_pending = interrupts::is_any_interrupt_pending(memory);
         }
     };
 

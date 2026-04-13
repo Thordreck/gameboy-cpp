@@ -4,6 +4,7 @@ export import :common;
 export import cpu;
 export import utilities;
 export import std;
+import memory;
 
 namespace opcodes
 {
@@ -11,19 +12,20 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 2:
                 {
                     const std::uint8_t low_byte = cpu.cache.r8;
-                    const std::uint8_t high_byte = cpu.memory->read(cpu.pc++);
+                    const std::uint8_t high_byte = memory.read(cpu.pc++);
 
                     cpu.cache.r16 = utils::encode_little_endian(low_byte, high_byte);
                 }
@@ -44,11 +46,12 @@ namespace opcodes
             return condition::evaluate(cpu) ? 4 : 3;
         }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::Memory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             if (condition::evaluate(cpu))
             {
-                jp_n16::execute(cpu, step);
+                jp_n16::execute(cpu, step, memory);
             }
             else if (step == 2)
             {
@@ -66,14 +69,15 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 3; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
             {
             case 0:
                 break;
             case 1:
-                cpu.cache.r8 = cpu.memory->read(cpu.pc++);
+                cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
             case 2:
                 {
@@ -94,11 +98,12 @@ namespace opcodes
             return condition::evaluate(cpu) ? 3: 2;
         }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        template<memory::ReadOnlyMemory Memory>
+        static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             if (condition::evaluate(cpu))
             {
-                jr_n16::execute(cpu, step);
+                jr_n16::execute(cpu, step, memory);
             }
             else if (step == 1)
             {

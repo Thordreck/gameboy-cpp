@@ -7,6 +7,7 @@ export import std;
 export import cpu;
 export import opcodes;
 export import interrupts;
+import memory;
 
 namespace emulator
 {
@@ -30,42 +31,45 @@ namespace emulator
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const { return remaining_cycles_in_state; }
 
-        void tick(std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        void tick(std::uint32_t num_ticks, Memory& memory)
         {
             PROFILER_SCOPE("CPU Runner:tick()");
 
             while (num_ticks > 0)
             {
-                const std::uint32_t consumed_ticks = step(num_ticks);
+                const std::uint32_t consumed_ticks = step(num_ticks, memory);
                 num_ticks -= consumed_ticks;
             }
         }
 
     private:
-        std::uint32_t step(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory)
         {
             using enum state;
 
             switch (current_state)
             {
-            case fetch_decode: return handle_fetch_decode(num_ticks);
-            case fetch_decode_prefixed: return handle_fetch_decode_prefixed(num_ticks);
-            case execute: return handle_execute<opcodes::dispatch>(num_ticks);
-            case execute_prefixed: return handle_execute<opcodes::dispatch_prefixed>(num_ticks);
-            case halt: return handle_halt(num_ticks);
-            case interrupt: return handle_interrupt(num_ticks);
+            case fetch_decode: return handle_fetch_decode(num_ticks, memory);
+            case fetch_decode_prefixed: return handle_fetch_decode_prefixed(num_ticks, memory);
+            case execute: return handle_execute<opcodes::dispatch<Memory>>(num_ticks, memory);
+            case execute_prefixed: return handle_execute<opcodes::dispatch_prefixed<Memory>>(num_ticks, memory);
+            case halt: return handle_halt(num_ticks, memory);
+            case interrupt: return handle_interrupt(num_ticks, memory);
             default: std::unreachable();
             }
         }
 
-        std::uint32_t handle_fetch_decode(const std::uint32_t num_ticks)
+        template<memory::ReadOnlyMemory Memory>
+        std::uint32_t handle_fetch_decode(const std::uint32_t num_ticks, const Memory& memory)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
             remaining_cycles_in_state -= ticks_consumed;
 
             if (remaining_cycles_in_state == 0)
             {
-                current_opcode = cpu.memory->read(cpu.pc++);
+                current_opcode = memory.read(cpu.pc++);
                 const bool prefix_mode = current_opcode == opcodes::prefix_opcode;
 
                 using enum state;
@@ -77,14 +81,15 @@ namespace emulator
             return ticks_consumed;
         }
 
-        std::uint32_t handle_fetch_decode_prefixed(const std::uint32_t num_ticks)
+        template<memory::ReadOnlyMemory Memory>
+        std::uint32_t handle_fetch_decode_prefixed(const std::uint32_t num_ticks, const Memory& memory)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
             remaining_cycles_in_state -= ticks_consumed;
 
             if (remaining_cycles_in_state == 0)
             {
-                current_opcode = cpu.memory->read(cpu.pc++);
+                current_opcode = memory.read(cpu.pc++);
                 current_state = state::execute_prefixed;
                 remaining_cycles_in_state = opcodes::get_num_steps_prefixed(cpu, current_opcode) * 4;
                 current_execution_cycle = 0;
@@ -93,10 +98,10 @@ namespace emulator
             return ticks_consumed;
         }
 
-        template <auto Dispatcher>
-        requires std::invocable<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t>
-            && std::same_as<std::invoke_result_t<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t>, void>
-        std::uint32_t handle_execute(const std::uint32_t num_ticks)
+        template <auto Dispatcher, memory::Memory Memory>
+        requires std::invocable<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t, Memory&>
+            && std::same_as<std::invoke_result_t<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t, Memory&>, void>
+        std::uint32_t handle_execute(const std::uint32_t num_ticks, Memory& memory)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
             remaining_cycles_in_state -= ticks_consumed;
@@ -115,7 +120,7 @@ namespace emulator
                 if (current_execution_cycle % 4 == 0)
                 {
                     const opcodes::step_t step = current_execution_cycle / 4 - 1;
-                    Dispatcher(cpu, current_opcode, step);
+                    Dispatcher(cpu, current_opcode, step, memory);
                 }
             }
 
@@ -131,11 +136,12 @@ namespace emulator
                 cpu.ime.requested = !cpu.ime.enabled;
             }
 
-            if (cpu.ime.enabled && interrupts::is_any_interrupt_pending(cpu))
+            if (cpu.ime.enabled && interrupts::is_any_interrupt_pending(memory))
             {
                 current_state = state::interrupt;
                 current_execution_cycle = 0;
-                remaining_cycles_in_state = 5 * 4;
+                remaining_cycles_in_state = interrupts::dispatcher::num_steps() * 4;
+                current_interrupt = interrupts::get_first_pending_interrupt(memory);
             }
             else if (cpu.halt.enabled)
             {
@@ -146,20 +152,15 @@ namespace emulator
             {
                 current_state = state::fetch_decode;
                 remaining_cycles_in_state = 4;
-                handle_fetch_decode(remaining_cycles_in_state);
+                handle_fetch_decode(remaining_cycles_in_state, memory);
             }
 
             return ticks_consumed;
         }
 
-        std::uint32_t handle_interrupt(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        std::uint32_t handle_interrupt(const std::uint32_t num_ticks, Memory& memory)
         {
-            // TODO: remove optional usage
-            if (!active_interrupt.has_value())
-            {
-                active_interrupt = interrupts::service_first_pending_interrupt(cpu);
-            }
-
             const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
             remaining_cycles_in_state -= ticks_consumed;
 
@@ -177,7 +178,7 @@ namespace emulator
                 if (current_execution_cycle % 4 == 0)
                 {
                     const opcodes::step_t step = current_execution_cycle / 4 - 1;
-                    active_interrupt.value().execute(cpu, step);
+                    interrupts::dispatcher::execute(current_interrupt.value(), cpu, step, memory);
                 }
             }
 
@@ -185,15 +186,15 @@ namespace emulator
             {
                 current_state = state::fetch_decode;
                 remaining_cycles_in_state = 4;
-                active_interrupt.reset();
             }
 
             return ticks_consumed;
         }
 
-        std::uint32_t handle_halt(const std::uint32_t num_ticks)
+        template<memory::Memory Memory>
+        std::uint32_t handle_halt(const std::uint32_t num_ticks, Memory& memory)
         {
-            if (!interrupts::is_any_interrupt_pending(cpu))
+            if (!interrupts::is_any_interrupt_pending(memory))
             {
                 return num_ticks;
             }
@@ -205,10 +206,11 @@ namespace emulator
             if (cpu.halt.ime_flag_set)
             {
                 current_state = interrupt;
-                remaining_cycles_in_state = 5 * 4;
+                remaining_cycles_in_state = interrupts::dispatcher::num_steps() * 4;
+                current_interrupt = interrupts::get_first_pending_interrupt(memory);
 
                 const std::uint32_t available_ticks = std::min(num_ticks, remaining_cycles_in_state);
-                return handle_interrupt(available_ticks);
+                return handle_interrupt(available_ticks, memory);
             }
 
             // Fetch-decode next instruction
@@ -216,7 +218,7 @@ namespace emulator
             remaining_cycles_in_state = 4;
 
             const std::uint32_t available_ticks = std::min(num_ticks, remaining_cycles_in_state);
-            return handle_fetch_decode(available_ticks);
+            return handle_fetch_decode(available_ticks, memory);
         }
 
         cpu::cpu_state& cpu;
@@ -226,8 +228,6 @@ namespace emulator
         std::uint32_t remaining_cycles_in_state { 4 };
 
         std::uint8_t current_opcode {};
-
-        // TODO: remove once interrupt system is reworked
-        std::optional<interrupts::interrupt_dispatcher> active_interrupt {};
+        std::optional<interrupts::interrupt> current_interrupt;
     };
 }

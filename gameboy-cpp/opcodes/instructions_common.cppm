@@ -3,6 +3,7 @@ export module opcodes:common;
 
 export import std;
 export import cpu;
+import memory;
 
 namespace opcodes
 {
@@ -10,10 +11,31 @@ namespace opcodes
 	export using step_t = std::uint8_t;
 
 	export template<typename T>
+	concept InstructionStepsProvider = requires(const cpu::cpu_state& cpu)
+	{
+		{ T::num_steps(cpu) } -> std::convertible_to<step_t>;
+	};
+
+	export template<typename T>
 	concept Instruction = requires(cpu::cpu_state& cpu, const step_t step)
 	{
 		{ T::execute(cpu, step) } -> std::same_as<void>;
-		{ T::num_steps(cpu) } -> std::convertible_to<step_t>;
+	};
+
+	export template<typename T, typename Memory>
+	concept ReadOnlyMemoryInstruction =
+		memory::AnyMemory<Memory> &&
+		requires(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
+	{
+		{ T::execute(cpu, step, memory) } -> std::same_as<void>;
+	};
+
+	export template<typename T, typename Memory>
+	concept MemoryInstruction =
+		memory::AnyMemory<Memory> &&
+		requires(cpu::cpu_state& cpu, const step_t step, Memory& memory)
+	{
+		{ T::execute(cpu, step, memory) } -> std::same_as<void>;
 	};
 
 	export constexpr opcode_t prefix_opcode = 0xCB;
