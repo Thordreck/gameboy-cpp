@@ -1,3 +1,5 @@
+module;
+#include "profiling.hpp"
 
 export module emulator:adapters;
 export import emulator.core;
@@ -16,10 +18,10 @@ namespace emulator
         {}
 
         // TODO: rethink this interface
-        void load_rom(const rom_data_view_t data) { engine.load_rom(data); }
-        void reset() { engine.reset(); }
+        void load_rom(const rom_data_view_t data) const { engine.load_rom(data); }
+        void reset() const { engine.reset(); }
 
-        [[nodiscard]] framebuffer_view_t framebuffer() { return engine.lcd(); }
+        [[nodiscard]] framebuffer_view_t framebuffer() const { return engine.lcd(); }
 
     private:
         engine& engine;
@@ -35,6 +37,7 @@ namespace emulator
 
         void update() const
         {
+            PROFILER_SCOPE("Engine Input Source Tick");
             using enum sdl::scancode;
 
             sink.set_input_state(

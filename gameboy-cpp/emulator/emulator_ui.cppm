@@ -1,3 +1,6 @@
+module;
+#include "profiling.hpp"
+
 export module emulator.ui;
 
 import std;
@@ -44,6 +47,8 @@ namespace emulator
 
         void render()
         {
+            PROFILER_SCOPE("Engine Thread");
+
             if (should_quit)
             {
                 return;

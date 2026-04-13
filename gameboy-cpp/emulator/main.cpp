@@ -37,7 +37,7 @@ int main()
 
     while (!ui.quit_app_requested())
     {
-        //PROFILER_SCOPE("UI Frame");
+        PROFILER_SCOPE("UI Frame");
 
         utils::execute_for(
             [&]

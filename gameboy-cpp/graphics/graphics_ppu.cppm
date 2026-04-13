@@ -137,32 +137,16 @@ namespace graphics
         }
 
         template<memory::Memory Memory>
-        void tick(const std::uint32_t num_ticks, Memory& memory)
+        void tick(std::uint32_t num_ticks, Memory& memory)
         {
             PROFILER_SCOPE("PPU::tick()");
 
             if (!enabled) [[unlikely]] { return; }
 
-            std::uint32_t remaining_ticks = num_ticks;
-
-            while (remaining_ticks-- > 0)
+            while (num_ticks > 0)
             {
-                switch (current_mode)
-                {
-                case ppu_mode::h_blank:
-                    h_blank(memory);
-                    break;
-                case ppu_mode::v_blank:
-                    v_blank(memory);
-                    break;
-                case ppu_mode::oam_scan:
-                    scan_oam(memory);
-                    break;
-                case ppu_mode::drawing:
-                    draw(memory);
-                    break;
-                default: std::unreachable();
-                }
+                const std::uint32_t consumed_ticks = step(num_ticks, memory);
+                num_ticks -= consumed_ticks;
             }
         }
 
@@ -203,16 +187,30 @@ namespace graphics
         }
 
     private:
-	    template<memory::Memory Memory>
-        void scan_oam(Memory& memory)
+        template<memory::Memory Memory>
+        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory)
         {
-            if (scanline_cycle == 0)
-            {
-                sprite_buffer.clear();
-            }
+            using enum ppu_mode;
 
-            if (scanline_cycle % 2 == 0)
+            switch (current_mode)
             {
+            case h_blank: return handle_h_blank(num_ticks, memory);
+            case v_blank: return handle_v_blank(num_ticks, memory);
+            case oam_scan: return handle_scan_oam(num_ticks, memory);
+            case drawing: return handle_draw(num_ticks, memory);
+            default: std::unreachable();
+            }
+        }
+
+        template<memory::Memory Memory>
+        std::uint32_t handle_scan_oam(const std::uint32_t num_ticks, Memory& memory)
+        {
+            const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
+
+            for (std::uint32_t i = 0; i < ticks_consumed; i++)
+            {
+                if (scanline_cycle++ % 2 != 0) { continue; }
+
                 const std::uint8_t object_index = scanline_cycle / 2;
                 const object candidate = get_object(object_index, memory);
                 const std::uint8_t objects_height = get_objects_height(memory);
@@ -224,19 +222,9 @@ namespace graphics
                 }
             }
 
-            if (++scanline_cycle >= 80)
+            if (scanline_cycle >= 80)
             {
-                update_mode(ppu_mode::drawing, memory);
-                update_stat_line(memory);
-            }
-        }
-
-	    template<memory::Memory Memory>
-        void draw(Memory& memory)
-        {
-            // Draw start
-            if (scanline_cycle++ == 80)
-            {
+                current_mode = ppu_mode::drawing;
                 pixel_fetcher.reset();
                 background_fifo.clear();
 
@@ -245,7 +233,18 @@ namespace graphics
 
                 pixels_drawn_in_scanline = 0;
                 pixels_to_discard = scx(memory) % 8;
+
+                update_stat_line(memory);
             }
+
+            return ticks_consumed;
+        }
+
+	    template<memory::Memory Memory>
+        std::uint32_t handle_draw(const std::uint32_t, Memory& memory)
+        {
+            constexpr std::uint32_t ticks_consumed = 1;
+            scanline_cycle += ticks_consumed;
 
             // Window start
             if (!window_active_in_scanline
@@ -264,7 +263,7 @@ namespace graphics
             if (window_fetcher_penalty > 0)
             {
                 window_fetcher_penalty--;
-                return;
+                return ticks_consumed;
             }
 
             // Sprite fetch
@@ -289,7 +288,7 @@ namespace graphics
             if (sprite_fetcher.is_fetching() && background_fifo.count() < 8)
             {
                 pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
-                return;
+                return ticks_consumed;
             }
 
             // Wait until sprite fetch completes
@@ -297,7 +296,7 @@ namespace graphics
 
             if (sprite_fetcher.is_fetching())
             {
-                return;
+                return ticks_consumed;
             }
 
             // Background/window fetch
@@ -308,7 +307,7 @@ namespace graphics
                 if (pixels_to_discard > 0)
                 {
                     pixels_to_discard--;
-                    return;
+                    return ticks_consumed;
                 }
 
                 const std::optional sprite_pixel = sprite_fifo.try_pop();
@@ -327,16 +326,21 @@ namespace graphics
 
             if (pixels_drawn_in_scanline == 160)
             {
-                update_mode(ppu_mode::h_blank, memory);
+                current_mode = ppu_mode::h_blank;
                 update_stat_line(memory);
             }
+
+            return ticks_consumed;
         }
 
 	    template<memory::Memory Memory>
-        void h_blank(Memory& memory)
+        std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Memory& memory)
         {
+            const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
+            scanline_cycle += ticks_consumed;
+
             // End of scanline
-            if (++scanline_cycle >= 456)
+            if (scanline_cycle >= 456)
             {
                 scanline_cycle = 0;
                 current_scanline++;
@@ -347,19 +351,32 @@ namespace graphics
                     window_line++;
                 }
 
-                const auto next_mode = current_scanline <= 143
-                                           ? ppu_mode::oam_scan
-                                           : ppu_mode::v_blank;
+                if (current_scanline <= 143)
+                {
+                    sprite_buffer.clear();
+                    current_mode = ppu_mode::oam_scan;
+                }
+                else
+                {
+                    current_mode = ppu_mode::v_blank;
 
-                update_mode(next_mode, memory);
+                    using namespace interrupts;
+                    request(vblank_interrupt, memory);
+                }
+
                 update_stat_line(memory);
             }
+
+            return ticks_consumed;
         }
 
 	    template<memory::Memory Memory>
-        void v_blank(Memory& memory)
+        std::uint32_t handle_v_blank(const std::uint32_t num_ticks, Memory& memory)
         {
-            if (++scanline_cycle >= 456)
+            const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
+            scanline_cycle += ticks_consumed;
+
+            if (scanline_cycle >= 456)
             {
                 scanline_cycle = 0;
                 current_scanline++;
@@ -367,11 +384,14 @@ namespace graphics
                 if (current_scanline > 153)
                 {
                     current_scanline = 0;
-                    update_mode(ppu_mode::oam_scan, memory);
+                    sprite_buffer.clear();
+                    current_mode = ppu_mode::oam_scan;
                 }
 
                 update_stat_line(memory);
             }
+
+            return ticks_consumed;
         }
 
 	    template<memory::Memory Memory>
@@ -397,20 +417,6 @@ namespace graphics
             stat_line = new_stat_line;
         }
 
-	    template<memory::Memory Memory>
-        void update_mode(const ppu_mode new_mode, Memory& memory)
-        {
-            current_mode = new_mode;
-
-            // VBlank interrupt
-            if (new_mode == ppu_mode::v_blank)
-            {
-                using namespace interrupts;
-                request(vblank_interrupt, memory);
-            }
-        }
-
-    private:
         bool enabled;
         ppu_mode current_mode{ppu_mode::oam_scan};
         std::uint8_t scanline_compare{};
