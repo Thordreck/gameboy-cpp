@@ -163,8 +163,6 @@ namespace graphics
                     break;
                 default: std::unreachable();
                 }
-
-                update_stat_line(memory);
             }
         }
 
@@ -229,6 +227,7 @@ namespace graphics
             if (++scanline_cycle >= 80)
             {
                 update_mode(ppu_mode::drawing, memory);
+                update_stat_line(memory);
             }
         }
 
@@ -329,6 +328,7 @@ namespace graphics
             if (pixels_drawn_in_scanline == 160)
             {
                 update_mode(ppu_mode::h_blank, memory);
+                update_stat_line(memory);
             }
         }
 
@@ -352,6 +352,7 @@ namespace graphics
                                            : ppu_mode::v_blank;
 
                 update_mode(next_mode, memory);
+                update_stat_line(memory);
             }
         }
 
@@ -368,6 +369,8 @@ namespace graphics
                     current_scanline = 0;
                     update_mode(ppu_mode::oam_scan, memory);
                 }
+
+                update_stat_line(memory);
             }
         }
 
