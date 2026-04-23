@@ -102,6 +102,22 @@ case (0xFF80 + (i)): return hram[i];
 #define HRAM_WRITE_CASE(i) \
 case (0xFF80 + (i)): hram[i] = value; break;
 
+#define UNUSED_HW_IO_CASES(X) \
+X(0xFF03) X(0xFF08) X(0xFF09) X(0xFF0A) X(0xFF0B) X(0xFF0C) X(0xFF0D) X(0xFF0E) \
+X(0xFF15) X(0xFF1F) \
+X(0xFF27) X(0xFF28) X(0xFF29) \
+X(0xFF4C) X(0xFF4D) X(0xFF4E) X(0xFF4F) \
+X(0xFF50) X(0xFF51) X(0xFF52) X(0xFF53) X(0xFF54) X(0xFF55) X(0xFF56) X(0xFF57) X(0xFF58) X(0xFF59) X(0xFF5A) X(0xFF5B) X(0xFF5C) X(0xFF5D) X(0xFF5E) \
+X(0xFF5F) X(0xFF60) X(0xFF61) X(0xFF62) X(0xFF63) X(0xFF64) X(0xFF65) X(0xFF66) X(0xFF67) \
+X(0xFF68) X(0xFF69) X(0xFF6A) X(0xFF6B) X(0xFF6C) X(0xFF6D) X(0xFF6E) X(0xFF6F) X(0xFF70) X(0xFF71) \
+X(0xFF72) X(0xFF73) X(0xFF74) X(0xFF75) X(0xFF76) X(0xFF77) X(0xFF78) X(0xFF79) X(0xFF7A) X(0xFF7B) X(0xFF7C) X(0xFF7D) X(0xFF7E) X(0xFF7F) \
+
+#define UNUSED_HW_IO_READ_CASE(i) \
+case i: return 0xFF;
+
+#define UNUSED_HW_IO_WRITE_CASE(i) \
+case i: break;
+
     export class io_hram_interrupt_memory_page
     {
     public:
@@ -136,11 +152,12 @@ case (0xFF80 + (i)): hram[i] = value; break;
             case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
-            case graphics::oam_dma_transfer_address: return oam_dma.start_address() / 0x100;
+            case graphics::oam_dma_transfer_address: return oam_dma.start_address() / static_cast<memory::memory_address_t>(0x100);
             case interrupts::if_address: return interrupts.flag;
             case interrupts::ie_address: return interrupts.enable;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             HRAM_CASES(HRAM_READ_CASE)
+            UNUSED_HW_IO_CASES(UNUSED_HW_IO_READ_CASE)
             default: return fallback_memory[address - start];
             }
         }
@@ -187,6 +204,7 @@ case (0xFF80 + (i)): hram[i] = value; break;
                 joypad::write_joypad_register(joypad, value);
                 break;
             HRAM_CASES(HRAM_WRITE_CASE)
+            UNUSED_HW_IO_CASES(UNUSED_HW_IO_WRITE_CASE)
             default:
                 fallback_memory[address - start] = value;
             }
