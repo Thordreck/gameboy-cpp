@@ -108,9 +108,8 @@ namespace graphics
     export class pixel_processing_unit
     {
     public:
-        explicit pixel_processing_unit(lcd& screen)
+        explicit pixel_processing_unit()
             : enabled{true}
-            , screen(screen)
             , pixel_fetcher(background_fifo)
             , sprite_fetcher(sprite_fifo)
         {}
@@ -136,8 +135,8 @@ namespace graphics
             }
         }
 
-        template<memory::Memory Memory>
-        void tick(std::uint32_t num_ticks, Memory& memory)
+        template<memory::Memory Memory, LCD Screen>
+        void tick(std::uint32_t num_ticks, Memory& memory, Screen& screen)
         {
             PROFILER_SCOPE("PPU::tick()");
 
@@ -145,7 +144,7 @@ namespace graphics
 
             while (num_ticks > 0)
             {
-                const std::uint32_t consumed_ticks = step(num_ticks, memory);
+                const std::uint32_t consumed_ticks = step(num_ticks, memory, screen);
                 num_ticks -= consumed_ticks;
             }
         }
@@ -187,14 +186,14 @@ namespace graphics
         }
 
     private:
-        template<memory::Memory Memory>
-        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory)
+        template<memory::Memory Memory, LCD Screen>
+        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory, Screen& screen)
         {
             using enum ppu_mode;
 
             switch (current_mode)
             {
-            case h_blank: return handle_h_blank(num_ticks, memory);
+            case h_blank: return handle_h_blank(num_ticks, memory, screen);
             case v_blank: return handle_v_blank(num_ticks, memory);
             case oam_scan: return handle_scan_oam(num_ticks, memory);
             case drawing: return handle_draw(num_ticks, memory);
@@ -318,9 +317,13 @@ namespace graphics
 
                 // TODO: make palette configurable
                 const color pixel_color = get_pixel_color(mixed_pixel, memory, grayscale_lcd_color_palette);
-                const coords_2d pixel_coords { pixels_drawn_in_scanline, current_scanline };
 
-                screen.set_pixel(pixel_coords, pixel_color);
+                // TODO: rethink this
+			    const std::size_t pixel_data_pos = pixels_drawn_in_scanline * num_color_channels;
+                scanline_buffer[pixel_data_pos] = pixel_color.r;
+                scanline_buffer[pixel_data_pos + 1] = pixel_color.g;
+                scanline_buffer[pixel_data_pos + 2] = pixel_color.b;
+
                 pixels_drawn_in_scanline++;
             }
 
@@ -333,8 +336,8 @@ namespace graphics
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory>
-        std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Memory& memory)
+	    template<memory::Memory Memory, LCD Screen>
+        std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Memory& memory, Screen& screen)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
             scanline_cycle += ticks_consumed;
@@ -343,6 +346,8 @@ namespace graphics
             if (scanline_cycle >= 456)
             {
                 scanline_cycle = 0;
+                screen.set_scanline(current_scanline, scanline_buffer);
+
                 current_scanline++;
 
                 if (window_active_in_scanline)
@@ -423,8 +428,6 @@ namespace graphics
         std::uint8_t current_scanline{};
         std::uint16_t scanline_cycle{};
 
-        lcd& screen;
-
         pixel_fifo background_fifo{};
         std::uint8_t window_line {};
         std::uint8_t window_fetcher_penalty{};
@@ -439,6 +442,7 @@ namespace graphics
 
         ppu_interrupt_sources interrupt_sources{};
         bool stat_line{};
+        std::array<std::uint8_t, lcd_width * num_color_channels> scanline_buffer {};
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)

@@ -47,14 +47,14 @@ namespace graphics
 
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
-            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
+		    return !(address >= oam_start_address && address <= oam_end_address)
                 || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
                 || !dma.is_transfer_active();
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
-            return !memory::is_in_region<oam_start_address, oam_end_address>(address)
+		    return !(address >= oam_start_address && address <= oam_end_address)
                 || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
                 || !dma.is_transfer_active();
         }

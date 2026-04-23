@@ -60,14 +60,14 @@ namespace emulator
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
-            return memory::is_in_region<0xFEA0, 0xFEFF>(address)
+            return address >= 0xFEA0 && address <= 0xFEFF
                        ? 0xFF
                        : oam[address - start];
         }
 
         void write(const memory::memory_address_t address, const memory::memory_data_t value)
         {
-            if (!memory::is_in_region<0xFEA0, 0xFEFF>(address))
+            if (!(address >= 0xFEA0 && address <= 0xFEFF))
             {
                 oam[address - start] = value;
             }
@@ -77,6 +77,30 @@ namespace emulator
         const graphics::oam_dma& dma;
         std::span<memory::memory_data_t, graphics::oam_size> oam;
     };
+
+#define HRAM_CASES(X) \
+X(0x00) X(0x01) X(0x02) X(0x03) X(0x04) X(0x05) X(0x06) X(0x07) \
+X(0x08) X(0x09) X(0x0A) X(0x0B) X(0x0C) X(0x0D) X(0x0E) X(0x0F) \
+X(0x10) X(0x11) X(0x12) X(0x13) X(0x14) X(0x15) X(0x16) X(0x17) \
+X(0x18) X(0x19) X(0x1A) X(0x1B) X(0x1C) X(0x1D) X(0x1E) X(0x1F) \
+X(0x20) X(0x21) X(0x22) X(0x23) X(0x24) X(0x25) X(0x26) X(0x27) \
+X(0x28) X(0x29) X(0x2A) X(0x2B) X(0x2C) X(0x2D) X(0x2E) X(0x2F) \
+X(0x30) X(0x31) X(0x32) X(0x33) X(0x34) X(0x35) X(0x36) X(0x37) \
+X(0x38) X(0x39) X(0x3A) X(0x3B) X(0x3C) X(0x3D) X(0x3E) X(0x3F) \
+X(0x40) X(0x41) X(0x42) X(0x43) X(0x44) X(0x45) X(0x46) X(0x47) \
+X(0x48) X(0x49) X(0x4A) X(0x4B) X(0x4C) X(0x4D) X(0x4E) X(0x4F) \
+X(0x50) X(0x51) X(0x52) X(0x53) X(0x54) X(0x55) X(0x56) X(0x57) \
+X(0x58) X(0x59) X(0x5A) X(0x5B) X(0x5C) X(0x5D) X(0x5E) X(0x5F) \
+X(0x60) X(0x61) X(0x62) X(0x63) X(0x64) X(0x65) X(0x66) X(0x67) \
+X(0x68) X(0x69) X(0x6A) X(0x6B) X(0x6C) X(0x6D) X(0x6E) X(0x6F) \
+X(0x70) X(0x71) X(0x72) X(0x73) X(0x74) X(0x75) X(0x76) X(0x77) \
+X(0x78) X(0x79) X(0x7A) X(0x7B) X(0x7C) X(0x7D) X(0x7E)
+
+#define HRAM_READ_CASE(i) \
+case (0xFF80 + (i)): return hram[i];
+
+#define HRAM_WRITE_CASE(i) \
+case (0xFF80 + (i)): hram[i] = value; break;
 
     export class io_hram_interrupt_memory_page
     {
@@ -102,11 +126,6 @@ namespace emulator
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
-            if (memory::is_in_region<0xFF80, 0xFFFE>(address))
-            {
-                return hram[address - 0xFF80];
-            }
-
             switch (address)
             {
             case timer::div_address: return static_cast<memory::memory_data_t>(timers.divider() >> 8);
@@ -121,18 +140,13 @@ namespace emulator
             case interrupts::if_address: return interrupts.flag;
             case interrupts::ie_address: return interrupts.enable;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
+            HRAM_CASES(HRAM_READ_CASE)
             default: return fallback_memory[address - start];
             }
         }
 
         void write(const memory::memory_address_t address, const memory::memory_data_t value)
         {
-            if (memory::is_in_region<0xFF80, 0xFFFE>(address))
-            {
-                hram[address - 0xFF80] = value;
-                return;
-            }
-
             switch (address)
             {
             case timer::div_address:
@@ -172,6 +186,7 @@ namespace emulator
             case joypad::joypad_memory_address:
                 joypad::write_joypad_register(joypad, value);
                 break;
+            HRAM_CASES(HRAM_WRITE_CASE)
             default:
                 fallback_memory[address - start] = value;
             }

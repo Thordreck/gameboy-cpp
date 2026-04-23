@@ -24,8 +24,6 @@ namespace emulator
     public:
         engine()
             : lcd_adapter { lcd_memory }
-            , lcd_ { lcd_adapter }
-            , ppu_ { lcd_ }
             , memory_map { memory_blocks, oam_dma, timers, interrupts, ppu_, joypad_imp }
             , memory_buses { memory_map.get(), ppu_, oam_dma }
             , cpu_runner { cpu }
@@ -52,7 +50,7 @@ namespace emulator
                     num_ticks,
                     adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus()),
                     adapt_for_scheduler(timers, memory_buses.timers_bus()),
-                    adapt_for_scheduler(ppu_, memory_buses.ppu_bus()),
+                    adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter),
                     adapt_for_scheduler(oam_dma, memory_buses.oam_bus()));
             }
         }
@@ -97,8 +95,7 @@ namespace emulator
 
         lcd_memory_t lcd_memory {};
         graphics::raw_memory_lcd lcd_adapter;
-        graphics::lcd lcd_;
-        graphics::pixel_processing_unit ppu_;
+        graphics::pixel_processing_unit ppu_ {};
 
         memory_blocks memory_blocks {};
         memory_map memory_map;

@@ -26,7 +26,7 @@ int main()
 
                 utils::execute_for([&engine] { run_frame(engine); }
                     , frame_duration
-                    , [](const auto& d) { sdl::delay_precise(d); });
+                    , [](const auto& d) { utils::sleep_precise(d); });
             }
         }
     };

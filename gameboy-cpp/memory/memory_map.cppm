@@ -61,6 +61,16 @@ namespace memory
         return mapping;
     }
 
+    // TODO: this only work for the current memory map compilation
+#define REPEAT_256(X) \
+X(0)   X(1)   X(2)   X(3)   X(4)   X(5)   X(6)   X(7)   X(8)
+
+#define GEN_READ_CASE(i) \
+case i: return std::get<i>(regions).read(address);
+
+#define GEN_WRITE_CASE(i) \
+case i: std::get<i>(regions).write(address, value); break;
+
     export template <MappedMemoryRegion... Regions>
     class memory_map
     {
@@ -80,51 +90,28 @@ namespace memory
         [[nodiscard]] memory_data_t read(const memory_address_t address) const
         {
             const std::uint8_t region_index = mapping[address >> 8];
-            return read_dispatch(region_index, address);
+
+            switch (region_index)
+            {
+                REPEAT_256(GEN_READ_CASE)
+            default:
+                std::unreachable();
+            }
         }
 
         void write(const memory_address_t address, const memory_data_t value)
         {
             const std::uint8_t region_index = mapping[address >> 8];
-            write_dispatch(region_index, address, value);
+
+            switch (region_index)
+            {
+                REPEAT_256(GEN_WRITE_CASE)
+            default:
+                std::unreachable();
+            }
         }
 
     private:
-        template<std::size_t I = 0>
-        [[nodiscard]] memory_data_t read_dispatch(const std::uint8_t index, const memory_address_t address) const
-        {
-            if constexpr (I >= std::tuple_size_v<decltype(regions)>)
-            {
-                std::unreachable();
-            }
-            else
-            {
-                return index == I
-                    ? std::get<I>(regions).read(address)
-                    : read_dispatch<I + 1>(index, address);
-            }
-        }
-
-        template<std::size_t I = 0>
-        void write_dispatch(const std::uint8_t index, const memory_address_t address, const memory_data_t value)
-        {
-            if constexpr (I >= std::tuple_size_v<decltype(regions)>)
-            {
-                std::unreachable();
-            }
-            else
-            {
-                if (index == I)
-                {
-                    std::get<I>(regions).write(address, value);
-                }
-                else
-                {
-                    write_dispatch<I + 1>(index, address, value);
-                }
-            }
-        }
-
         std::tuple<Regions&...> regions;
         std::array<std::uint8_t, memory_map_num_pages> mapping;
     };
