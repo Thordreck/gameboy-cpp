@@ -14,7 +14,6 @@ namespace emulator
     export using vram_t = std::array<memory::memory_data_t, graphics::vram_size>;
     export using external_ram_t = std::array<memory::memory_data_t, 0x2000>;
     export using work_ram_t = std::array<memory::memory_data_t, 0x1000>;
-    export using echo_ram_t = std::array<memory::memory_data_t, 0x1E00>;
     export using oam_memory_t = std::array<memory::memory_data_t, graphics::oam_size>;
     export using hram_t = std::array<memory::memory_data_t, 0x7F>;
 
@@ -26,7 +25,6 @@ namespace emulator
         external_ram_t external_ram{};
         work_ram_t work_ram_0{};
         work_ram_t work_ram_1{};
-        echo_ram_t echo_ram{};
         oam_memory_t oam{};
         hram_t hram{};
     };
@@ -38,9 +36,49 @@ namespace emulator
     export using external_ram_page_t = memory::span_map<0x2000, 0xA000, 0xBFFF>;
     export using work_ram_0_page_t = memory::span_map<0x1000, 0xC000, 0xCFFF>;
     export using work_ram_1_page_t = memory::span_map<0x1000, 0xD000, 0xDFFF>;
-    export using echo_ram_page_t = memory::span_map<0x1E00, 0xE000, 0xFDFF>;
 
     export using rom_read_only_policy_t = memory::read_only_memory_policy<0x0000, 0x7FFF>;
+
+    export class echo_ram_memory_page
+    {
+    public:
+        static constexpr memory::memory_address_t start = 0xE000;
+        static constexpr memory::memory_address_t end = 0xFDFF;
+
+        explicit echo_ram_memory_page(work_ram_0_page_t& wram_0, work_ram_1_page_t& wram_1)
+            : wram_0 { wram_0 }
+            , wram_1 { wram_1 }
+        {}
+
+        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
+        {
+            using namespace memory;
+            const memory_address_t real_address = address - 0x2000;
+
+            return is_in_region<wram_0.start, wram_0.end>(real_address)
+                ? wram_0.read(real_address)
+                : wram_1.read(real_address);
+        }
+
+        void write(const memory::memory_address_t address, const memory::memory_data_t value) const
+        {
+            using namespace memory;
+            const memory_address_t real_address = address - 0x2000;
+
+            if (is_in_region<wram_0.start, wram_0.end>(real_address))
+            {
+                wram_0.write(real_address, value);
+            }
+            else
+            {
+                wram_1.write(real_address, value);
+            }
+        }
+
+    private:
+        work_ram_0_page_t& wram_0;
+        work_ram_1_page_t& wram_1;
+    };
 
     // OAM + not-usable memory region
     // TODO: oam corruption bug
@@ -229,7 +267,7 @@ case i: break;
         external_ram_page_t,
         work_ram_0_page_t,
         work_ram_1_page_t,
-        echo_ram_page_t,
+        echo_ram_memory_page,
         oam_memory_page,
         io_hram_interrupt_memory_page>;
 
@@ -249,7 +287,7 @@ case i: break;
               , external_ram_page{memory.external_ram}
               , work_ram_0_page{memory.work_ram_0}
               , work_ram_1_page{memory.work_ram_1}
-              , echo_ram_page{memory.echo_ram}
+              , echo_ram_page{work_ram_0_page, work_ram_1_page}
               , oam_memory_page{oam_dma, memory.oam}
               , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma}
               , map{
@@ -275,7 +313,7 @@ case i: break;
         external_ram_page_t external_ram_page;
         work_ram_0_page_t work_ram_0_page;
         work_ram_1_page_t work_ram_1_page;
-        echo_ram_page_t echo_ram_page;
+        echo_ram_memory_page echo_ram_page;
         oam_memory_page oam_memory_page;
         io_hram_interrupt_memory_page ihi_page;
 

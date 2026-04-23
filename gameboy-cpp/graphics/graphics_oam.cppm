@@ -164,7 +164,11 @@ namespace graphics
         {
             using namespace memory;
 
-            const memory_address_t source_address = start + current_byte;
+            const memory_address_t raw_source_address = start + current_byte;
+            const memory_address_t source_address = raw_source_address >= 0xE000
+                ? raw_source_address - 0x2000
+                : raw_source_address;
+
             const memory_address_t target_address = oam_start_address + current_byte;
             const memory_data_t byte_to_copy = memory.read(source_address);
 
