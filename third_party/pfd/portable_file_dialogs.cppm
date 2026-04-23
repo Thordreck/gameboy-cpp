@@ -49,4 +49,9 @@ namespace pfd
         std::ignore = message_dialog(title, text, choice::ok, icon::error);
     }
 
+    export void message_dialog(const std::string_view title, const std::string_view text)
+    {
+        std::ignore = message_dialog(title, text, choice::ok, icon::info);
+    }
+
 }

@@ -22,7 +22,7 @@ add_library(emulator-ui)
 add_library(emulator::ui ALIAS emulator-ui)
 target_compile_features(emulator-ui PUBLIC cxx_std_23)
 set_target_properties(emulator-ui PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-ui PUBLIC imgui sdl pfd utilities profiling)
+target_link_libraries(emulator-ui PUBLIC imgui sdl pfd utilities profiling cartridge)
 target_sources(emulator-ui PUBLIC
 		FILE_SET
 		CXX_MODULES

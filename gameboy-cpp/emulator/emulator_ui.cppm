@@ -8,6 +8,7 @@ import sdl;
 import pfd;
 import imgui;
 import utilities;
+import cartridge;
 
 namespace emulator
 {
@@ -93,6 +94,28 @@ namespace emulator
                                 pfd::error_dialog("Error loading rom", rom_data.error());
                             }
                         }
+                    }
+
+                    if (imgui::menu_item("Display Rom Details"))
+                    {
+                        // TODO: open_file should be able to accept const span-like objects
+                        std::array<pfd::filter, 1> rom_filter { { "Rom Files", "*.gb" } };
+
+                        if (const auto rom_selection = pfd::open_file("Select Rom", std::nullopt, rom_filter); rom_selection.has_value())
+                        {
+                            const auto load_details = utils::read_binary_file(rom_selection.value())
+                                    .and_then(cartridge::parse);
+
+                            if (load_details.has_value())
+                            {
+                                pfd::message_dialog("Rom Details", cartridge::pretty_print(load_details.value()));
+                            }
+                            else
+                            {
+                                pfd::error_dialog("Error loading rom details", load_details.error());
+                            }
+                        }
+
                     }
                 }
             }

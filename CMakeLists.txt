@@ -25,6 +25,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/timer)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/graphics)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/joypad)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/audio)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cartridge)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/profiling)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 
