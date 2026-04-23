@@ -17,20 +17,30 @@ namespace graphics
 
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
-            constexpr memory::memory_address_t hram_start_address = 0xFF80;
-            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
+            if (!dma.is_transfer_active())
+            {
+                return true;
+            }
 
-            return memory::is_in_region<hram_start_address, hram_end_address>(address)
-                || !dma.is_transfer_active();
+            using namespace memory;
+
+            return !(is_in_region<0x0000, 0x7FFF>(address) && is_in_region<0x0000, 0x7FFF>(dma.start_address()))
+                && !(is_in_region<0x8000, 0x9FFF>(address) && is_in_region<0x8000, 0x9FFF>(dma.start_address()))
+                && !(is_in_region<0xA000, 0xBFFF>(address) && is_in_region<0xA000, 0xBFFF>(dma.start_address()));
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
-            constexpr memory::memory_address_t hram_start_address = 0xFF80;
-            constexpr memory::memory_address_t hram_end_address = 0xFFFE;
+            if (!dma.is_transfer_active())
+            {
+                return true;
+            }
 
-            return memory::is_in_region<hram_start_address, hram_end_address>(address)
-                || !dma.is_transfer_active();
+            using namespace memory;
+
+            return !(is_in_region<0x0000, 0x7FFF>(address) && is_in_region<0x0000, 0x7FFF>(dma.start_address()))
+                && !(is_in_region<0x8000, 0x9FFF>(address) && is_in_region<0x8000, 0x9FFF>(dma.start_address()))
+                && !(is_in_region<0xA000, 0xBFFF>(address) && is_in_region<0xA000, 0xBFFF>(dma.start_address()));
         }
 
     private:
