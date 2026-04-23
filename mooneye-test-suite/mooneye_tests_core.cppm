@@ -15,7 +15,8 @@ namespace mooneye
 		return result.value();
 	}
 
-	std::optional<std::uint8_t> read_io_result_output(memory::memory_bus& memory)
+	template<memory::Memory Memory>
+	std::optional<std::uint8_t> read_io_result_output(Memory& memory)
 	{
 		constexpr memory::memory_address_t sb = 0xFF01;
 		constexpr memory::memory_address_t sc = 0xFF02;
@@ -45,7 +46,6 @@ namespace mooneye
 		constexpr size_t max_num_timer_cycles = 127e6;
 		constexpr size_t expected_num_result_numbers = 6;
 
-		memory::memory_bus memory_bus = engine.memory_bus();
 		size_t num_result_numbers_read { 0 };
 
 		using result_sequence_t = std::array<std::uint8_t, expected_num_result_numbers>;
@@ -53,9 +53,9 @@ namespace mooneye
 
 		for (size_t i = 0; i < max_num_timer_cycles; i++)
 		{
-			engine.tick();
+			engine.tick(4);
 
-			if (const auto read_result = read_io_result_output(memory_bus); read_result.has_value())
+			if (const auto read_result = read_io_result_output(engine.memory()); read_result.has_value())
 			{
 				result[num_result_numbers_read++] = read_result.value();
 			}
