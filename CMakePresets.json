@@ -44,6 +44,15 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "PROFILING_BACKEND": "Tracy"
       }
+    },
+    {
+      "name": "win-64-relWithDebInfo",
+      "displayName": "Release With Debug Info",
+      "inherits": "win-64-release",
+      "binaryDir": "${sourceDir}/build/release-deb-info",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
     }
   ],
   "buildPresets": [
@@ -61,6 +70,11 @@
       "name": "win-64-release-tracy",
       "displayName": "Tracy Profiling",
       "configurePreset": "win-64-tracy"
+    },
+    {
+      "name": "win-64-release-deb-info",
+      "displayName": "Release With Debug Info",
+      "configurePreset": "win-64-relWithDebInfo"
     }
   ],
   "testPresets": [
