@@ -49,7 +49,7 @@ namespace utils
 		std::terminate();
 	}
 
-	export void panic_on_error(std::expected<void, std::string> result, const std::source_location loc = std::source_location::current())
+	export void panic_on_error(std::expected<void, std::string> result, const std::source_location& loc = std::source_location::current())
 	{
 		if (!result.has_value())
 		{

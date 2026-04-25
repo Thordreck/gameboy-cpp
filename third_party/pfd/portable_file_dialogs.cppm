@@ -26,7 +26,7 @@ namespace pfd
     export [[nodiscard]] std::optional<std::filesystem::path> open_file(
         const std::string_view title,
         const std::optional<std::filesystem::path>& path = std::nullopt,
-        const std::optional<std::span<filter>>& filters = std::nullopt)
+        const std::optional<std::span<const filter>>& filters = std::nullopt)
     {
         const auto pfd_path = path.transform([] (auto& p) { return p.string(); }).value_or({});
         const auto pfd_filters = filters.transform(to_pfd_filters).value_or({});

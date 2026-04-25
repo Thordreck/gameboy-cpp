@@ -52,7 +52,21 @@ namespace sdl
         friend internal::wrapper;
     };
 
-    export using event_variants_t = std::variant<common_event, quit_event, window_shown_event>;
+    export class window_exposed_event
+    {
+    public:
+        [[nodiscard]] event_timestamp_t timestamp() const noexcept { return time; }
+
+    private:
+        explicit window_exposed_event(const SDL_WindowEvent& event) noexcept
+            : time { event.timestamp }
+        {}
+
+        event_timestamp_t time{};
+        friend internal::wrapper;
+    };
+
+    export using event_variants_t = std::variant<common_event, quit_event, window_shown_event, window_exposed_event>;
 
     event_variants_t parse_event(const SDL_Event& event)
     {
@@ -62,6 +76,8 @@ namespace sdl
             return internal::wrapper::create<quit_event>(event.quit);
         case SDL_EVENT_WINDOW_SHOWN:
             return internal::wrapper::create<window_shown_event>(event.window);
+        case SDL_EVENT_WINDOW_EXPOSED:
+            return internal::wrapper::create<window_exposed_event>(event.window);
         default:
             return internal::wrapper::create<common_event>(event.common);
         }
@@ -95,6 +111,18 @@ namespace sdl
         if (!SDL_PollEvent(&sdl_event))
         {
             return std::nullopt;
+        }
+
+        return internal::wrapper::create<event>(sdl_event);
+    }
+
+    export result<event> wait_event()
+    {
+        SDL_Event sdl_event {};
+
+        if (!SDL_WaitEvent(&sdl_event))
+        {
+            return std::unexpected { SDL_GetError() };
         }
 
         return internal::wrapper::create<event>(sdl_event);

@@ -25,7 +25,10 @@ namespace utils
             return std::unexpected{ "Could not open file" };
         }
 
-        binary_data_t file_contents { std::istreambuf_iterator(file), std::istreambuf_iterator<char>() };
+        const std::size_t file_size = std::filesystem::file_size(filepath);
+        binary_data_t file_contents (file_size);
+
+        file.read(reinterpret_cast<char*>(file_contents.data()), static_cast<std::streamsize>(file_contents.size()));
 
         if (file.bad())
         {

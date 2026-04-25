@@ -7,29 +7,17 @@ import std;
 import sdl;
 import pfd;
 import imgui;
-import utilities;
 import cartridge;
+import utilities;
+import emulator.core;
 
 namespace emulator
 {
-    export constexpr std::size_t framebuffer_size = 160 * 144 * 3;
-    export using framebuffer_view_t = std::span<const std::uint8_t, framebuffer_size>;
-
-    export template <typename T>
-    concept EmulatorUIInterface = requires(T& emulator, const std::vector<std::uint8_t>& rom_data)
-    {
-        { emulator.load_rom(rom_data) } -> std::same_as<void>;
-        { emulator.reset() } -> std::same_as<void>;
-        { emulator.framebuffer() } -> std::convertible_to<framebuffer_view_t>;
-    };
-
-    export template <EmulatorUIInterface Engine>
-    class ui
+    export class graphical_interface
     {
     public:
-        explicit ui(Engine& engine)
-            : engine { engine }
-            , sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video) )}
+        graphical_interface()
+            : sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video) )}
             , sdl_window { utils::value_or_panic(sdl::window::create("gameboy-cpp", 160, 144, sdl::window_flags::resizable)) }
             , sdl_renderer { utils::value_or_panic(sdl::renderer::create(sdl_window)) }
             , sdl_texture { utils::value_or_panic(sdl::texture::create(sdl_renderer, sdl::pixel_format::rgb_24, sdl::texture_access::streaming, 160, 144)) }
@@ -40,90 +28,74 @@ namespace emulator
             imgui::check_version();
             imgui::set_dark_style();
 
-            utils::panic_on_error(sdl_renderer.set_vsync(sdl::renderer_vsync::disabled));
+            utils::panic_on_error(sdl_renderer.set_vsync(1));
         }
 
-        // TODO: rethink interface
         [[nodiscard]] bool quit_app_requested() const { return should_quit; }
 
-        void render()
+        void process_event(const sdl::event& event) const
+        {
+            std::ignore = imgui_platform.process_event(event);
+        }
+
+        template <Emulator Imp>
+        void render(Imp& emulator)
         {
             PROFILER_SCOPE("Engine Thread");
-
-            if (should_quit)
-            {
-                return;
-            }
-
-            // TODO: other events
-            const auto event = sdl::poll_event();
-
-            should_quit = event
-                .transform(&sdl::event::parse)
-                .transform([] (const auto& e) { return std::holds_alternative<sdl::quit_event>(e); })
-                .value_or(false);
-
-            if (event.has_value())
-            {
-                std::ignore = imgui_platform.process_event(event.value());
-            }
 
             imgui_backend.new_frame();
             imgui_platform.new_frame();
             imgui::new_frame();
 
+            // Main menu
             if (const auto main_menu = imgui::main_menu_bar(); main_menu)
             {
                 if (const auto file_menu = imgui::menu("File"); file_menu)
                 {
                     if (imgui::menu_item("Open Rom"))
                     {
-                        // TODO: open_file should be able to accept const span-like objects
-                        std::array<pfd::filter, 1> rom_filter { { "Rom Files", "*.gb" } };
+                        constexpr std::array rom_filter { pfd::filter { "Rom Files", "*.gb" } };
 
                         if (const auto rom_selection = pfd::open_file("Select Rom", std::nullopt, rom_filter); rom_selection.has_value())
                         {
-                            // TODO: rethink this. Proper error handling
-                            if (const auto rom_data = utils::read_binary_file(rom_selection.value()); rom_data.has_value())
+                            const auto load_result
+                                = cartridge::load_rom_file(rom_selection.value())
+                                .and_then([&emulator] (const auto& data) { return emulator.load_rom(data); });
+
+                            if (!load_result.has_value())
                             {
-                                // TODO: manual reset?
-                                engine.load_rom(rom_data.value());
-                            }
-                            else
-                            {
-                                pfd::error_dialog("Error loading rom", rom_data.error());
+                                pfd::error_dialog("Error loading rom", load_result.error());
                             }
                         }
                     }
 
-                    if (imgui::menu_item("Display Rom Details"))
+                    if (emulator.is_running() && imgui::menu_item("Display Rom Details"))
                     {
-                        // TODO: open_file should be able to accept const span-like objects
-                        std::array<pfd::filter, 1> rom_filter { { "Rom Files", "*.gb" } };
+                        pfd::message_dialog("Rom Details", cartridge::pretty_print(emulator.cartridge()));
+                    }
 
-                        if (const auto rom_selection = pfd::open_file("Select Rom", std::nullopt, rom_filter); rom_selection.has_value())
-                        {
-                            const auto load_details = utils::read_binary_file(rom_selection.value())
-                                    .and_then(cartridge::parse);
+                    if (emulator.is_running() && imgui::menu_item("Pause"))
+                    {
+                        emulator.pause();
+                    }
 
-                            if (load_details.has_value())
-                            {
-                                pfd::message_dialog("Rom Details", cartridge::pretty_print(load_details.value()));
-                            }
-                            else
-                            {
-                                pfd::error_dialog("Error loading rom details", load_details.error());
-                            }
-                        }
+                    if (emulator.is_running() && imgui::menu_item("Stop"))
+                    {
+                        emulator.stop();
+                    }
 
+                    if (!emulator.is_running() && imgui::menu_item("Resume"))
+                    {
+                        emulator.resume();
                     }
                 }
             }
 
-            if (const auto viewport = imgui::window("Viewport"); viewport)
+            // Viewport
+            if (const auto viewport = imgui::window("Viewport"); viewport && emulator.has_rom())
             {
                 auto [lock, surface] = utils::value_or_panic(sdl::lock_to_surface(sdl_texture));
-                std::ranges::copy(engine.framebuffer(), static_cast<std::uint8_t*>(surface.pixels()));
+                std::ranges::copy(emulator.framebuffer(), static_cast<std::uint8_t*>(surface.pixels()));
 
                 const imgui::vec2 viewport_size = imgui::get_available_content_space();
                 const imgui::texture_id texture_id = reinterpret_cast<imgui::texture_id>(sdl::internal::native::get_handle(sdl_texture));
@@ -137,8 +109,6 @@ namespace emulator
         }
 
     private:
-        Engine& engine;
-
         sdl::session sdl_session;
         sdl::window sdl_window;
         sdl::renderer sdl_renderer;

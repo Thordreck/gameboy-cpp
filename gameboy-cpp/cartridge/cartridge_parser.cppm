@@ -1,8 +1,11 @@
 export module cartridge:parser;
 
-import std;
+import :rom;
 import :common;
 import :header;
+
+import std;
+import utilities;
 
 namespace cartridge
 {
@@ -22,7 +25,6 @@ namespace cartridge
     constexpr std::uint16_t new_licensee_code_end_address = 0x145;
     constexpr std::uint16_t version_address = 0x14C;
 
-    export using parse_result_t = std::expected<header, std::string>;
     export using const_rom_data_t = std::span<const std::uint8_t>;
 
     [[nodiscard]] std::string parse_title(const const_rom_data_t rom, const bool cgb_cartridge)
@@ -366,7 +368,7 @@ namespace cartridge
         }
     }
 
-    export [[nodiscard]] parse_result_t parse(const const_rom_data_t rom)
+    export [[nodiscard]] std::expected<header, std::string> parse_header(const const_rom_data_t rom)
     {
         if (rom.size() < header_end_address)
         {
@@ -388,5 +390,18 @@ namespace cartridge
             parse_version(rom),
             parse_hardware_type(rom),
         };
+    }
+
+    export [[nodiscard]] std::expected<rom, std::string> load_rom_file(const std::filesystem::path& path)
+    {
+        const auto read_file = utils::read_binary_file(path);
+        const auto read_header = read_file.and_then(parse_header);
+
+        if (!read_header.has_value())
+        {
+            return std::unexpected{ read_file.error() };
+        }
+
+        return rom { read_header.value(), read_file.value() };
     }
 }

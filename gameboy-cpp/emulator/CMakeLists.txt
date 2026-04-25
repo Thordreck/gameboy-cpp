@@ -5,15 +5,31 @@ add_library(emulator::core ALIAS emulator-core)
 target_compile_features(emulator-core PUBLIC cxx_std_23)
 
 set_target_properties(emulator-core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-core PUBLIC cpu timer memory opcodes interrupts graphics joypad utilities profiling)
+target_link_libraries(emulator-core PUBLIC memory joypad graphics cartridge profiling)
 target_sources(emulator-core PUBLIC
+		FILE_SET
+		CXX_MODULES
+		FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_core.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_common.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_tasks.cppm
+)
+
+# Gameboy
+add_library(emulator-gameboy)
+add_library(emulator::gameboy ALIAS emulator-gameboy)
+target_compile_features(emulator-gameboy PUBLIC cxx_std_23)
+
+set_target_properties(emulator-gameboy PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+target_link_libraries(emulator-gameboy PUBLIC emulator::core cpu timer memory opcodes interrupts graphics joypad utilities profiling mbc cartridge)
+target_sources(emulator-gameboy PUBLIC
 	FILE_SET 
 		CXX_MODULES 
-	FILES 
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_core.cppm
+	FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_gameboy.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_engine.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_cpu.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_scheduler.cppm
 )
 
@@ -22,7 +38,7 @@ add_library(emulator-ui)
 add_library(emulator::ui ALIAS emulator-ui)
 target_compile_features(emulator-ui PUBLIC cxx_std_23)
 set_target_properties(emulator-ui PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-ui PUBLIC imgui sdl pfd utilities profiling cartridge)
+target_link_libraries(emulator-ui PUBLIC emulator::core imgui sdl pfd profiling utilities)
 target_sources(emulator-ui PUBLIC
 		FILE_SET
 		CXX_MODULES
@@ -34,14 +50,13 @@ target_sources(emulator-ui PUBLIC
 add_library(emulator)
 target_compile_features(emulator PUBLIC cxx_std_23)
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator PUBLIC emulator::core emulator::ui)
+target_link_libraries(emulator PUBLIC emulator::core emulator::gameboy emulator::ui)
 target_sources(emulator PUBLIC
 		FILE_SET
 		CXX_MODULES
 		FILES
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/emulator_adapters.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_utils.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
 )
 
 add_executable(gameboy-cpp)
@@ -49,8 +64,8 @@ target_compile_features(gameboy-cpp PUBLIC cxx_std_23)
 target_link_libraries(gameboy-cpp PRIVATE emulator profiling)
 
 target_sources(gameboy-cpp 
-	PRIVATE 
-		${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_main.cpp
 )
 
 add_custom_command(TARGET gameboy-cpp POST_BUILD

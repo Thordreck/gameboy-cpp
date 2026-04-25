@@ -1,4 +1,4 @@
-export module emulator.core:memory;
+export module emulator.engine:memory;
 
 export import std;
 export import timer;
@@ -17,7 +17,7 @@ namespace emulator
     export using oam_memory_t = std::array<memory::memory_data_t, graphics::oam_size>;
     export using hram_t = std::array<memory::memory_data_t, 0x7F>;
 
-    export struct memory_blocks
+    export struct internal_memory
     {
         vram_t vram{};
         rom_bank_t rom_bank_0{};
@@ -275,7 +275,7 @@ case i: break;
     {
     public:
         memory_map(
-            memory_blocks& memory,
+            internal_memory& memory,
             graphics::oam_dma& oam_dma,
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,

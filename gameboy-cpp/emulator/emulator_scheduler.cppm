@@ -1,5 +1,5 @@
 
-export module emulator.core:scheduler;
+export module emulator.engine:scheduler;
 import std;
 
 namespace emulator

@@ -1,7 +1,7 @@
 module;
 #include "profiling.hpp"
 
-export module emulator.core:cpu;
+export module emulator.engine:cpu;
 
 export import std;
 export import cpu;
