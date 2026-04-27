@@ -28,20 +28,27 @@ namespace emulator
             imgui::check_version();
             imgui::set_dark_style();
 
-            utils::panic_on_error(sdl_renderer.set_vsync(1));
+            utils::panic_on_error(sdl_renderer.set_vsync(sdl::renderer_vsync::disabled));
         }
 
         [[nodiscard]] bool quit_app_requested() const { return should_quit; }
-
-        void process_event(const sdl::event& event) const
-        {
-            std::ignore = imgui_platform.process_event(event);
-        }
 
         template <Emulator Imp>
         void render(Imp& emulator)
         {
             PROFILER_SCOPE("Engine Thread");
+
+            while (const auto event = sdl::poll_event())
+            {
+                std::ignore = imgui_platform.process_event(event.value());
+
+                should_quit = event
+                    .transform(&sdl::event::parse)
+                    .transform([] (const auto& e) { return std::holds_alternative<sdl::quit_event>(e); })
+                    .value_or(false);
+
+                if (should_quit) { return; }
+            }
 
             imgui_backend.new_frame();
             imgui_platform.new_frame();
