@@ -7,3 +7,6 @@
 [submodule "third_party/tracy/upstream"]
 	path = third_party/tracy/upstream
 	url = https://github.com/wolfpld/tracy.git
+[submodule "ctrack"]
+	path = third_party/ctrack/upstream
+	url = https://github.com/Compaile/ctrack.git
