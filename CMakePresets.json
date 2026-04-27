@@ -7,14 +7,18 @@
       "generator": "Ninja",
       "warnings": {
         "dev": false
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
       }
     },
     {
-      "name": "win-64-debug",
+      "name": "with-ccache",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+      }
+    },
+    {
+      "name": "debug",
       "displayName": "Debug",
       "inherits": "base",
       "binaryDir": "${sourceDir}/build/debug",
@@ -25,7 +29,13 @@
       }
     },
     {
-      "name": "win-64-release",
+      "name": "debug-ccache",
+      "binaryDir": "${sourceDir}/build/debug-ccache",
+      "displayName": "Debug (ccache)",
+      "inherits": ["debug", "with-ccache"]
+    },
+    {
+      "name": "release",
       "displayName": "Release",
       "inherits": "base",
       "binaryDir": "${sourceDir}/build/release",
@@ -36,67 +46,64 @@
       }
     },
     {
-      "name": "win-64-tracy",
-      "displayName": "Tracy Profiling",
-      "inherits": "win-64-release",
-      "binaryDir": "${sourceDir}/build/release-tracy",
+      "name": "release-ccache",
+      "displayName": "Release (ccache)",
+      "binaryDir": "${sourceDir}/build/release-ccache",
+      "inherits": ["release", "with-ccache"]
+    },
+    {
+      "name": "relWithDebInfo",
+      "displayName": "RelWithDebInfo",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/release-deb-info",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "OFF",
+        "CMAKE_VERBOSE_MAKEFILE": "OFF"
+      }
+    },
+    {
+      "name": "relWithDebInfo-ccache",
+      "displayName": "RelWithDebInfo (ccache)",
+      "binaryDir": "${sourceDir}/build/release-deb-info-ccache",
+      "inherits": ["relWithDebInfo", "with-ccache"]
+    },
+    {
+      "name": "tracy",
+      "displayName": "Tracy Profiling",
+      "inherits": "relWithDebInfo",
+      "binaryDir": "${sourceDir}/build/release-tracy",
+      "cacheVariables": {
         "PROFILING_BACKEND": "Tracy"
       }
     },
     {
-      "name": "win-64-ctrack",
+      "name": "tracy-ccache",
+      "displayName": "Tracy Profiling (ccache)",
+      "binaryDir": "${sourceDir}/build/release-tracy-ccache",
+      "inherits": ["tracy", "with-ccache"]
+    },
+    {
+      "name": "ctrack",
       "displayName": "CTrack Profiling",
-      "inherits": "win-64-release",
+      "inherits": "relWithDebInfo",
       "binaryDir": "${sourceDir}/build/release-ctrack",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "PROFILING_BACKEND": "CTrack"
       }
     },
     {
-      "name": "win-64-relWithDebInfo",
-      "displayName": "Release With Debug Info",
-      "inherits": "win-64-release",
-      "binaryDir": "${sourceDir}/build/release-deb-info",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "win-64-debug",
-      "displayName": "Debug",
-      "configurePreset": "win-64-debug"
-    },
-    {
-      "name": "win-64-release",
-      "displayName": "Release",
-      "configurePreset": "win-64-release"
-    },
-    {
-      "name": "win-64-release-tracy",
-      "displayName": "Tracy Profiling",
-      "configurePreset": "win-64-tracy"
-    },
-    {
-      "name": "win-64-release-ctrack",
-      "displayName": "CTrack Profiling",
-      "configurePreset": "win-64-ctrack"
-    },
-    {
-      "name": "win-64-release-deb-info",
-      "displayName": "Release With Debug Info",
-      "configurePreset": "win-64-relWithDebInfo"
+      "name": "ctrack-ccache",
+      "displayName": "CTrack Profiling (ccache)",
+      "binaryDir": "${sourceDir}/build/release-ctrack-ccache",
+      "inherits": ["ctrack", "with-ccache"]
     }
   ],
   "testPresets": [
     {
-      "name": "win-64-test-all",
-      "displayName": "Test All",
-      "configurePreset": "win-64-debug"
+      "name": "test",
+      "displayName": "Test",
+      "configurePreset": "debug"
     }
   ]
 }
