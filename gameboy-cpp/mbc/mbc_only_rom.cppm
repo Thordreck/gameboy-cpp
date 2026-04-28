@@ -6,19 +6,19 @@ import std;
 
 namespace mbc
 {
-    export constexpr std::size_t rom_only_data_size { 0x8000 };
+    export constexpr std::size_t rom_only_cartridge_data_size { 0x8000 };
 
     export class only_rom
     {
     public:
-        only_rom(const const_rom_bank_t rom_bank_0, const const_rom_bank_t rom_bank_n)
+        only_rom(const rom_bank_t rom_bank_0, const rom_bank_t rom_bank_n)
             : rom_bank_0(rom_bank_0)
             , rom_bank_n(rom_bank_n)
         {}
 
-        explicit only_rom(const const_rom_data_t rom)
-            : rom_bank_0(rom.subspan<0x0000, 0x4000>())
-            , rom_bank_n(rom.subspan<0x4000, 0x4000>())
+        explicit only_rom(const cartridge_data_t cartridge)
+            : rom_bank_0(cartridge.subspan<0x0000, 0x4000>())
+            , rom_bank_n(cartridge.subspan<0x4000, 0x4000>())
         {}
 
         [[nodiscard]] std::uint8_t read_rom_bank_0(const std::uint16_t address) const
@@ -41,8 +41,8 @@ namespace mbc
         void write_external_ram(const std::uint16_t, const std::uint8_t) {}
 
     private:
-        const_rom_bank_t rom_bank_0;
-        const_rom_bank_t rom_bank_n;
+        rom_bank_t rom_bank_0;
+        rom_bank_t rom_bank_n;
     };
 
 }

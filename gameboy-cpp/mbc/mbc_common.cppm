@@ -4,18 +4,16 @@ import std;
 
 namespace mbc
 {
+    export constexpr std::size_t rom_bank_size = 0x4000;
+    export constexpr std::size_t external_ram_size = 0x1000;
+
     export constexpr std::uint16_t rom_bank_0_start_address = 0x0000;
     export constexpr std::uint16_t rom_bank_n_start_address = 0x4000;
     export constexpr std::uint16_t external_ram_start_address = 0xA000;
 
-    export using rom_data_t = std::span<std::uint8_t>;
-    export using const_rom_data_t = std::span<const std::uint8_t>;
-
-    export using rom_bank_t = std::span<std::uint8_t, 0x4000>;
-    export using external_ram_t = std::span<std::uint8_t, 0x1000>;
-
-    export using const_rom_bank_t = std::span<const std::uint8_t, 0x4000>;
-    export using const_external_ram_t = std::span<const std::uint8_t, 0x1000>;
+    export using cartridge_data_t = std::span<std::uint8_t>;
+    export using rom_bank_t = std::span<const std::uint8_t, rom_bank_size>;
+    export using external_ram_t = std::array<std::uint8_t, external_ram_size>;
 
     export template<typename T>
     concept MemoryBankController = requires(T& mbc, const std::uint16_t address, const std::uint8_t value)

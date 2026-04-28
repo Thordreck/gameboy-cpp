@@ -18,12 +18,16 @@ namespace emulator
         switch (rom.header.hardware)
         {
         case rom_only:
-            if (rom.data.size() < rom_only_data_size)
+            if (rom.data.size() < rom_only_cartridge_data_size)
             {
-                return std::unexpected { std::format("Unexpected no MBC rom size. Expected {}. Got {}", rom_only_data_size, rom.data.size() ) };
+                return std::unexpected { std::format("Unexpected no MBC rom size. Expected {}. Got {}", rom_only_cartridge_data_size, rom.data.size() ) };
             }
 
             return std::make_unique<engine<only_rom>>(only_rom { rom.data });
+        case mbc1:
+        case mbc1_ram:
+        case mbc1_ram_battery:
+            return std::make_unique<engine<mbc::mbc1>>(mbc::mbc1{ rom.data, rom.header.rom_size, rom.header.ram_size });
         default:
             return std::unexpected{ std::format("Unsupported rom type {}", cartridge::pretty_print(rom.header.hardware)) };
         }
