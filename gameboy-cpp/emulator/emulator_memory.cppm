@@ -1,18 +1,17 @@
 export module emulator.engine:memory;
 
-export import std;
-export import timer;
-export import memory;
-export import joypad;
-export import graphics;
-export import utilities;
-export import interrupts;
+import std;
+import mbc;
+import timer;
+import memory;
+import joypad;
+import graphics;
+import utilities;
+import interrupts;
 
 namespace emulator
 {
-    export using rom_bank_t = std::array<memory::memory_data_t, 0x4000>;
     export using vram_t = std::array<memory::memory_data_t, graphics::vram_size>;
-    export using external_ram_t = std::array<memory::memory_data_t, 0x2000>;
     export using work_ram_t = std::array<memory::memory_data_t, 0x1000>;
     export using oam_memory_t = std::array<memory::memory_data_t, graphics::oam_size>;
     export using hram_t = std::array<memory::memory_data_t, 0x7F>;
@@ -20,24 +19,15 @@ namespace emulator
     export struct internal_memory
     {
         vram_t vram{};
-        rom_bank_t rom_bank_0{};
-        rom_bank_t rom_bank_n{};
-        external_ram_t external_ram{};
         work_ram_t work_ram_0{};
         work_ram_t work_ram_1{};
         oam_memory_t oam{};
         hram_t hram{};
     };
 
-    export using rom_bank_0_page_t = memory::span_map<0x4000>;
-    export using rom_bank_n_page_t = memory::span_map<0x4000, 0x4000, 0x7FFF>;
-    export using vram_memory_page_t = memory::span_map<
-        graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
-    export using external_ram_page_t = memory::span_map<0x2000, 0xA000, 0xBFFF>;
+    export using vram_memory_page_t = memory::span_map<graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
     export using work_ram_0_page_t = memory::span_map<0x1000, 0xC000, 0xCFFF>;
     export using work_ram_1_page_t = memory::span_map<0x1000, 0xD000, 0xDFFF>;
-
-    export using rom_read_only_policy_t = memory::read_only_memory_policy<0x0000, 0x7FFF>;
 
     export class echo_ram_memory_page
     {
@@ -260,37 +250,115 @@ case i: break;
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
     };
 
-    export using memory_map_t = memory::memory_map<
-        rom_bank_0_page_t,
-        rom_bank_n_page_t,
+    export template<mbc::MemoryBankController MBC>
+    class rom_bank_0_page
+    {
+    public:
+        static constexpr memory::memory_address_t start = 0x0000;
+        static constexpr memory::memory_address_t end = 0x3FFF;
+
+        explicit rom_bank_0_page(MBC& mbc)
+            : mbc { mbc }
+        {}
+
+        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
+        {
+            return mbc.read_rom_bank_0(address);
+        }
+
+        void write(const memory::memory_address_t address, const memory::memory_data_t value)
+        {
+            mbc.write_rom_bank_0(address, value);
+        }
+
+    private:
+        MBC& mbc;
+    };
+
+    export template<mbc::MemoryBankController MBC>
+    class rom_bank_n_page
+    {
+    public:
+        static constexpr memory::memory_address_t start = 0x4000;
+        static constexpr memory::memory_address_t end = 0x7FFF;
+
+        explicit rom_bank_n_page(MBC& mbc)
+            : mbc { mbc }
+        {}
+
+        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
+        {
+            return mbc.read_rom_bank_n(address);
+        }
+
+        void write(const memory::memory_address_t address, const memory::memory_data_t value)
+        {
+            mbc.write_rom_bank_n(address, value);
+        }
+
+    private:
+        MBC& mbc;
+    };
+
+    export template<mbc::MemoryBankController MBC>
+    class external_ram_page
+    {
+    public:
+        static constexpr memory::memory_address_t start = 0xA000;
+        static constexpr memory::memory_address_t end = 0xBFFF;
+
+        explicit external_ram_page(MBC& mbc)
+            : mbc { mbc }
+        {}
+
+        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
+        {
+            return mbc.read_external_ram(address);
+        }
+
+        void write(const memory::memory_address_t address, const memory::memory_data_t value)
+        {
+            mbc.write_external_ram(address, value);
+        }
+
+    private:
+        MBC& mbc;
+    };
+
+    export template<mbc::MemoryBankController MBC>
+    using memory_map_t = memory::memory_map<
+        rom_bank_0_page<MBC>,
+        rom_bank_n_page<MBC>,
         vram_memory_page_t,
-        external_ram_page_t,
+        external_ram_page<MBC>,
         work_ram_0_page_t,
         work_ram_1_page_t,
         echo_ram_memory_page,
         oam_memory_page,
         io_hram_interrupt_memory_page>;
 
-    export class memory_map
+    export template <mbc::MemoryBankController MBC>
+    class memory_map
     {
     public:
         memory_map(
             internal_memory& memory,
+            MBC& mbc,
             graphics::oam_dma& oam_dma,
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
             joypad::joypad& joypad)
-            : rom_bank_0_page{memory.rom_bank_0}
-              , rom_bank_n_page{memory.rom_bank_n}
-              , vram_memory_page{memory.vram}
-              , external_ram_page{memory.external_ram}
-              , work_ram_0_page{memory.work_ram_0}
-              , work_ram_1_page{memory.work_ram_1}
-              , echo_ram_page{work_ram_0_page, work_ram_1_page}
-              , oam_memory_page{oam_dma, memory.oam}
-              , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma}
-              , map{
+            : rom_bank_0_page{mbc}
+             , rom_bank_n_page{mbc}
+             , vram_memory_page{memory.vram}
+             , external_ram_page{mbc}
+             , work_ram_0_page{memory.work_ram_0}
+             , work_ram_1_page{memory.work_ram_1}
+             , echo_ram_page{work_ram_0_page, work_ram_1_page}
+             , oam_memory_page{oam_dma, memory.oam}
+             , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma}
+             , map{
                   rom_bank_0_page,
                   rom_bank_n_page,
                   vram_memory_page,
@@ -304,56 +372,58 @@ case i: break;
         {
         }
 
-        [[nodiscard]] memory_map_t& get() { return map; }
+        [[nodiscard]] auto& get() { return map; }
 
     private:
-        rom_bank_0_page_t rom_bank_0_page;
-        rom_bank_n_page_t rom_bank_n_page;
+        rom_bank_0_page<MBC> rom_bank_0_page;
+        rom_bank_n_page<MBC> rom_bank_n_page;
         vram_memory_page_t vram_memory_page;
-        external_ram_page_t external_ram_page;
+        external_ram_page<MBC> external_ram_page;
         work_ram_0_page_t work_ram_0_page;
         work_ram_1_page_t work_ram_1_page;
         echo_ram_memory_page echo_ram_page;
         oam_memory_page oam_memory_page;
         io_hram_interrupt_memory_page ihi_page;
 
-        memory_map_t map;
+        memory_map_t<MBC> map;
     };
 
-    export using cpu_memory_bus_t = memory::memory_bus<
-        memory_map_t,
+    export template <mbc::MemoryBankController MBC>
+    using cpu_memory_bus_t = memory::memory_bus<
+        memory_map_t<MBC>,
         graphics::vram_access_policy,
         graphics::oam_dma_access_policy,
-        graphics::oam_ppu_access_policy,
-        rom_read_only_policy_t>;
-
-    export using timers_memory_bus_t = memory::memory_bus<
-        memory_map_t,
-        graphics::vram_access_policy,
-        graphics::oam_dma_access_policy,
-        graphics::oam_ppu_access_policy,
-        rom_read_only_policy_t>;
-
-    export using ppu_memory_bus_t = memory::memory_bus<
-        memory_map_t,
-        rom_read_only_policy_t,
         graphics::oam_ppu_access_policy>;
 
-    export using oam_dma_memory_bus_t = memory::memory_bus<memory_map_t>;
+    export template <mbc::MemoryBankController MBC>
+    using timers_memory_bus_t = memory::memory_bus<
+        memory_map_t<MBC>,
+        graphics::vram_access_policy,
+        graphics::oam_dma_access_policy,
+        graphics::oam_ppu_access_policy>;
 
-    export class memory_buses
+    export template <mbc::MemoryBankController MBC>
+    using ppu_memory_bus_t = memory::memory_bus<
+        memory_map_t<MBC>,
+        graphics::oam_ppu_access_policy>;
+
+    export template <mbc::MemoryBankController MBC>
+    using oam_dma_memory_bus_t = memory::memory_bus<memory_map_t<MBC>>;
+
+    export template <mbc::MemoryBankController MBC>
+    class memory_buses
     {
     public:
         memory_buses(
-            memory_map_t& map,
+            memory_map_t<MBC>& map,
             const graphics::pixel_processing_unit& ppu,
             const graphics::oam_dma& oam_dma)
             : vram_policy{ppu}
               , oam_dma_policy{oam_dma}
               , oam_ppu_policy{ppu, oam_dma}
-              , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy}
-              , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, rom_policy}
-              , ppu_bus_{map, rom_policy, oam_ppu_policy}
+              , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
+              , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
+              , ppu_bus_{map, oam_ppu_policy}
               , oam_dma_bus_{map}
         {
         }
@@ -364,14 +434,13 @@ case i: break;
         [[nodiscard]] auto& oam_bus() { return oam_dma_bus_; }
 
     private:
-        rom_read_only_policy_t rom_policy{};
         graphics::vram_access_policy vram_policy;
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
 
-        cpu_memory_bus_t cpu_bus_;
-        timers_memory_bus_t timers_bus_;
-        ppu_memory_bus_t ppu_bus_;
-        oam_dma_memory_bus_t oam_dma_bus_;
+        cpu_memory_bus_t<MBC> cpu_bus_;
+        timers_memory_bus_t<MBC> timers_bus_;
+        ppu_memory_bus_t<MBC> ppu_bus_;
+        oam_dma_memory_bus_t<MBC> oam_dma_bus_;
     };
 }

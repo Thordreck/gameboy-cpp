@@ -31,6 +31,7 @@ target_sources(emulator-gameboy PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_cpu.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_scheduler.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_factory.cppm
 )
 
 # UI

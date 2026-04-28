@@ -20,7 +20,7 @@ namespace cartridge
         hardware_type hardware;
     };
 
-    [[nodiscard]] std::string pretty_print(const hardware_type type)
+    export [[nodiscard]] std::string pretty_print(const hardware_type type)
     {
         using enum hardware_type;
 

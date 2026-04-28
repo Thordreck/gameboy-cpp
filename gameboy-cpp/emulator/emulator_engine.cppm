@@ -20,32 +20,39 @@ namespace emulator
 {
     using lcd_memory_t = std::array<std::uint8_t, graphics::lcd_memory_size>;
 
-    export class engine
+    export class base_engine
     {
     public:
-        explicit engine(const cartridge::rom& rom)
+        virtual ~base_engine() = default;
+        virtual lcd_view_t lcd() const = 0;
+        virtual void update_joypad_state(joypad::const_input_state_view_t state) = 0;
+        virtual void tick(std::uint32_t num_ticks) = 0;
+    };
+
+    export template<mbc::MemoryBankController MBC>
+    class engine : public base_engine
+    {
+    public:
+        explicit engine(MBC&& mbc_imp)
         : lcd_adapter { lcd_memory }
-        , memory_map { internal_memory, oam_dma, timers, interrupts, ppu_, joypad }
+        , mbc { std::forward<MBC>(mbc_imp) }
+        , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad }
         , memory_buses { memory_map.get(), ppu_, oam_dma }
         , cpu_runner { cpu }
-        , cartridge_header { rom.header }
         {
-            // TODO: proper mbc support
-            std::ranges::copy(rom.data | std::views::take(internal_memory.rom_bank_0.size()), internal_memory.rom_bank_0.begin());
-            std::ranges::copy(rom.data | std::views::drop(internal_memory.rom_bank_0.size()), internal_memory.rom_bank_n.begin());
-
             cpu.pc = 0x100;
             cpu.sp = 0xFFFE;
             timers.divider() = 0xAB;
         }
 
-        [[nodiscard]] lcd_view_t lcd() const { return lcd_memory; }
-        [[nodiscard]] memory_map_t& memory() { return memory_map.get(); }
-        [[nodiscard]] cartridge::header cartridge() const { return cartridge_header; }
+        ~engine() override = default;
 
-        void update_joypad_state(const joypad::const_input_state_view_t state) { joypad.set_state(state); }
+        [[nodiscard]] lcd_view_t lcd() const override { return lcd_memory; }
+        [[nodiscard]] auto& memory() { return memory_map.get(); }
 
-        void tick(const std::uint32_t num_ticks)
+        void update_joypad_state(const joypad::const_input_state_view_t state) override { joypad.set_state(state); }
+
+        void tick(const std::uint32_t num_ticks) override
         {
             PROFILER_SCOPE("Engine::tick()");
 
@@ -70,12 +77,10 @@ namespace emulator
         graphics::pixel_processing_unit ppu_ {};
 
         internal_memory internal_memory {};
-        mbc::external_memory external_memory {};
-        memory_map memory_map;
-        memory_buses memory_buses;
+        MBC mbc;
+        memory_map<MBC> memory_map;
+        memory_buses<MBC> memory_buses;
 
         cpu_runner cpu_runner;
-        cartridge::header cartridge_header;
     };
-
 }

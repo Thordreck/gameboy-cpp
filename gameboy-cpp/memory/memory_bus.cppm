@@ -57,19 +57,4 @@ namespace memory
         std::tuple<Policies&...> policies;
     };
 
-    export template <memory_address_t start, memory_address_t end>
-    requires (start <= end)
-    class read_only_memory_policy
-    {
-    public:
-        [[nodiscard]] static bool can_read(const memory_address_t _) { return true; }
-        [[nodiscard]] static bool can_write(const memory_address_t address) { return !is_in_region<start, end>(address); }
-    };
-
-    export struct free_access_policy
-    {
-        [[nodiscard]] static bool can_read(const memory_address_t) { return true; }
-        [[nodiscard]] static bool can_write(const memory_address_t) { return true; }
-    };
-
 }

@@ -38,15 +38,12 @@ namespace emulator
         {
             PROFILER_SCOPE("Engine Thread");
 
-            while (const auto event = sdl::poll_event())
+            while (const auto event_opt = sdl::poll_event())
             {
-                std::ignore = imgui_platform.process_event(event.value());
+                const auto event = event_opt.value();
+                std::ignore = imgui_platform.process_event(event);
 
-                should_quit = event
-                    .transform(&sdl::event::parse)
-                    .transform([] (const auto& e) { return std::holds_alternative<sdl::quit_event>(e); })
-                    .value_or(false);
-
+                should_quit = std::holds_alternative<sdl::quit_event>(event.parse());
                 if (should_quit) { return; }
             }
 

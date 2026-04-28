@@ -11,7 +11,7 @@ int main()
     using namespace emulator;
 
     sdl_joypad_source joypad {};
-    gameboy<engine, sdl_joypad_source> emulator { joypad };
+    gameboy emulator { joypad };
     graphical_interface ui{ };
 
     while (!ui.quit_app_requested())
