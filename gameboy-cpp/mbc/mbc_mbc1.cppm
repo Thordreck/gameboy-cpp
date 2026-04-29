@@ -28,27 +28,64 @@ namespace mbc
 
             // RAM
             const std::size_t ram_bank_count = ram_size / external_ram_size;
-            external_ram_banks.resize(ram_bank_count);
+            ram_banks.resize(ram_bank_count);
         }
 
         [[nodiscard]] std::uint8_t read_rom_bank_0(const std::uint16_t address) const
         {
-            return rom_banks[0][address - rom_bank_0_start_address];
+            using enum banking_mode;
+            const std::uint8_t raw_bank_index = bank_mode == simple ? 0 : bank_register_2 << 5;
+            const std::uint8_t bank_index = raw_bank_index % rom_banks.size();
+
+            return rom_banks[bank_index][address - rom_bank_0_start_address];
         }
 
         [[nodiscard]] std::uint8_t read_rom_bank_n(const std::uint16_t address) const
         {
-            return rom_banks[rom_bank_index][address - rom_bank_n_start_address];
+            const std::uint8_t raw_bank_index = bank_register_2 << 5 | bank_register_1;
+            const std::uint8_t bank_index = raw_bank_index % rom_banks.size();
+
+            return rom_banks[bank_index][address - rom_bank_n_start_address];
         }
 
         [[nodiscard]] std::uint8_t read_external_ram(const std::uint16_t address) const
         {
-            return ram_enabled
-                ? external_ram_banks[external_ram_bank_index][address - external_ram_start_address]
-                : 0xFF;
+            if (!ram_enabled || ram_banks.empty())
+            {
+                return 0xFF;
+            }
+
+            using enum banking_mode;
+            const std::uint8_t raw_bank_index = bank_mode == simple ? 0 : bank_register_2;
+            const std::uint8_t bank_index = raw_bank_index % ram_banks.size();
+
+            return ram_banks[bank_index][address - external_ram_start_address];
         }
 
         void write_rom_bank_0(const std::uint16_t address, const std::uint8_t value)
+        {
+            write_registers(address, value);
+        }
+
+        void write_rom_bank_n(const std::uint16_t address, const std::uint8_t value)
+        {
+            write_registers(address, value);
+        }
+
+        void write_external_ram(const std::uint16_t address, const std::uint8_t value)
+        {
+            if (ram_enabled && !ram_banks.empty())
+            {
+                using enum banking_mode;
+                const std::uint8_t raw_bank_index = bank_mode == simple ? 0 : bank_register_2;
+                const std::uint8_t bank_index = raw_bank_index % ram_banks.size();
+
+                ram_banks[bank_index][address - external_ram_start_address] = value;
+            }
+        }
+
+    private:
+        void write_registers(const std::uint16_t address, const std::uint8_t value)
         {
             if (constexpr std::uint16_t ram_enable_end_address { 0x1FFF }; address <= ram_enable_end_address)
             {
@@ -57,20 +94,20 @@ namespace mbc
 
                 ram_enabled = (value & enable_ram_mask) == enable_ram_value;
             }
-            else if (constexpr std::uint16_t rom_bank_select_end_address { 0x3FFF }; address <= rom_bank_select_end_address)
+            else if (constexpr std::uint16_t bank_register_1_end_address { 0x3FFF }; address <= bank_register_1_end_address)
             {
-                constexpr std::uint8_t rom_bank_select_mask = 0x1F;
-                const std::uint8_t raw_rom_bank_index = rom_bank_select_mask & value;
-                const std::uint8_t rom_bank_index_clamp_mask = 0xFF >> (8 - rom_banks.size());
-                const std::uint8_t clamped_rom_bank_index = raw_rom_bank_index & rom_bank_index_clamp_mask;
+                constexpr std::uint8_t bank_register_1_write_mask = 0x1F;
+                const std::uint8_t raw_bank_register_1 = bank_register_1_write_mask & value;
 
-                rom_bank_index = std::max<std::uint8_t>(1, clamped_rom_bank_index);
+                bank_register_1 = std::max<std::uint8_t>(1, raw_bank_register_1);
             }
-            else if (constexpr std::uint16_t ram_bank_select_end_address { 0x5FFF }; address <= rom_bank_select_end_address)
+            else if (constexpr std::uint16_t bank_register_2_end_address { 0x5FFF }; address <= bank_register_2_end_address)
             {
-                // TODO: implement
+                constexpr std::uint8_t bank_register_2_write_mask = 0b11;
+
+                bank_register_2 = bank_register_2_write_mask & value;
             }
-            else
+            else if (constexpr std::uint16_t bank_mode_select_end_address { 0x7FFF }; address <= bank_mode_select_end_address)
             {
                 using enum banking_mode;
                 constexpr std::uint8_t banking_mode_select_mask = 0x01;
@@ -78,24 +115,13 @@ namespace mbc
             }
         }
 
-        void write_rom_bank_n(const std::uint16_t, const std::uint8_t) {}
-
-        void write_external_ram(const std::uint16_t address, const std::uint8_t value)
-        {
-            if (ram_enabled)
-            {
-                external_ram_banks[external_ram_bank_index][address - external_ram_start_address] = value;
-            }
-        }
-
-    private:
         std::vector<rom_bank_t> rom_banks{};
-        std::vector<external_ram_t> external_ram_banks {};
+        std::vector<external_ram_t> ram_banks {};
 
         bool ram_enabled { false };
-        std::uint8_t rom_bank_index { 1 };
-        std::uint8_t external_ram_bank_index { 0 };
+        std::uint8_t bank_register_1 { 1 };
+        std::uint8_t bank_register_2 { 0 };
         banking_mode bank_mode { banking_mode::simple };
-
     };
+
 }

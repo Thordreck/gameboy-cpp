@@ -5,7 +5,7 @@ import std;
 namespace mbc
 {
     export constexpr std::size_t rom_bank_size = 0x4000;
-    export constexpr std::size_t external_ram_size = 0x1000;
+    export constexpr std::size_t external_ram_size = 0x2000;
 
     export constexpr std::uint16_t rom_bank_0_start_address = 0x0000;
     export constexpr std::uint16_t rom_bank_n_start_address = 0x4000;

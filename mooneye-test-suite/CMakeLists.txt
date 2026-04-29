@@ -20,6 +20,7 @@ doctest_discover_tests(mooneye_suite_tests)
 target_sources(mooneye_suite_tests
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/acceptance.test.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/emulator_only.test.cpp
 )
 
 # Copy ROMs to build directory
