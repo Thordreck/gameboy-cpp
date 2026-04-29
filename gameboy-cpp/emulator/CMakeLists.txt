@@ -35,11 +35,33 @@ target_sources(emulator-gameboy PUBLIC
 )
 
 # UI
+set(UI_BACKEND "SDL" CACHE STRING "UI backend")
+set_property(CACHE UI_BACKEND PROPERTY STRINGS SDL Qt)
+
+add_library(emulator-ui-backend STATIC)
+target_compile_features(emulator-ui-backend PUBLIC cxx_std_23)
+set_target_properties(emulator-ui-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+add_library(emulator::ui::backend ALIAS emulator-ui-backend)
+
+if(UI_BACKEND STREQUAL "SDL")
+	add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/imgui ${CMAKE_BINARY_DIR}/third_party/imgui)
+	add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/pfd ${CMAKE_BINARY_DIR}/third_party/pfd)
+
+	target_compile_definitions(emulator-ui-backend PUBLIC UI_SDL)
+	target_link_libraries(emulator-ui-backend PUBLIC emulator::core imgui sdl pfd profiling utilities)
+	target_sources(emulator-ui-backend PUBLIC
+			FILE_SET
+			CXX_MODULES
+			FILES
+			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_sdl.cppm
+	)
+endif()
+
 add_library(emulator-ui)
 add_library(emulator::ui ALIAS emulator-ui)
 target_compile_features(emulator-ui PUBLIC cxx_std_23)
 set_target_properties(emulator-ui PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-ui PUBLIC emulator::core imgui sdl pfd profiling utilities)
+target_link_libraries(emulator-ui PUBLIC emulator::core emulator::ui::backend)
 target_sources(emulator-ui PUBLIC
 		FILE_SET
 		CXX_MODULES

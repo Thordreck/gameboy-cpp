@@ -13,17 +13,7 @@ int main()
     sdl_joypad_source joypad {};
     gameboy emulator { joypad };
     graphical_interface ui{ };
-
-    while (!ui.quit_app_requested())
-    {
-        PROFILER_SCOPE("UI Frame");
-
-        using namespace std::chrono_literals;
-        utils::execute_for(
-            [&] { ui.render(emulator); }
-            , 16ms
-            , [](const auto& d) { std::this_thread::sleep_for(d); });
-    }
+    ui.render(emulator);
 
     return 0;
 }

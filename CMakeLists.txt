@@ -13,8 +13,6 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/imgui)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/memory)
