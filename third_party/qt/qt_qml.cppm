@@ -1,7 +1,9 @@
 module;
 #include <QQmlApplicationEngine>
+#include <QtCore/QDebug>
 
 export module qt:qml;
+
 import std;
 
 namespace qt
@@ -11,6 +13,9 @@ namespace qt
     public:
         explicit qml_engine(const std::string_view file_path)
         {
+            QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+                    [] (const auto& url) { qFatal() << "Could not create qt object from uri:" <<  url; });
+
             engine.load(QString(file_path.data()));
         }
 
