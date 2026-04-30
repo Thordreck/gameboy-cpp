@@ -17,7 +17,7 @@ namespace emulator
     export class graphical_interface
     {
     public:
-        graphical_interface()
+        graphical_interface(int, char**)
             : sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video) )}
             , sdl_window { utils::value_or_panic(sdl::window::create("gameboy-cpp", 160, 144, sdl::window_flags::resizable)) }
             , sdl_renderer { utils::value_or_panic(sdl::renderer::create(sdl_window)) }
@@ -33,7 +33,7 @@ namespace emulator
         }
 
         template <Emulator Imp>
-        void render(Imp& emulator)
+        int render(Imp& emulator)
         {
             while (!should_quit)
             {
@@ -45,6 +45,8 @@ namespace emulator
                     , 16ms
                     , [](const auto& d) { std::this_thread::sleep_for(d); });
             }
+
+            return 0;
         }
 
     private:

@@ -4,16 +4,15 @@ import std;
 import emulator;
 import utilities;
 
-int main()
+int main(int argc, char** argv)
 {
     PROFILER_SESSION();
 
     using namespace emulator;
 
-    sdl_joypad_source joypad {};
+    joypad_source joypad {};
     gameboy emulator { joypad };
-    graphical_interface ui{ };
-    ui.render(emulator);
+    graphical_interface ui { argc, argv };
 
-    return 0;
+    return ui.render(emulator);
 }

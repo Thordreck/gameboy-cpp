@@ -2,7 +2,7 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "base",
+      "name": "ninja",
       "hidden": true,
       "generator": "Ninja",
       "warnings": {
@@ -10,18 +10,8 @@
       }
     },
     {
-      "name": "with-ccache",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
-      }
-    },
-    {
       "name": "debug",
-      "displayName": "Debug",
-      "inherits": "base",
-      "binaryDir": "${sourceDir}/build/debug",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "BUILD_TESTING": "ON",
@@ -29,16 +19,8 @@
       }
     },
     {
-      "name": "debug-ccache",
-      "binaryDir": "${sourceDir}/build/debug-ccache",
-      "displayName": "Debug (ccache)",
-      "inherits": ["debug", "with-ccache"]
-    },
-    {
       "name": "release",
-      "displayName": "Release",
-      "inherits": "base",
-      "binaryDir": "${sourceDir}/build/release",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "BUILD_TESTING": "OFF",
@@ -46,16 +28,8 @@
       }
     },
     {
-      "name": "release-ccache",
-      "displayName": "Release (ccache)",
-      "binaryDir": "${sourceDir}/build/release-ccache",
-      "inherits": ["release", "with-ccache"]
-    },
-    {
       "name": "relWithDebInfo",
-      "displayName": "RelWithDebInfo",
-      "inherits": "base",
-      "binaryDir": "${sourceDir}/build/release-deb-info",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "BUILD_TESTING": "OFF",
@@ -63,40 +37,146 @@
       }
     },
     {
-      "name": "relWithDebInfo-ccache",
-      "displayName": "RelWithDebInfo (ccache)",
-      "binaryDir": "${sourceDir}/build/release-deb-info-ccache",
-      "inherits": ["relWithDebInfo", "with-ccache"]
-    },
-    {
-      "name": "tracy",
-      "displayName": "Tracy Profiling",
-      "inherits": "relWithDebInfo",
-      "binaryDir": "${sourceDir}/build/release-tracy",
+      "name": "with-tracy-profiling",
+      "hidden": true,
       "cacheVariables": {
         "PROFILING_BACKEND": "Tracy"
       }
     },
     {
-      "name": "tracy-ccache",
-      "displayName": "Tracy Profiling (ccache)",
-      "binaryDir": "${sourceDir}/build/release-tracy-ccache",
-      "inherits": ["tracy", "with-ccache"]
-    },
-    {
-      "name": "ctrack",
-      "displayName": "CTrack Profiling",
-      "inherits": "relWithDebInfo",
-      "binaryDir": "${sourceDir}/build/release-ctrack",
+      "name": "with-ctrack-profiling",
+      "hidden": true,
       "cacheVariables": {
         "PROFILING_BACKEND": "CTrack"
       }
     },
     {
-      "name": "ctrack-ccache",
-      "displayName": "CTrack Profiling (ccache)",
-      "binaryDir": "${sourceDir}/build/release-ctrack-ccache",
-      "inherits": ["ctrack", "with-ccache"]
+      "name": "with-no-profiling",
+      "hidden": true,
+      "cacheVariables": {
+        "PROFILING_BACKEND": "None"
+      }
+    },
+    {
+      "name": "with-sdl-ui",
+      "hidden": true,
+      "cacheVariables": {
+        "UI_BACKEND": "SDL"
+      }
+    },
+    {
+      "name": "with-qt-ui",
+      "hidden": true,
+      "cacheVariables": {
+        "UI_BACKEND": "Qt"
+      }
+    },
+    {
+      "name": "with-sdl-joypad",
+      "hidden": true,
+      "cacheVariables": {
+        "JOYPAD_BACKEND": "SDL"
+      }
+    },
+    {
+      "name": "with-qt-joypad",
+      "hidden": true,
+      "cacheVariables": {
+        "JOYPAD_BACKEND": "Qt"
+      }
+    },
+    {
+      "name": "with-sdl",
+      "hidden": true,
+      "inherits": ["with-sdl-ui", "with-sdl-joypad"]
+    },
+    {
+      "name": "with-qt",
+      "hidden": true,
+      "inherits": ["with-qt-ui", "with-qt-joypad"]
+    },
+
+    {
+      "name": "ninja-no-profiling-sdl",
+      "hidden": true,
+      "inherits": ["ninja", "with-no-profiling", "with-sdl"]
+    },
+    {
+      "name": "ninja-tracy-profiling-sdl",
+      "hidden": true,
+      "inherits": ["ninja", "with-tracy-profiling", "with-sdl"]
+    },
+    {
+      "name": "ninja-ctrack-profiling-sdl",
+      "hidden": true,
+      "inherits": ["ninja", "with-ctrack-profiling", "with-sdl"]
+    },
+
+    {
+      "name": "ninja-no-profiling-qt",
+      "hidden": true,
+      "inherits": ["ninja", "with-no-profiling", "with-qt"]
+    },
+    {
+      "name": "ninja-tracy-profiling-qt",
+      "hidden": true,
+      "inherits": ["ninja", "with-tracy-profiling", "with-qt"]
+    },
+    {
+      "name": "ninja-ctrack-profiling-qt",
+      "hidden": true,
+      "inherits": ["ninja", "with-ctrack-profiling", "with-qt"]
+    },
+
+    {
+      "name": "ninja-no-profiling-sdl-release",
+      "displayName": "Ninja Release (SDL)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-sdl", "release"]
+    },
+    {
+      "name": "ninja-no-profiling-qt-release",
+      "displayName": "Ninja Release (Qt)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-qt", "release"]
+    },
+
+    {
+      "name": "ninja-tracy-profiling-sdl-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (Tracy, SDL)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-tracy-profiling-sdl", "relWithDebInfo"]
+    },
+    {
+      "name": "ninja-ctrack-profiling-sdl-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (ctrack, SDL)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-ctrack-profiling-sdl", "relWithDebInfo"]
+    },
+    {
+      "name": "ninja-tracy-profiling-qt-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (Tracy, Qt)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-tracy-profiling-qt", "relWithDebInfo"]
+    },
+    {
+      "name": "ninja-ctrack-profiling-qt-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (ctrack, Qt)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-ctrack-profiling-qt", "relWithDebInfo"]
+    },
+
+    {
+      "name": "ninja-no-profiling-sdl-debug",
+      "displayName": "Ninja Debug (SDL)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-sdl", "debug"]
+    },
+    {
+      "name": "ninja-no-profiling-qt-debug",
+      "displayName": "Ninja Debug (Qt)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-qt", "debug"]
     }
   ],
   "testPresets": [

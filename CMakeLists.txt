@@ -12,7 +12,25 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest/cmake/doctest.cmake)
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
+if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
+endif()
+
+if(UI_BACKEND STREQUAL "SDL")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/imgui)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
+endif()
+
+if(UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt")
+    include(${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/qt_setup.cmake NO_POLICY_SCOPE)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/qt)
+endif()
+
+if(PROFILING_BACKEND STREQUAL "Tracy")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/tracy)
+elseif(PROFILING_BACKEND STREQUAL "CTrack")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/ctrack)
+endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/memory)

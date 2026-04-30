@@ -7,12 +7,10 @@ set_target_properties(profiling-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_M
 add_library(profiling::backend ALIAS profiling-backend)
 
 if(PROFILING_BACKEND STREQUAL "Tracy")
-    add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/tracy ${CMAKE_BINARY_DIR}/third_party/tracy)
     target_compile_definitions(profiling-backend PUBLIC PROFILING_TRACY)
     target_link_libraries(profiling-backend PUBLIC Tracy::TracyClient)
     target_include_directories(profiling-backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 elseif(PROFILING_BACKEND STREQUAL "CTrack")
-    add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/ctrack ${CMAKE_BINARY_DIR}/third_party/ctrack)
     target_compile_definitions(profiling-backend PUBLIC PROFILING_CTRACK)
     target_include_directories(profiling-backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(profiling-backend PUBLIC ctrack)
