@@ -21,7 +21,7 @@ namespace emulator
             return std::array
             {
                 source[enter],
-                source[right_shift],
+                source[backspace],
                 source[up],
                 source[down],
                 source[left],

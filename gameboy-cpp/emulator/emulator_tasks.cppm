@@ -36,7 +36,7 @@ namespace emulator
     };
 
     export template <Engine Imp, JoypadSource Source>
-    void update_joypad_state(Imp& engine, const Source& source)
+    void update_joypad_state(Imp& engine, Source& source)
     {
         engine.update_joypad_state(source.read());
     }

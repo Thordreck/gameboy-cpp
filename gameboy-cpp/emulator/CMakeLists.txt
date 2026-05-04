@@ -112,8 +112,14 @@ if(JOYPAD_BACKEND STREQUAL "SDL")
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad_sdl.cppm
 	)
-elseif(JOYPAD_BACKEND STREQUAL "Qt")
-	target_link_libraries(emulator-joypad-backend PUBLIC emulator::core profiling utilities)
+elseif(JOYPAD_BACKEND STREQUAL "Qt" AND UI_BACKEND STREQUAL "Qt")
+	add_library(emulator-joypad-backend-qt STATIC)
+	target_compile_features(emulator-joypad-backend-qt PUBLIC cxx_std_23)
+	target_sources(emulator-joypad-backend-qt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad_qt.cpp)
+	target_link_libraries(emulator-joypad-backend-qt PRIVATE qt)
+	set_target_properties(emulator-joypad-backend-qt PROPERTIES AUTOMOC ON)
+
+	target_link_libraries(emulator-joypad-backend PUBLIC emulator::core profiling utilities qt emulator-joypad-backend-qt)
 	target_compile_definitions(emulator-joypad-backend PUBLIC JOYPAD_QT)
 
 	target_sources(emulator-joypad-backend PUBLIC
