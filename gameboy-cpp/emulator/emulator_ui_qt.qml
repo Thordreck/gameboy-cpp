@@ -11,6 +11,15 @@ ApplicationWindow {
     visible: true
     title: "Gameboy-cpp"
 
+    background: FramebufferView {
+        id: viewport
+        backend: Backend
+        anchors.centerIn: parent
+        width: parent.width
+        smooth: false
+        height: width * 144 / 160
+    }
+
     menuBar: MenuBar {
         Menu {
             title: "File"

@@ -20,11 +20,16 @@ namespace emulator
 
         [[nodiscard]] bool has_rom() const { return emulator.has_rom(); }
         [[nodiscard]] bool is_running() const { return emulator.is_running(); }
-        [[nodiscard]] std::expected<void, std::string> load_rom(const std::string_view path)
+        [[nodiscard]] ui_framebuffer_t framebuffer() { return emulator.framebuffer(); }
+        [[nodiscard]] ui_load_rom_result_t load_rom(const std::string_view path)
         {
             return cartridge::load_rom_file(path)
                 .and_then([this] (const auto& data) { return emulator.load_rom(data); });
         }
+
+        void resume() { emulator.resume(); }
+        void pause() { emulator.pause(); }
+        void stop() { emulator.stop(); }
 
     private:
         Emulator& emulator;
