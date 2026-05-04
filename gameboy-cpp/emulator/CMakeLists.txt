@@ -53,21 +53,25 @@ if(UI_BACKEND STREQUAL "SDL")
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_sdl.cppm
 	)
 elseif(UI_BACKEND STREQUAL "Qt")
-	target_compile_definitions(emulator-ui-backend PUBLIC UI_QT)
-	target_link_libraries(emulator-ui-backend PRIVATE emulator::core profiling utilities qt)
-	set_target_properties(emulator-ui-backend PROPERTIES AUTOMOC ON AUTORCC ON)
+	add_library(emulator-ui-backend-qml STATIC)
+	target_compile_features(emulator-ui-backend-qml PUBLIC cxx_std_23)
+	target_sources(emulator-ui-backend-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
+	target_link_libraries(emulator-ui-backend-qml PRIVATE qt)
+	set_target_properties(emulator-ui-backend-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
+	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES  QT_RESOURCE_ALIAS emulator_ui_qt)
 
-	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
-			QT_RESOURCE_ALIAS emulator_ui_qt
-	)
-
-	qt_add_qml_module(emulator-ui-backend
-			URI emulator.ui
+	qt_add_qml_module(emulator-ui-backend-qml
+			URI Emulator.UI
 			VERSION ${PROJECT_VERSION}
 			QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml
-			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/emulator/ui
-			PLUGIN_TARGET emulator-ui-backend-plugin
+			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Emulator/UI
+			PLUGIN_TARGET emulator-ui-backend-qml-plugin
 	)
+
+	target_link_libraries(emulator-ui-backend-qml PUBLIC emulator-ui-backend-qml-plugin)
+
+	target_compile_definitions(emulator-ui-backend PUBLIC UI_QT)
+	target_link_libraries(emulator-ui-backend PRIVATE emulator::core profiling utilities qt emulator-ui-backend-qml)
 
 	target_sources(emulator-ui-backend PUBLIC
 			FILE_SET
@@ -76,7 +80,6 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cppm
 	)
 
-	target_link_libraries(emulator-ui-backend PUBLIC emulator-ui-backend-plugin)
 endif()
 
 add_library(emulator-ui)

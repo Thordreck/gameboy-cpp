@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Dialogs
+import Emulator.UI
 
 ApplicationWindow {
     id: root
@@ -9,16 +11,36 @@ ApplicationWindow {
     visible: true
     title: "Gameboy-cpp"
 
-    signal loadRomRequested()
-
     menuBar: MenuBar {
         Menu {
             title: "File"
 
             Action {
                 text: "Load ROM"
-                onTriggered: root.loadRomRequested()
+                onTriggered: romFileDialog.open()
             }
         }
+    }
+
+    FileDialog {
+        id: romFileDialog
+        currentFolder: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Rom Files (*.gb)"]
+        onAccepted:{
+            const result = Backend.load_rom(selectedFile)
+
+            if(!result.success) {
+                errorDialog.text = "Error loading rom file"
+                errorDialog.informativeText = result.error
+                errorDialog.open()
+            }
+
+        }
+    }
+
+    MessageDialog {
+        id: errorDialog
+        buttons: MessageDialog.Ok
     }
 }
