@@ -59,6 +59,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	target_link_libraries(emulator-ui-backend-qml PRIVATE qt)
 	set_target_properties(emulator-ui-backend-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES  QT_RESOURCE_ALIAS emulator_ui_qt)
+	set_source_files_properties(${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png PROPERTIES  QT_RESOURCE_ALIAS gameboy-icon.png)
 
 	qt_add_qml_module(emulator-ui-backend-qml
 			URI Emulator.UI
@@ -66,6 +67,11 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml
 			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Emulator/UI
 			PLUGIN_TARGET emulator-ui-backend-qml-plugin
+	)
+
+	qt_add_resources(emulator-ui-backend-qml "icons"
+			PREFIX "/icons"
+			FILES ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
 	)
 
 	target_link_libraries(emulator-ui-backend-qml PUBLIC emulator-ui-backend-qml-plugin)

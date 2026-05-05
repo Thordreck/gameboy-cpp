@@ -45,6 +45,8 @@ namespace emulator
         template <Emulator Imp>
         int render(Imp& emulator)
         {
+            utils::panic_on_error(app.set_window_icon(":/icons/gameboy-icon.png"));
+
             emulator_ui_backend_adapter ui_adapter { emulator };
             emulator_ui_backend ui_backend { ui_adapter };
             emulator_ui_backend_singleton::set_backend(&ui_backend);
