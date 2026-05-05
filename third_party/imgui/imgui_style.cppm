@@ -98,18 +98,6 @@ namespace imgui
         scoped_style_var(const scoped_style_var&) = delete;
         scoped_style_var& operator=(const scoped_style_var&) = delete;
 
-        /*
-        scoped_widget(scoped_widget&& other) noexcept
-            : scoped_widget { std::exchange(other.close_widget_fn, nullptr) }
-        {}
-
-        scoped_widget& operator=(scoped_widget&& other) noexcept
-        {
-            close_widget_fn = std::exchange(other.close_widget_fn, nullptr);
-            return *this;
-        }
-        */
-
     private:
         explicit scoped_style_var(const style_var variable)
             : variable { variable }

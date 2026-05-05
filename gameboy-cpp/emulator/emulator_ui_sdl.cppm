@@ -119,8 +119,23 @@ namespace emulator
             if (emulator.has_rom())
             {
                 const auto main_viewport = utils::value_or_panic(imgui::viewport::get_main());
-                imgui::set_next_window_position(main_viewport.work_area_position());
-                imgui::set_next_window_size(main_viewport.work_area_size());
+                const auto work_area_position = main_viewport.work_area_position();
+                const auto work_area_size = main_viewport.work_area_size();
+
+                const std::size_t texture_width = utils::value_or_panic(sdl_texture.width());
+                const std::size_t texture_height = utils::value_or_panic(sdl_texture.height());
+
+                const float ratio = std::min(work_area_size.x / texture_width, work_area_size.y / texture_height);
+
+                const imgui::vec2 viewport_size { texture_width * ratio, texture_height * ratio };
+                const imgui::vec2 viewport_position
+                {
+                    work_area_position.x + (work_area_size.x - viewport_size.x) * 0.5f,
+                    work_area_position.y + (work_area_size.y - viewport_size.y) * 0.5f
+                };
+
+                imgui::set_next_window_position(viewport_position);
+                imgui::set_next_window_size(viewport_size);
 
                 const auto viewport_style = imgui::scoped_style_var::create(imgui::style_var::window_rounding, 0.0f);
 
@@ -133,9 +148,8 @@ namespace emulator
                     auto [lock, surface] = utils::value_or_panic(sdl::lock_to_surface(sdl_texture));
                     std::ranges::copy(emulator.framebuffer(), static_cast<std::uint8_t*>(surface.pixels()));
 
-                    const imgui::vec2 viewport_size = imgui::get_available_content_space();
                     const imgui::texture_id texture_id = reinterpret_cast<imgui::texture_id>(sdl::internal::native::get_handle(sdl_texture));
-                    imgui::image(texture_id, viewport_size);
+                    imgui::image(texture_id, imgui::get_available_content_space());
                 }
             }
 

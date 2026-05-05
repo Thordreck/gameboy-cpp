@@ -1,4 +1,6 @@
 module;
+#include <expected>
+
 #include "SDL3/SDL_render.h"
 
 export module sdl:texture;
@@ -39,6 +41,32 @@ namespace sdl
             }
 
             return std::unexpected{ SDL_GetError() };
+        }
+
+        [[nodiscard]] result<std::size_t> height() const
+        {
+            float height {};
+            float width {};
+
+            if (!SDL_GetTextureSize(imp.get(), &width, &height))
+            {
+                return std::unexpected{ SDL_GetError() };
+            }
+
+            return height;
+        }
+
+        [[nodiscard]] result<std::size_t> width() const
+        {
+            float height {};
+            float width {};
+
+            if (!SDL_GetTextureSize(imp.get(), &width, &height))
+            {
+                return std::unexpected{ SDL_GetError() };
+            }
+
+            return width;
         }
 
     private:
