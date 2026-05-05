@@ -1,6 +1,5 @@
 module;
 #include "imgui.h"
-#include "upstream/imgui.h"
 
 export module imgui:frame;
 

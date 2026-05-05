@@ -10,3 +10,4 @@ export import :fixed_size_queue;
 export import :fixed_capacity_vector;
 export import :io;
 export import :clock;
+export import :enum_extensions;

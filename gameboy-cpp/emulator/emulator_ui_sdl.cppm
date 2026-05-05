@@ -116,14 +116,27 @@ namespace emulator
             }
 
             // Viewport
-            if (const auto viewport = imgui::window("Viewport"); viewport && emulator.has_rom())
+            if (emulator.has_rom())
             {
-                auto [lock, surface] = utils::value_or_panic(sdl::lock_to_surface(sdl_texture));
-                std::ranges::copy(emulator.framebuffer(), static_cast<std::uint8_t*>(surface.pixels()));
+                const auto main_viewport = utils::value_or_panic(imgui::viewport::get_main());
+                imgui::set_next_window_position(main_viewport.work_area_position());
+                imgui::set_next_window_size(main_viewport.work_area_size());
 
-                const imgui::vec2 viewport_size = imgui::get_available_content_space();
-                const imgui::texture_id texture_id = reinterpret_cast<imgui::texture_id>(sdl::internal::native::get_handle(sdl_texture));
-                imgui::image(texture_id, viewport_size);
+                const auto viewport_style = imgui::scoped_style_var::create(imgui::style_var::window_rounding, 0.0f);
+
+                using enum imgui::window_flags;
+                using namespace utils::operators;
+                constexpr auto viewport_flags { no_nav | no_decoration | no_inputs };
+
+                if (const auto viewport = imgui::window("Viewport", viewport_flags); viewport)
+                {
+                    auto [lock, surface] = utils::value_or_panic(sdl::lock_to_surface(sdl_texture));
+                    std::ranges::copy(emulator.framebuffer(), static_cast<std::uint8_t*>(surface.pixels()));
+
+                    const imgui::vec2 viewport_size = imgui::get_available_content_space();
+                    const imgui::texture_id texture_id = reinterpret_cast<imgui::texture_id>(sdl::internal::native::get_handle(sdl_texture));
+                    imgui::image(texture_id, viewport_size);
+                }
             }
 
             imgui::render();

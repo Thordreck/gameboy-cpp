@@ -8,3 +8,4 @@ export import :assert;
 export import :demo;
 export import :frame;
 export import :sdl3;
+export import :viewport;

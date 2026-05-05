@@ -64,4 +64,5 @@ target_sources(imgui PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/imgui_frame.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/imgui_demo.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/imgui_sdl3.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/imgui_viewport.cppm
 )
