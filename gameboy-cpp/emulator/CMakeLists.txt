@@ -174,7 +174,8 @@ add_custom_command(TARGET gameboy-cpp POST_BUILD
 if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt"))
 	add_custom_command(TARGET gameboy-cpp POST_BUILD
 			COMMAND ${Qt6_DIR}/../../../bin/windeployqt.exe
-			--qmldir ${Qt6_DIR}/../../../qml
+			--qmldir ${CMAKE_CURRENT_SOURCE_DIR}
+			--no-translations
 			$<TARGET_FILE:gameboy-cpp>
 	)
 endif()

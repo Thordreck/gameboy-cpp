@@ -12,7 +12,7 @@ namespace emulator
     {
         if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
         {
-            const auto* keyEvent = static_cast<QKeyEvent*>(event);
+            const auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
             const bool pressed = event->type() == QEvent::KeyPress;
 
             switch (keyEvent->key())
