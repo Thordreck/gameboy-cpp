@@ -22,4 +22,10 @@ namespace sdl::internal
         }
     };
 
+    export template<typename Wrapper, typename Handle>
+    concept WrapperFor = requires(Wrapper& wrapper)
+    {
+        { native::get_handle(wrapper) } -> std::convertible_to<Handle*>;
+    };
+
 }

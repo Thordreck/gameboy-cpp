@@ -45,13 +45,14 @@ add_library(emulator::ui::backend ALIAS emulator-ui-backend)
 
 if(UI_BACKEND STREQUAL "SDL")
 	target_compile_definitions(emulator-ui-backend PUBLIC UI_SDL)
-	target_link_libraries(emulator-ui-backend PUBLIC emulator::core imgui sdl pfd profiling utilities)
+	target_link_libraries(emulator-ui-backend PUBLIC emulator::core imgui sdl sdl-image pfd profiling utilities)
 	target_sources(emulator-ui-backend PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_sdl.cppm
 	)
+
 elseif(UI_BACKEND STREQUAL "Qt")
 	add_library(emulator-ui-backend-qml STATIC)
 	target_compile_features(emulator-ui-backend-qml PUBLIC cxx_std_23)
@@ -176,6 +177,14 @@ add_custom_command(TARGET gameboy-cpp POST_BUILD
 		$<TARGET_RUNTIME_DLLS:gameboy-cpp>
 		COMMAND_EXPAND_LISTS
 )
+
+if(UI_BACKEND STREQUAL "SDL")
+	add_custom_command(TARGET gameboy-cpp POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${CMAKE_SOURCE_DIR}/resources
+			$<TARGET_FILE_DIR:gameboy-cpp>/assets
+	)
+endif()
 
 if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt"))
 	add_custom_command(TARGET gameboy-cpp POST_BUILD

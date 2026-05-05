@@ -60,6 +60,18 @@ namespace sdl
 
         [[nodiscard]] window_id id() const { return SDL_GetWindowID(imp.get()); }
 
+        template<typename Wrapper>
+        requires internal::WrapperFor<Wrapper, SDL_Surface>
+        [[nodiscard]] result<void> set_icon(Wrapper& icon)
+        {
+            if (!SDL_SetWindowIcon(imp.get(), internal::native::get_handle(icon)))
+            {
+                return std::unexpected(SDL_GetError());
+            }
+
+            return {};
+        }
+
     private:
         explicit window(SDL_Window* imp)
             : imp(imp, SDL_DestroyWindow)

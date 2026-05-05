@@ -6,6 +6,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RelWithDebInfo ON)
 
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 include(CTest)
@@ -20,6 +21,7 @@ if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL")
 endif()
 
 if(UI_BACKEND STREQUAL "SDL")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl-image)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/imgui)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
 endif()

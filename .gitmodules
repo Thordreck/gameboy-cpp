@@ -10,3 +10,6 @@
 [submodule "ctrack"]
 	path = third_party/ctrack/upstream
 	url = https://github.com/Compaile/ctrack.git
+[submodule "third_party/sdl-image/upstream"]
+	path = third_party/sdl-image/upstream
+	url = https://github.com/libsdl-org/SDL_image.git

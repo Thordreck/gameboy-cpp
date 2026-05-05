@@ -6,6 +6,7 @@ export module emulator.ui:sdl;
 
 import std;
 import sdl;
+import sdl_image;
 import pfd;
 import imgui;
 import cartridge;
@@ -19,16 +20,18 @@ namespace emulator
     public:
         graphical_interface(int, char**)
             : sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video) )}
-            , sdl_window { utils::value_or_panic(sdl::window::create("gameboy-cpp", 160, 144, sdl::window_flags::resizable)) }
+            , sdl_window { utils::value_or_panic(sdl::window::create("gameboy-cpp", 640, 480, sdl::window_flags::resizable)) }
             , sdl_renderer { utils::value_or_panic(sdl::renderer::create(sdl_window)) }
             , sdl_texture { utils::value_or_panic(sdl::texture::create(sdl_renderer, sdl::pixel_format::rgb_24, sdl::texture_access::streaming, 160, 144)) }
             , imgui_context { utils::value_or_panic(imgui::context::create()) }
             , imgui_backend { utils::value_or_panic(imgui::sdl3_renderer_backend::create(sdl_renderer)) }
             , imgui_platform { utils::value_or_panic(imgui::sdl3_platform::with_renderer(sdl_window, sdl_renderer)) }
+            , window_icon { utils::value_or_panic(sdl::load_image(std::filesystem::current_path() / "assets" / "icons" / "gameboy-icon.png"))}
         {
             imgui::check_version();
             imgui::set_dark_style();
 
+            utils::panic_on_error(sdl_window.set_icon(window_icon));
             utils::panic_on_error(sdl_renderer.set_vsync(sdl::renderer_vsync::disabled));
         }
 
@@ -137,6 +140,8 @@ namespace emulator
         imgui::context imgui_context;
         imgui::sdl3_renderer_backend imgui_backend;
         imgui::sdl3_platform imgui_platform;
+
+        sdl::surface window_icon;
 
         bool should_quit { false };
     };
