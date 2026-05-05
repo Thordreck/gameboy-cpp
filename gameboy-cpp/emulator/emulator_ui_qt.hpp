@@ -85,10 +85,16 @@ namespace emulator
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(FramebufferView)
+
         Q_PROPERTY(QObject* backend WRITE set_backend)
+        Q_PROPERTY(int framebufferWidth READ get_width CONSTANT)
+        Q_PROPERTY(int framebufferHeight READ get_height CONSTANT)
 
     public:
         void set_backend(QObject* b);
+
+        static int get_width() { return ui_framebuffer_width; }
+        static int get_height() { return ui_framebuffer_height; }
 
     protected:
         QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData* updatePaintNodeData) override;

@@ -15,10 +15,22 @@ ApplicationWindow {
     background: FramebufferView {
         id: viewport
         backend: Backend
-        anchors.centerIn: parent
-        width: parent.width
+        width: framebufferWidth
+        height: framebufferHeight
+        parent: root.contentItem
+
+        transform: [
+            Scale {
+                id: scale;
+                yScale: Math.min(viewport.parent.width / viewport.width, viewport.parent.height / viewport.height);
+                xScale: Math.min(viewport.parent.width / viewport.width, viewport.parent.height / viewport.height);
+                },
+            Translate {
+                x: (viewport.parent.width - viewport.width  * scale.xScale) / 2;
+                y: (viewport.parent.height - viewport.height * scale.yScale) / 2;
+        }]
+
         smooth: false
-        height: width * 144 / 160
     }
 
     menuBar: MenuBar {
