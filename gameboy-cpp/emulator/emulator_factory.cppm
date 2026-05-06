@@ -1,3 +1,5 @@
+module;
+#include "profiling.hpp"
 
 export module emulator.gameboy:factory;
 

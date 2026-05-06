@@ -142,6 +142,12 @@
     },
 
     {
+      "name": "ninja-no-profiling-sdl-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (SDL)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-sdl", "relWithDebInfo"]
+    },
+    {
       "name": "ninja-tracy-profiling-sdl-relWithDebInfo",
       "displayName": "Ninja RelWithDebInfo (Tracy, SDL)",
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -152,6 +158,12 @@
       "displayName": "Ninja RelWithDebInfo (ctrack, SDL)",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "inherits": ["ninja-ctrack-profiling-sdl", "relWithDebInfo"]
+    },
+    {
+      "name": "ninja-no-profiling-qt-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo (Qt)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja-no-profiling-qt", "relWithDebInfo"]
     },
     {
       "name": "ninja-tracy-profiling-qt-relWithDebInfo",
