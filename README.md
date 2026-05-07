@@ -50,10 +50,21 @@ cmake --build --preset "ninja-no-profiling-qt-release"
 For example for Qt6.11 under Windows and msvc, 
 the default installation path would be `C:/Qt/6.11.0/msvc2022_64`.
 
+## Acknowledgements
+
+* [Pan Docs](https://gbdev.io/pandocs/) has been my main go-to reference.
+* [The complete technical gb reference](https://gekkio.fi/files/gb-docs/gbctr.pdf) has also been an invaluable source of information as well.
+* [Blargg](https://github.com/retrio/gb-test-roms) test suite helped me greatly to get the cpu up running and achieve cycle accuracy. 
+* The comprehensive [mooneye](https://github.com/Gekkio/mooneye-test-suite/) test suite.
+* [r/emudev](https://www.reddit.com/r/EmuDev/) and its Discord channel is full of hidden knowledge gems.
+ 
 ## TO-DO 
 
 - [ ] Pass remaining [mooneye](https://github.com/Gekkio/mooneye-test-suite) tests.
 - [ ] Refactor graphics and interrupt modules.
+- [ ] Sound.
+- [ ] Save files/state support.
 - [ ] Add CI support and automatic releases.
 - [ ] Add performance tests.
+- [ ] Support for additional memory bank controllers.
 - [ ] PS Vita port?
