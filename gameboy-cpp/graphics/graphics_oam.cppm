@@ -121,7 +121,7 @@ namespace graphics
         [[nodiscard]] bool is_transfer_active() const { return is_transferring; }
         [[nodiscard]] memory::memory_address_t start_address() const { return start; }
 
-        [[nodiscard]] std::uint8_t active() const { return is_transfer_active(); }
+        [[nodiscard]] bool active() const { return is_transfer_active(); }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
             return active() ? 4 : std::numeric_limits<std::uint32_t>::max();

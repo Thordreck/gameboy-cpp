@@ -120,7 +120,7 @@ namespace graphics
         [[nodiscard]] bool is_enabled() const { return enabled; }
         [[nodiscard]] ppu_interrupt_sources interrupts() const { return interrupt_sources; }
 
-        [[nodiscard]] std::uint8_t active() const { return is_enabled(); }
+        [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
             if (!active()) [[unlikely]] { return std::numeric_limits<std::uint32_t>::max(); }
