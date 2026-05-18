@@ -63,10 +63,10 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	set_source_files_properties(${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png PROPERTIES  QT_RESOURCE_ALIAS gameboy-icon.png)
 
 	qt_add_qml_module(emulator-ui-backend-qml
-			URI Emulator.UI
+			URI Gameboy.UI
 			VERSION ${PROJECT_VERSION}
 			QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml
-			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Emulator/UI
+			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Gameboy/UI
 			PLUGIN_TARGET emulator-ui-backend-qml-plugin
 	)
 

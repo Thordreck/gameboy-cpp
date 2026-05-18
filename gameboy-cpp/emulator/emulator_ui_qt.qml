@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Dialogs
-import Emulator.UI
+import Gameboy.UI
 
 ApplicationWindow {
     id: root

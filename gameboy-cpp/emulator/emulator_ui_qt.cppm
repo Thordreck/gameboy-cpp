@@ -52,7 +52,7 @@ namespace emulator
             emulator_ui_backend_singleton::set_backend(&ui_backend);
 
             // TODO: replace by LoadFromModule
-            engine.load(":/qt/qml/Emulator/UI/emulator_ui_qt");
+            engine.load(":/qt/qml/Gameboy/UI/emulator_ui_qt");
             return app.execute();
         }
 
