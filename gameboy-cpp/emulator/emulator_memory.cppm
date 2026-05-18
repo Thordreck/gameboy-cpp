@@ -4,6 +4,7 @@ import std;
 import mbc;
 import timer;
 import memory;
+import serial;
 import joypad;
 import graphics;
 import utilities;
@@ -158,13 +159,15 @@ case i: break;
             graphics::pixel_processing_unit& ppu,
             const memory::memory_span_t<0x7F> hram,
             joypad::joypad& joypad,
-            graphics::oam_dma& oam_dma)
+            graphics::oam_dma& oam_dma,
+            serial::link& serial)
             : timers{timers}
               , interrupts{interrupts}
               , ppu{ppu}
               , hram{hram}
               , joypad{joypad}
               , oam_dma{oam_dma}
+              , serial { serial }
         {
         }
 
@@ -184,6 +187,8 @@ case i: break;
             case interrupts::if_address: return interrupts.flag;
             case interrupts::ie_address: return interrupts.enable;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
+            case serial::serial_transfer_data_address: return serial::read_serial_transfer_data_address(serial);
+            case serial::serial_transfer_control_address: return serial::read_serial_transfer_control_address(serial);
             HRAM_CASES(HRAM_READ_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_READ_CASE)
             default: return fallback_memory[address - start];
@@ -231,7 +236,13 @@ case i: break;
             case joypad::joypad_memory_address:
                 joypad::write_joypad_register(joypad, value);
                 break;
-            HRAM_CASES(HRAM_WRITE_CASE)
+            case serial::serial_transfer_data_address:
+                serial::write_serial_transfer_data_address(serial, value);
+                break;
+            case serial::serial_transfer_control_address:
+                serial::write_serial_transfer_control_address(serial, value);
+                break;
+                HRAM_CASES(HRAM_WRITE_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_WRITE_CASE)
             default:
                 fallback_memory[address - start] = value;
@@ -245,6 +256,7 @@ case i: break;
         memory::memory_span_t<0x7F> hram;
         joypad::joypad& joypad;
         graphics::oam_dma& oam_dma;
+        serial::link& serial;
 
         // TODO: replace by remaining missing io registers
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
@@ -348,7 +360,8 @@ case i: break;
             timer::timer_system& timers,
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
-            joypad::joypad& joypad)
+            joypad::joypad& joypad,
+            serial::link& serial)
             : rom_bank_0_page{mbc}
              , rom_bank_n_page{mbc}
              , vram_memory_page{memory.vram}
@@ -357,7 +370,7 @@ case i: break;
              , work_ram_1_page{memory.work_ram_1}
              , echo_ram_page{work_ram_0_page, work_ram_1_page}
              , oam_memory_page{oam_dma, memory.oam}
-             , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma}
+             , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma, serial}
              , map{
                   rom_bank_0_page,
                   rom_bank_n_page,

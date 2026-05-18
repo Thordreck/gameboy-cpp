@@ -1,9 +1,9 @@
 
 export module emulator.gameboy;
+export import :factory;
 
 import std;
 import mbc;
-import :factory;
 import cartridge;
 import emulator.core;
 import emulator.engine;
@@ -25,7 +25,7 @@ namespace emulator
             stop();
 
             rom = std::move(rom_cartridge);
-            auto create = create_engine(rom.value());
+            auto create = create_engine(rom.value(), dummy_serial);
 
             if (create)
             {
@@ -74,6 +74,7 @@ namespace emulator
         std::optional<cartridge::rom> rom {};
 
         Joypad& joypad_source;
+        serial::dummy_link dummy_serial {};
     };
 
 }

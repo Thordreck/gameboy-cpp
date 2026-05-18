@@ -5,6 +5,7 @@ export module emulator.gameboy:factory;
 
 import std;
 import mbc;
+import serial;
 import cartridge;
 import emulator.engine;
 
@@ -12,7 +13,8 @@ namespace emulator
 {
     export using base_engine_ptr = std::unique_ptr<base_engine>;
 
-    export [[nodiscard]] std::expected<base_engine_ptr, std::string> create_engine(cartridge::rom& rom)
+    export template<serial::SerialInterface Serial>
+    [[nodiscard]] std::expected<base_engine_ptr, std::string> create_engine(cartridge::rom& rom, Serial& serial)
     {
         using namespace mbc;
         using enum cartridge::hardware_type;
@@ -25,17 +27,17 @@ namespace emulator
                 return std::unexpected { std::format("Unexpected no MBC rom size. Expected {}. Got {}", rom_only_cartridge_data_size, rom.data.size() ) };
             }
 
-            return std::make_unique<engine<only_rom>>(only_rom { rom.data });
+            return std::make_unique<engine<only_rom, Serial>>(only_rom { rom.data }, serial);
         case mbc1:
         case mbc1_ram:
         case mbc1_ram_battery:
-            return std::make_unique<engine<mbc::mbc1>>(mbc::mbc1{ rom.data, rom.header.rom_size, rom.header.ram_size });
+            return std::make_unique<engine<mbc::mbc1, Serial>>(mbc::mbc1{ rom.data, rom.header.rom_size, rom.header.ram_size }, serial);
         case mbc3:
         case mbc3_ram:
         case mbc3_ram_battery:
         case mbc3_timer_battery:
         case mbc3_timer_ram_battery:
-            return std::make_unique<engine<mbc::mbc3>>(mbc::mbc3{ rom.data, rom.header.rom_size, rom.header.ram_size });
+            return std::make_unique<engine<mbc::mbc3, Serial>>(mbc::mbc3{ rom.data, rom.header.rom_size, rom.header.ram_size }, serial);
         default:
             return std::unexpected{ std::format("Unsupported rom type {}", cartridge::pretty_print(rom.header.hardware)) };
         }

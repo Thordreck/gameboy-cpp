@@ -11,6 +11,7 @@ import cpu;
 import mbc;
 import timer;
 import joypad;
+import serial;
 import graphics;
 import cartridge;
 import interrupts;
@@ -24,19 +25,21 @@ namespace emulator
     {
     public:
         virtual ~base_engine() = default;
-        virtual lcd_view_t lcd() const = 0;
+        [[nodiscard]] virtual lcd_view_t lcd() const = 0;
         virtual void update_joypad_state(joypad::const_input_state_view_t state) = 0;
         virtual void tick(std::uint32_t num_ticks) = 0;
+        virtual void tick_external_serial_clock() = 0;
     };
 
-    export template<mbc::MemoryBankController MBC>
+    export template<mbc::MemoryBankController MBC, serial::SerialInterface Serial>
     class engine : public base_engine
     {
     public:
-        explicit engine(MBC&& mbc_imp)
+        engine(MBC&& mbc_imp, Serial& serial)
         : lcd_adapter { lcd_memory }
         , mbc { std::forward<MBC>(mbc_imp) }
-        , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad }
+        , serial { serial }
+        , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad, serial_link }
         , memory_buses { memory_map.get(), ppu_, oam_dma }
         , cpu_runner { cpu }
         {
@@ -61,7 +64,13 @@ namespace emulator
                 adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus()),
                 adapt_for_scheduler(timers, memory_buses.timers_bus()),
                 adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter),
-                adapt_for_scheduler(oam_dma, memory_buses.oam_bus()));
+                adapt_for_scheduler(oam_dma, memory_buses.oam_bus()),
+                adapt_for_scheduler(serial_link, serial));
+        }
+
+        void tick_external_serial_clock() override
+        {
+            serial_link.external_tick(serial);
         }
 
     private:
@@ -75,6 +84,9 @@ namespace emulator
         lcd_memory_t lcd_memory {};
         graphics::raw_memory_lcd lcd_adapter;
         graphics::pixel_processing_unit ppu_ {};
+
+        Serial& serial;
+        serial::link serial_link {};
 
         internal_memory internal_memory {};
         MBC mbc;

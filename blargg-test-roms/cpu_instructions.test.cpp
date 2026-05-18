@@ -24,7 +24,7 @@ TEST_CASE("blargg.cpu_instrs.04-op r,imm")
 
 TEST_CASE("blargg.cpu_instrs.05-op rp")
 {
-	blargg::run_test("05-op rp.gb", "05-op rp\n\n\nPassed\n", 60e5);
+	blargg::run_test("05-op rp.gb", "05-op rp\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.06-ld r,r")
@@ -44,15 +44,15 @@ TEST_CASE("blargg.cpu_instrs.08-misc instrs")
 
 TEST_CASE("blargg.cpu_instrs.09-op r,r")
 {
-	blargg::run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 30e6);
+	blargg::run_test("09-op r,r.gb", "09-op r,r\n\n\nPassed\n", 60e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.10-bit ops")
 {
-	blargg::run_test("10-bit ops.gb", "10-bit ops\n\n\nPassed\n",  30e6);
+	blargg::run_test("10-bit ops.gb", "10-bit ops\n\n\nPassed\n",  60e6);
 }
 
 TEST_CASE("blargg.cpu_instrs.11-op a,(hl)")
 {
-	blargg::run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 30e6);
+	blargg::run_test("11-op a,(hl).gb", "11-op a,(hl)\n\n\nPassed\n", 80e6);
 }

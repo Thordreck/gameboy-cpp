@@ -3,65 +3,63 @@ module;
 
 export module blargg;
 
-import emulator.core;
-import utilities;
 import std;
+import mbc;
+import memory;
+import utilities;
+import cartridge;
+import emulator.core;
+import emulator.engine;
+import emulator.gameboy;
 
 namespace blargg
 {
 	template<typename TExpected, typename TError>
-	TExpected require_success(const std::expected<TExpected, TError>& result)
+	TExpected require_success(std::expected<TExpected, TError>&& result)
 	{
 		REQUIRE_MESSAGE(result.has_value(), std::format("Unexpected error. {}", result.error()));
-		return result.value();
+		return std::forward<TExpected>(result.value());
 	}
 
-	template<memory::Memory Memory>
-	std::optional<std::uint8_t> read_io_result_output(Memory& memory)
+	class test_serial
 	{
-		constexpr memory::memory_address_t sb = 0xFF01;
-		constexpr memory::memory_address_t sc = 0xFF02;
-		constexpr memory::memory_data_t transfer_start = 0x80;
-
-		if (memory.read(sc) & transfer_start)
+	public:
+		[[nodiscard]] std::string result() const
 		{
-			memory.write(sc, 0);
-			return memory.read(sb);
+			return { buffer.begin(), buffer.end() };
 		}
 
-		return std::nullopt;
-	}
+		[[nodiscard]] std::uint8_t transfer_bit(const std::uint8_t bit)
+		{
+			current_byte = current_byte << 1  | (bit & 0b1);
+
+			if (++bits_received >= 8)
+			{
+				buffer.push_back(current_byte);
+				bits_received = 0;
+			}
+
+			return 0x00;
+		}
+
+	private:
+		std::vector<std::uint8_t> buffer {};
+		std::uint8_t current_byte {};
+		std::uint8_t bits_received {};
+	};
 
 	export void run_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
-		const size_t max_num_machine_cycles)
+		const size_t num_t_cycles)
 	{
-		// engine
-		emulator::engine engine {};
+		test_serial serial {};
 
-		{
-			const auto rom_data = require_success(utils::read_binary_file(rom_file_path));
-			engine.load_rom(rom_data);
-		}
+		auto cartridge = require_success(cartridge::load_rom_file(rom_file_path));
+		auto engine = require_success(emulator::create_engine(cartridge, serial));
 
-		// results
-		std::string result{};
-
-		for (size_t t_cycle = 0; t_cycle < max_num_machine_cycles; t_cycle++)
-		{
-			engine.tick(4);
-
-			if (const auto character = read_io_result_output(engine.memory()); character.has_value())
-			{
-				result += character.value();
-			}
-
-			if (result == expected_output)
-			{
-				break;
-			}
-		}
+		engine->tick(num_t_cycles);
+		const std::string result = serial.result();
 
 		REQUIRE_EQ(expected_output, result);
 		std::cout << result;

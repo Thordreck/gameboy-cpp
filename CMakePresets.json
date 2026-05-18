@@ -32,7 +32,7 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "BUILD_TESTING": "OFF",
+        "BUILD_TESTING": "ON",
         "CMAKE_VERBOSE_MAKEFILE": "OFF"
       }
     },
@@ -195,7 +195,13 @@
     {
       "name": "test",
       "displayName": "Test",
-      "configurePreset": "debug"
+      "configurePreset": "relWithDebInfo",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": true
+      }
     }
   ]
 }
