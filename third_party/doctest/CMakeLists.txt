@@ -1,0 +1,5 @@
+
+add_subdirectory(upstream EXCLUDE_FROM_ALL)
+
+target_compile_definitions(doctest_with_main PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS)
+include(${DOCTEST_CMAKE_HELPER})

@@ -12,8 +12,7 @@ project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 include(CTest)
 
 if(BUILD_TESTING)
-    include(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest/cmake/doctest-target.cmake)
-    include(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest/cmake/doctest.cmake)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest)
 endif()
 
 if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL")

@@ -12,6 +12,7 @@ namespace utils
     class constrained
     {
     public:
+        using underlying_type = T;
         static constexpr auto min = lower_bound;
         static constexpr auto max = upper_bound;
 

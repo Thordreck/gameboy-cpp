@@ -1,6 +1,9 @@
 
 export module audio;
 
+export import :common;
+export import :dac;
+
 export import :memory;
 export import :channels;
 export import :processing;

@@ -23,7 +23,7 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/constrained.cppm
 )
 
-if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+if(BUILD_TESTING)
 	add_executable(utilities_tests)
 	target_compile_features(utilities_tests PUBLIC cxx_std_23)
 	target_link_libraries(utilities_tests PRIVATE utilities doctest::doctest_with_main)
