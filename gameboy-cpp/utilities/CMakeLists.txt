@@ -19,6 +19,8 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/io.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/clock.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/enum.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/concepts.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/constrained.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
@@ -32,6 +34,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 		PRIVATE 
 			${CMAKE_CURRENT_SOURCE_DIR}/arithmetic.test.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/fixed_size_queue.test.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/constrained.test.cpp
 	)
 
 endif()

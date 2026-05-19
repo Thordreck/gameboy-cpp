@@ -19,7 +19,7 @@ namespace emulator
             if (!attached) [[unlikely]]
             {
                 const auto app = QGuiApplication::instance();
-                utils::assert_not_nullptr(app);
+                (utils::assert)(app != nullptr);
 
                 auto* filter = new emulator_joypad_filter(state);
                 filter->moveToThread(app->thread());
