@@ -2,7 +2,7 @@ add_library(audio)
 target_compile_features(audio PUBLIC cxx_std_23)
 
 set_target_properties(audio PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(audio memory utilities)
+target_link_libraries(audio memory timer utilities)
 target_sources(audio PUBLIC
         FILE_SET
         CXX_MODULES
@@ -13,6 +13,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_mixer.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_amplifier.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_hpf.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_div_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_memory.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_channels.cppm

@@ -6,6 +6,7 @@ export import :dac;
 export import :mixer;
 export import :amplifier;
 export import :hpf;
+export import :div_apu;
 
 export import :memory;
 export import :channels;
