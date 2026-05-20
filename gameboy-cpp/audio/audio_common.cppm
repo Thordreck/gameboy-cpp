@@ -16,4 +16,15 @@ namespace audio
         T right;
     };
 
+    export template <typename T>
+    concept AudioSample = requires(T sample)
+    {
+        typename T::underlying_type;
+        std::is_arithmetic_v<typename T::underlying_type>;
+
+        { T::min } -> std::convertible_to<typename T::underlying_type>;
+        { T::max } -> std::convertible_to<typename T::underlying_type>;
+        { static_cast<T::underlying_type>(sample) } -> std::convertible_to<typename T::underlying_type>;
+    };
+
 }

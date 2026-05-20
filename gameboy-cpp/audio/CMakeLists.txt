@@ -11,6 +11,8 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_dac.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_mixer.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_amplifier.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_hpf.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_memory.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_channels.cppm
