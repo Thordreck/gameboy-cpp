@@ -10,6 +10,7 @@ import :scheduler;
 import cpu;
 import mbc;
 import timer;
+import audio;
 import joypad;
 import serial;
 import graphics;
@@ -25,7 +26,10 @@ namespace emulator
     {
     public:
         virtual ~base_engine() = default;
+
         [[nodiscard]] virtual lcd_view_t lcd() const = 0;
+        [[nodiscard]] virtual audio::analog_sample audio() const = 0;
+
         virtual void update_joypad_state(joypad::const_input_state_view_t state) = 0;
         virtual void tick(std::uint32_t num_ticks) = 0;
         virtual void tick_external_serial_clock() = 0;
@@ -52,6 +56,7 @@ namespace emulator
 
         [[nodiscard]] lcd_view_t lcd() const override { return lcd_memory; }
         [[nodiscard]] auto& memory() { return memory_map.get(); }
+        [[nodiscard]] audio::analog_sample audio() const override { return apu.output(); }
 
         void update_joypad_state(const joypad::const_input_state_view_t state) override { joypad.set_state(state); }
 
@@ -65,6 +70,7 @@ namespace emulator
                 adapt_for_scheduler(timers, memory_buses.timers_bus()),
                 adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter),
                 adapt_for_scheduler(oam_dma, memory_buses.oam_bus()),
+                adapt_for_scheduler(apu, timers.divider()),
                 adapt_for_scheduler(serial_link, serial));
         }
 
@@ -94,5 +100,6 @@ namespace emulator
         memory_buses<MBC> memory_buses;
 
         cpu_runner cpu_runner;
+        audio::audio_processing_unit apu {};
     };
 }

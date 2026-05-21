@@ -21,7 +21,22 @@ add_library(emulator::gameboy ALIAS emulator-gameboy)
 target_compile_features(emulator-gameboy PUBLIC cxx_std_23)
 
 set_target_properties(emulator-gameboy PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-gameboy PUBLIC emulator::core cpu timer memory opcodes interrupts graphics joypad utilities profiling mbc cartridge serial)
+target_link_libraries(emulator-gameboy PUBLIC
+		emulator::core
+		cpu
+		timer
+		memory
+		opcodes
+		interrupts
+		graphics
+		audio
+		joypad
+		utilities
+		profiling
+		mbc
+		cartridge
+		serial)
+
 target_sources(emulator-gameboy PUBLIC
 	FILE_SET 
 		CXX_MODULES 

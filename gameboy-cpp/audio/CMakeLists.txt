@@ -16,7 +16,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_div_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_memory.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/audio_channels.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_pulse.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_processing.cppm
 )
 if(BUILD_TESTING)
