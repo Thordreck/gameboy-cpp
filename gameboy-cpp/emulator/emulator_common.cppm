@@ -2,6 +2,7 @@
 export module emulator.core:common;
 
 import std;
+import audio;
 import memory;
 import joypad;
 import graphics;
@@ -42,5 +43,15 @@ namespace emulator
     {
         { source.read() } -> std::convertible_to<joypad::const_input_state_view_t>;
     };
+
+    export template<typename T>
+    concept AudioDevice = requires(T& device)
+    {
+        { device.open() } -> std::same_as<void>;
+        { device.close() } -> std::same_as<void>;
+    };
+
+    export template<typename T, typename Sample>
+    concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T>;
 
 }

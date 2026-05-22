@@ -13,8 +13,6 @@ namespace audio
     export class audio_processing_unit
     {
     public:
-        [[nodiscard]] analog_sample output() const { return current_output; }
-
         [[nodiscard]] bool is_enabled() const { return enabled; }
         void set_enabled(const bool value) { enabled = value; }
 
@@ -25,7 +23,8 @@ namespace audio
             return 4;
         }
 
-        void tick(const std::uint32_t ticks, const timer::div div)
+        template<AudioSink<float> Sink>
+        void tick(const std::uint32_t ticks, const timer::div div, Sink& sink)
         {
             // TODO: update div_apu based on div
             // TODO: tick channels
@@ -36,8 +35,6 @@ namespace audio
 
     private:
         bool enabled { true };
-        analog_sample current_output {};
-
         div_apu div_apu {};
         pulse_channel channel_1 {};
     };

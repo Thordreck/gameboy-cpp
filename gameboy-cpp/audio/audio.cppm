@@ -8,6 +8,7 @@ export import :amplifier;
 export import :hpf;
 export import :div_apu;
 export import :pulse;
+export import :buffer;
 
 export import :memory;
 export import :processing;

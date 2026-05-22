@@ -15,11 +15,13 @@ import emulator.core;
 
 namespace emulator
 {
+    using namespace utils::operators;
+
     export class graphical_interface
     {
     public:
         graphical_interface(int, char**)
-            : sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video) )}
+            : sdl_session { utils::value_or_panic(sdl::session::create(sdl::init_flags::video | sdl::init_flags::audio) )}
             , sdl_window { utils::value_or_panic(sdl::window::create("gameboy-cpp", 640, 480, sdl::window_flags::resizable)) }
             , sdl_renderer { utils::value_or_panic(sdl::renderer::create(sdl_window)) }
             , sdl_texture { utils::value_or_panic(sdl::texture::create(sdl_renderer, sdl::pixel_format::rgb_24, sdl::texture_access::streaming, 160, 144)) }

@@ -27,7 +27,7 @@ namespace utils
 		}
 	}
 #else
-	export constexpr void assert(const bool) {}
+	export constexpr void assert(const bool, const char* message = nullptr) {}
 
 #endif
 

@@ -4,7 +4,7 @@ include(cmake/SplitMocFiles.cmake)
 add_library(qt)
 target_compile_features(qt PUBLIC cxx_std_23)
 set_target_properties(qt PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(qt PUBLIC Qt6::Core Qt6::Qml Qt6::Quick Qt6::QuickControls2)
+target_link_libraries(qt PUBLIC Qt6::Core Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Multimedia)
 
 target_sources(qt PUBLIC
         FILE_SET

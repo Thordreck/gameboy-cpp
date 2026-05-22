@@ -2,6 +2,7 @@
 
 add_library(utilities)
 target_compile_features(utilities PUBLIC cxx_std_23)
+target_link_libraries(utilities PRIVATE Boost::lockfree)
 
 set_target_properties(utilities PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_sources(utilities PUBLIC 
@@ -21,6 +22,7 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/enum.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/concepts.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/constrained.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer.cppm
 )
 
 if(BUILD_TESTING)

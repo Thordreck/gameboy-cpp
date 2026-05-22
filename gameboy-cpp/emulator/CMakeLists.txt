@@ -5,7 +5,7 @@ add_library(emulator::core ALIAS emulator-core)
 target_compile_features(emulator-core PUBLIC cxx_std_23)
 
 set_target_properties(emulator-core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-core PUBLIC memory joypad graphics cartridge profiling)
+target_link_libraries(emulator-core PUBLIC memory audio joypad graphics cartridge profiling)
 target_sources(emulator-core PUBLIC
 		FILE_SET
 		CXX_MODULES
@@ -164,11 +164,52 @@ target_sources(emulator-joypad PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
 )
 
+#Audio
+set(AUDIO_BACKEND "SDL" CACHE STRING "Audio backend")
+set_property(CACHE AUDIO_BACKEND PROPERTY STRINGS SDL Qt)
+
+add_library(emulator-audio-backend STATIC)
+target_compile_features(emulator-audio-backend PUBLIC cxx_std_23)
+set_target_properties(emulator-audio-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+add_library(emulator::audio::backend ALIAS emulator-audio-backend)
+
+if(AUDIO_BACKEND STREQUAL "SDL")
+	target_compile_definitions(emulator-audio-backend PUBLIC AUDIO_SDL)
+	target_link_libraries(emulator-audio-backend PUBLIC emulator::core sdl)
+	target_sources(emulator-audio-backend PUBLIC
+			FILE_SET
+			CXX_MODULES
+			FILES
+			${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio_sdl.cppm
+	)
+elseif(AUDIO_BACKEND STREQUAL "Qt")
+	target_compile_definitions(emulator-audio-backend PUBLIC AUDIO_QT)
+	target_link_libraries(emulator-audio-backend PUBLIC emulator::core qt utilities)
+	target_sources(emulator-audio-backend PUBLIC
+			FILE_SET
+			CXX_MODULES
+			FILES
+			${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio_qt.cppm
+	)
+endif()
+
+add_library(emulator-audio)
+add_library(emulator::audio ALIAS emulator-audio)
+target_compile_features(emulator-audio PUBLIC cxx_std_23)
+set_target_properties(emulator-audio PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+target_link_libraries(emulator-audio PUBLIC emulator::core emulator::audio::backend)
+target_sources(emulator-audio PUBLIC
+		FILE_SET
+		CXX_MODULES
+		FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio.cppm
+)
+
 # Aggregator
 add_library(emulator)
 target_compile_features(emulator PUBLIC cxx_std_23)
 set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator PUBLIC emulator::core emulator::gameboy emulator::ui emulator::joypad)
+target_link_libraries(emulator PUBLIC emulator::core emulator::gameboy emulator::ui emulator::joypad emulator::audio)
 target_sources(emulator PUBLIC
 		FILE_SET
 		CXX_MODULES
@@ -201,7 +242,7 @@ if(UI_BACKEND STREQUAL "SDL")
 	)
 endif()
 
-if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt"))
+if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt"))
 	add_custom_command(TARGET gameboy-cpp POST_BUILD
 			COMMAND ${Qt6_DIR}/../../../bin/windeployqt.exe
 			--qmldir ${CMAKE_CURRENT_SOURCE_DIR}

@@ -15,7 +15,7 @@ if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest)
 endif()
 
-if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL")
+if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL" OR AUDIO_BACKEND STREQUAL "SDL")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
 endif()
 
@@ -25,7 +25,7 @@ if(UI_BACKEND STREQUAL "SDL")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
 endif()
 
-if(UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt")
+if(UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt")
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/qt_setup.cmake NO_POLICY_SCOPE)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/qt)
 endif()
@@ -35,6 +35,8 @@ if(PROFILING_BACKEND STREQUAL "Tracy")
 elseif(PROFILING_BACKEND STREQUAL "CTrack")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/ctrack)
 endif()
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/boost)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/memory)

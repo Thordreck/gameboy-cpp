@@ -86,14 +86,28 @@
       }
     },
     {
+      "name": "with-sdl-audio",
+      "hidden": true,
+      "cacheVariables": {
+        "AUDIO_BACKEND": "SDL"
+      }
+    },
+    {
+      "name": "with-qt-audio",
+      "hidden": true,
+      "cacheVariables": {
+        "AUDIO_BACKEND": "Qt"
+      }
+    },
+    {
       "name": "with-sdl",
       "hidden": true,
-      "inherits": ["with-sdl-ui", "with-sdl-joypad"]
+      "inherits": ["with-sdl-ui", "with-sdl-joypad", "with-sdl-audio"]
     },
     {
       "name": "with-qt",
       "hidden": true,
-      "inherits": ["with-qt-ui", "with-qt-joypad"]
+      "inherits": ["with-qt-ui", "with-qt-joypad", "with-qt-audio"]
     },
 
     {

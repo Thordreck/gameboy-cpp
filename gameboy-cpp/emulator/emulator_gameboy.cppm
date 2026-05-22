@@ -10,12 +10,14 @@ import emulator.engine;
 
 namespace emulator
 {
-    export template<JoypadSource Joypad>
+    export template<JoypadSource Joypad, AudioOutputDevice<float> Audio, serial::SerialInterface Serial>
     class gameboy
     {
     public:
-        explicit gameboy(Joypad& joypad_source)
+        explicit gameboy(Joypad& joypad_source, Audio& audio_output, Serial& serial)
             : joypad_source { joypad_source }
+            , audio_output { audio_output }
+            , serial { serial }
         {}
 
         ~gameboy() { stop(); }
@@ -25,7 +27,7 @@ namespace emulator
             stop();
 
             rom = std::move(rom_cartridge);
-            auto create = create_engine(rom.value(), dummy_serial);
+            auto create = create_engine(rom.value(), audio_output, serial);
 
             if (create)
             {
@@ -48,6 +50,7 @@ namespace emulator
         {
             if (!is_running() && has_rom())
             {
+                audio_output.open();
                 tick_thread = std::jthread { [this] (const auto& ct) { engine_tick_thread(*engine, ct); } };
                 joypad_thread = std::jthread { [this] (const auto& ct) { engine_joypad_thread(*engine, joypad_source, ct); } };
             }
@@ -57,6 +60,7 @@ namespace emulator
         {
             tick_thread.reset();
             joypad_thread.reset();
+            audio_output.close();
         }
 
         void stop()
@@ -69,12 +73,14 @@ namespace emulator
 
     private:
         std::unique_ptr<base_engine> engine { nullptr };
-        std::optional<std::jthread> tick_thread {};
-        std::optional<std::jthread> joypad_thread {};
         std::optional<cartridge::rom> rom {};
 
         Joypad& joypad_source;
-        serial::dummy_link dummy_serial {};
+        Audio& audio_output;
+        Serial& serial;
+
+        std::optional<std::jthread> tick_thread {};
+        std::optional<std::jthread> joypad_thread {};
     };
 
 }

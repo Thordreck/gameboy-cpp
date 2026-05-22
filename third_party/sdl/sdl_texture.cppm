@@ -53,7 +53,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return height;
+            return static_cast<std::size_t>(height);
         }
 
         [[nodiscard]] result<std::size_t> width() const
@@ -66,7 +66,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return width;
+            return static_cast<std::size_t>(width);
         }
 
     private:

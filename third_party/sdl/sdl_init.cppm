@@ -27,7 +27,7 @@ namespace sdl
         {
             if (SDL_Init(std::to_underlying(flags)))
             {
-                return session();
+                return session(true);
             }
 
             return std::unexpected(SDL_GetError());
@@ -35,11 +35,28 @@ namespace sdl
 
         ~session()
         {
-            SDL_Quit();
+            if (valid) { SDL_Quit(); }
         }
 
-        // TODO: delete copy constructors. Implement proper move semantics
+        session(const session&) = delete;
+        session& operator =(const session&) = delete;
 
+        session(session&& other) noexcept
+            : session { std::exchange(other.valid, false ) }
+        {}
+
+        session& operator=(session&& other) noexcept
+        {
+            valid = std::exchange(other.valid, false);
+            return *this;
+        }
+
+    private:
+        explicit session(const bool valid)
+            : valid { valid }
+        {}
+
+        bool valid;
     };
 
 }
