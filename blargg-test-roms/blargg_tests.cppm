@@ -48,15 +48,24 @@ namespace blargg
 		std::uint8_t bits_received {};
 	};
 
+	class test_audio_sink
+	{
+	public:
+		static [[nodiscard]] std::uint8_t channel_count() { return 2; }
+		static [[nodiscard]] std::uint32_t sample_rate() { return 44100; }
+		static void write(const std::span<const float>) {}
+	};
+
 	export void run_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
 		const size_t num_t_cycles)
 	{
 		test_serial serial {};
+		test_audio_sink audio_sink {};
 
 		auto cartridge = require_success(cartridge::load_rom_file(rom_file_path));
-		auto engine = require_success(emulator::create_engine(cartridge, serial));
+		auto engine = require_success(emulator::create_engine(cartridge, audio_sink, serial));
 
 		engine->tick(num_t_cycles);
 		const std::string result = serial.result();
