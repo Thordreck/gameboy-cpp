@@ -44,7 +44,7 @@ namespace emulator
         : lcd_adapter { lcd_memory }
         , serial { serial }
         , mbc { std::forward<MBC>(mbc_imp) }
-        , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad, serial_link }
+        , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad, serial_link, apu }
         , memory_buses { memory_map.get(), ppu_, oam_dma }
         , cpu_runner { cpu }
         , audio_sink { audio_sink }

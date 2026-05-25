@@ -3,6 +3,7 @@ export module emulator.engine:memory;
 import std;
 import mbc;
 import timer;
+import audio;
 import memory;
 import serial;
 import joypad;
@@ -16,6 +17,7 @@ namespace emulator
     export using work_ram_t = std::array<memory::memory_data_t, 0x1000>;
     export using oam_memory_t = std::array<memory::memory_data_t, graphics::oam_size>;
     export using hram_t = std::array<memory::memory_data_t, 0x7F>;
+    export using wave_ram_t = std::array<memory::memory_data_t, audio::wave_ram_size>;
 
     export struct internal_memory
     {
@@ -24,6 +26,7 @@ namespace emulator
         work_ram_t work_ram_1{};
         oam_memory_t oam{};
         hram_t hram{};
+        wave_ram_t wave_ram {};
     };
 
     export using vram_memory_page_t = memory::span_map<graphics::vram_size, graphics::vram_start_address, graphics::vram_end_address>;
@@ -147,6 +150,16 @@ case i: return 0xFF;
 #define UNUSED_HW_IO_WRITE_CASE(i) \
 case i: break;
 
+#define WAVE_RAM_CASES(X) \
+X(0x00) X(0x01) X(0x02) X(0x03) X(0x04) X(0x05) X(0x06) X(0x07) \
+X(0x08) X(0x09) X(0x0A) X(0x0B) X(0x0C) X(0x0D) X(0x0E) X(0x0F)
+
+#define WAVE_RAM_READ_CASE(i) \
+case (audio::wave_ram_start_address + (i)): return wave_ram[i];
+
+#define WAVE_RAM_WRITE_CASE(i) \
+case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
+
     export class io_hram_interrupt_memory_page
     {
     public:
@@ -160,7 +173,9 @@ case i: break;
             const memory::memory_span_t<0x7F> hram,
             joypad::joypad& joypad,
             graphics::oam_dma& oam_dma,
-            serial::link& serial)
+            serial::link& serial,
+            audio::audio_processing_unit& apu,
+            audio::wave_ram_view_t wave_ram)
             : timers{timers}
               , interrupts{interrupts}
               , ppu{ppu}
@@ -168,8 +183,9 @@ case i: break;
               , joypad{joypad}
               , oam_dma{oam_dma}
               , serial { serial }
-        {
-        }
+              , apu { apu }
+              , wave_ram { wave_ram }
+        {}
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
@@ -189,6 +205,28 @@ case i: break;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             case serial::serial_transfer_data_address: return serial::read_serial_transfer_data_address(serial);
             case serial::serial_transfer_control_address: return serial::read_serial_transfer_control_address(serial);
+            case audio::master_control_address: return audio::read_master_control_address(apu);
+            case audio::sound_panning_address: return audio::read_sound_panning_address(apu);
+            case audio::master_volume_and_vin_panning_address: return audio::read_master_volume_address(apu);
+            case audio::channel_1_sweep_address: return audio::read_channel_1_sweep_address(apu);
+            case audio::channel_1_length_and_cycle_address: return audio::read_channel_1_length_and_cycle_address(apu);
+            case audio::channel_1_envelope_address: return audio::read_channel_1_envelope_address(apu);
+            case audio::channel_1_period_low_address: return audio::read_channel_1_period_low_address(apu);
+            case audio::channel_1_period_high_and_control_address: return audio::read_channel_1_period_high_and_control_address(apu);
+            case audio::channel_2_length_and_cycle_address: return audio::read_channel_2_length_and_cycle_address(apu);
+            case audio::channel_2_envelope_address: return audio::read_channel_2_envelope_address(apu);
+            case audio::channel_2_period_low_address: return audio::read_channel_2_period_low_address(apu);
+            case audio::channel_2_period_high_and_control_address: return audio::read_channel_2_period_high_and_control_address(apu);
+            case audio::channel_3_dac_enable_address: return audio::read_channel_3_dac_enable_address(apu);
+            case audio::channel_3_length_timer_address: return audio::read_channel_3_length_timer_address(apu);
+            case audio::channel_3_output_level_address: return audio::read_channel_3_output_level_address(apu);
+            case audio::channel_3_period_low_address: return audio::read_channel_3_period_low_address(apu);
+            case audio::channel_3_period_high_and_control_address: return audio::read_channel_3_period_high_and_control_address(apu);
+            case audio::channel_4_length_timer_address: return audio::read_channel_4_length_timer_address(apu);
+            case audio::channel_4_volume_and_envelop_address: return audio::read_channel_4_envelope_address(apu);
+            case audio::channel_4_frequency_and_randomness_address: return audio::read_channel_4_frequency_and_randomness_address(apu);
+            case audio::channel_4_control_address: return audio::read_channel_4_control_address(apu);
+            WAVE_RAM_CASES(WAVE_RAM_READ_CASE)
             HRAM_CASES(HRAM_READ_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_READ_CASE)
             default: return fallback_memory[address - start];
@@ -242,7 +280,71 @@ case i: break;
             case serial::serial_transfer_control_address:
                 serial::write_serial_transfer_control_address(serial, value);
                 break;
-                HRAM_CASES(HRAM_WRITE_CASE)
+            case audio::master_control_address:
+                audio::write_master_control_address(apu, value);
+                break;
+            case audio::sound_panning_address:
+                audio::write_sound_panning_address(apu, value);
+                break;
+            case audio::master_volume_and_vin_panning_address:
+                audio::write_master_volume_address(apu, value);
+                break;
+            case audio::channel_1_sweep_address:
+                audio::write_channel_1_sweep_address(apu, value);
+                break;
+            case audio::channel_1_length_and_cycle_address:
+                audio::write_channel_1_length_and_cycle_address(apu, value);
+                break;
+            case audio::channel_1_envelope_address:
+                audio::write_channel_1_envelope_address(apu, value);
+                break;
+            case audio::channel_1_period_low_address:
+                audio::write_channel_1_period_low_address(apu, value);
+                break;
+            case audio::channel_1_period_high_and_control_address:
+                audio::write_channel_1_period_high_and_control_address(apu, value);
+                break;
+            case audio::channel_2_length_and_cycle_address:
+                audio::write_channel_2_length_and_cycle_address(apu, value);
+                break;
+            case audio::channel_2_envelope_address:
+                audio::write_channel_2_envelope_address(apu, value);
+                break;
+            case audio::channel_2_period_low_address:
+                audio::write_channel_2_period_low_address(apu, value);
+                break;
+            case audio::channel_2_period_high_and_control_address:
+                audio::write_channel_2_period_high_and_control_address(apu, value);
+                break;
+            case audio::channel_3_dac_enable_address:
+                audio::write_channel_3_dac_enable_address(apu, value);
+                break;
+            case audio::channel_3_length_timer_address:
+                audio::write_channel_3_length_timer_address(apu, value);
+                break;
+            case audio::channel_3_output_level_address:
+                audio::write_channel_3_output_level_address(apu, value);
+                break;
+            case audio::channel_3_period_low_address:
+                audio::write_channel_3_period_low_address(apu, value);
+                break;
+            case audio::channel_3_period_high_and_control_address:
+                audio::write_channel_3_period_high_and_control_address(apu, value);
+                break;
+            case audio::channel_4_length_timer_address:
+                audio::write_channel_4_length_timer_address(apu, value);
+                break;
+            case audio::channel_4_volume_and_envelop_address:
+                audio::write_channel_4_envelope_address(apu, value);
+                break;
+            case audio::channel_4_frequency_and_randomness_address:
+                audio::write_channel_4_frequency_and_randomness_address(apu, value);
+                break;
+            case audio::channel_4_control_address:
+                audio::write_channel_4_control_address(apu, value);
+                break;
+            WAVE_RAM_CASES(WAVE_RAM_WRITE_CASE)
+            HRAM_CASES(HRAM_WRITE_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_WRITE_CASE)
             default:
                 fallback_memory[address - start] = value;
@@ -257,6 +359,8 @@ case i: break;
         joypad::joypad& joypad;
         graphics::oam_dma& oam_dma;
         serial::link& serial;
+        audio::audio_processing_unit& apu;
+        audio::wave_ram_view_t wave_ram;
 
         // TODO: replace by remaining missing io registers
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
@@ -361,7 +465,8 @@ case i: break;
             interrupts::interrupt_registers& interrupts,
             graphics::pixel_processing_unit& ppu,
             joypad::joypad& joypad,
-            serial::link& serial)
+            serial::link& serial,
+            audio::audio_processing_unit& apu)
             : rom_bank_0_page{mbc}
              , rom_bank_n_page{mbc}
              , vram_memory_page{memory.vram}
@@ -370,7 +475,7 @@ case i: break;
              , work_ram_1_page{memory.work_ram_1}
              , echo_ram_page{work_ram_0_page, work_ram_1_page}
              , oam_memory_page{oam_dma, memory.oam}
-             , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma, serial}
+             , ihi_page{timers, interrupts, ppu, memory.hram, joypad, oam_dma, serial, apu, memory.wave_ram }
              , map{
                   rom_bank_0_page,
                   rom_bank_n_page,

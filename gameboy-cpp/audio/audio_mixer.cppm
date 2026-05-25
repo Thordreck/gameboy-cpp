@@ -12,7 +12,7 @@ namespace audio
     using mixed_sample = utils::constrained<typename Sample::underlying_type, N * Sample::min, N * Sample::max>;
 
     export template<AudioSample Sample, size_t N>
-    using mixed_stereo_sample = stereo_sample<mixed_sample<Sample, N>>;
+    using mixed_stereo_sample = stereo<mixed_sample<Sample, N>>;
 
     export template<AudioSample Sample, size_t N>
     mixed_stereo_sample<Sample, N> mix(std::span<const Sample, N> left_channel, std::span<const Sample, N> right_channel)

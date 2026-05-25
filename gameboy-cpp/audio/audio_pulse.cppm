@@ -5,12 +5,6 @@ import :common;
 
 namespace audio
 {
-    export enum class sweep_direction : std::uint8_t
-    {
-        addition,
-        substraction
-    };
-
     export struct sweep_unit
     {
         std::uint8_t pace{};
@@ -50,14 +44,6 @@ namespace audio
         void tick() { current_timer_value++; }
     };
 
-    export enum class duty_cycle : std::uint8_t
-    {
-        _12_5 = 0b00,
-        _25 = 0b01,
-        _50 = 0b10,
-        _75 = 0b11,
-    };
-
     export std::uint8_t get_pulse_waveform(const duty_cycle cycle)
     {
         static constexpr std::uint8_t waveform_0 = 0b00000001;
@@ -81,12 +67,6 @@ namespace audio
     {
         return get_pulse_waveform(cycle) >> sample & 0b1;
     }
-
-    export enum class envelope_direction : std::uint8_t
-    {
-        decrease,
-        increase,
-    };
 
     export struct envelope_unit
     {
