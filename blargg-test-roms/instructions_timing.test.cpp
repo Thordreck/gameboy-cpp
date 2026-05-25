@@ -4,5 +4,5 @@ import blargg;
 
 TEST_CASE("blargg.instr_timing.instr_timing")
 {
-	blargg::run_test("instr_timing.gb", "instr_timing\n\n\nPassed\n", 30e5);
+	blargg::run_serial_test("instr_timing.gb", "instr_timing\n\n\nPassed\n", 30e5);
 }

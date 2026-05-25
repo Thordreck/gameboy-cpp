@@ -21,6 +21,25 @@ namespace blargg
 		return std::forward<TExpected>(result.value());
 	}
 
+	template<memory::ReadOnlyMemory Memory>
+	std::string decode_result_from_memory(
+		const memory::memory_address_t start,
+		const memory::memory_address_t end,
+		const Memory& memory)
+	{
+		std::string result {};
+
+		for (auto address = start; address < end; address++)
+		{
+			const auto value = memory.read(address);
+			if (value == '\0') { break; }
+
+			result += value;
+		}
+
+		return result;
+	}
+
 	class test_serial
 	{
 	public:
@@ -56,7 +75,7 @@ namespace blargg
 		static void write(const std::span<const float>) {}
 	};
 
-	export void run_test(
+	export void run_serial_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
 		const size_t num_t_cycles)
@@ -72,5 +91,41 @@ namespace blargg
 
 		REQUIRE_EQ(expected_output, result);
 		std::cout << result;
+	}
+
+	export void run_memory_test(
+		const std::string_view rom_file_path,
+		const std::string_view expected_output,
+		const size_t num_t_cycles)
+	{
+		test_serial serial {};
+		test_audio_sink audio_sink {};
+
+		auto cartridge = require_success(cartridge::load_rom_file(rom_file_path));
+		auto engine = require_success(emulator::create_engine(cartridge, audio_sink, serial));
+
+		engine->tick(num_t_cycles);
+		const auto memory = engine->memory();
+
+		const std::uint8_t result_code = memory[0xA000];
+
+		constexpr std::array<std::uint8_t, 3> expected_result_header { 0xde, 0xb0, 0x61 };
+		const std::array result_header { memory[0xA001], memory[0xA002], memory[0xA003] };
+
+		const std::string result = decode_result_from_memory(0xA004, 0xBFFF, memory);
+
+		REQUIRE_MESSAGE(
+			expected_result_header == result_header,
+			std::format("Unexpected header. Expected: {}. Got: {}. Error message: {}",
+				expected_result_header,
+				result_header,
+				result));
+
+		REQUIRE_MESSAGE(result_code == 0,
+			std::format("Unexpected result code. Expected: 0. Got: {}. Error message: {}",
+				result_code,
+				result));
+
+		REQUIRE_EQ(expected_output, result);
 	}
 }

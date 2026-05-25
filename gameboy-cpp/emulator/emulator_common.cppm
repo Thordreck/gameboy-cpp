@@ -54,4 +54,19 @@ namespace emulator
     export template<typename T, typename Sample>
     concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T>;
 
+    export class memory_view
+    {
+    public:
+        template<memory::ReadOnlyMemory Memory>
+        explicit memory_view(const Memory& memory)
+            : read_fn([&memory] (const auto address) { return memory.read(address); })
+        {}
+
+        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const { return read_fn(address); }
+        [[nodiscard]] memory::memory_data_t operator[](const memory::memory_address_t address) const { return read(address); }
+
+    private:
+        std::function<memory::memory_data_t(memory::memory_address_t address)> read_fn;
+    };
+
 }

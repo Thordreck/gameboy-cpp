@@ -385,6 +385,7 @@ case i: break;
         {
         }
 
+        [[nodiscard]] auto& get() const { return map; }
         [[nodiscard]] auto& get() { return map; }
 
     private:
