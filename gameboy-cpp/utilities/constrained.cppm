@@ -34,8 +34,8 @@ namespace utils
             check_boundaries();
         }
 
-        [[nodiscard]] constexpr T raw() const { return value; }
-        [[nodiscard]] constexpr explicit operator T() const { return raw(); }
+        [[nodiscard]] constexpr T data() const { return value; }
+        [[nodiscard]] constexpr explicit operator T() const { return data(); }
 
         template<typename Other>
         requires std::three_way_comparable_with<T, Other>

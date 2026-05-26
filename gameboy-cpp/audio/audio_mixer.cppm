@@ -14,28 +14,20 @@ namespace audio
     export template<AudioSample Sample, size_t N>
     using mixed_stereo_sample = stereo<mixed_sample<Sample, N>>;
 
-    export template<AudioSample Sample, size_t N>
-    mixed_stereo_sample<Sample, N> mix(std::span<const Sample, N> left_channel, std::span<const Sample, N> right_channel)
+    export template<AudioSample... Samples>
+    requires utils::all_same<Samples...>
+    auto mix(const stereo<Samples>&... samples)
     {
-        using sample_t = Sample::underlying_type;
+        using sample_t = std::tuple_element_t<0, std::tuple<Samples...>>;
+        using raw_sample_t = sample_t::underlying_type;
+        using mixed_t = mixed_sample<sample_t, sizeof...(Samples)>;
+        using stereo_mixed_t = stereo<mixed_t>;
 
-        const auto left_samples = left_channel | std::views::transform([] (auto s) { return static_cast<sample_t>(s); });
-        const auto right_samples = right_channel | std::views::transform([] (auto s) { return static_cast<sample_t>(s); });
-
-        const mixed_sample<Sample, N> mixed_left { std::ranges::fold_left(left_samples, 0, std::plus{}) };
-        const mixed_sample<Sample, N> mixed_right { std::ranges::fold_left(right_samples, 0, std::plus{}) };
-
-        return { mixed_left, mixed_right };
-    }
-
-    export template<AudioSample Sample, size_t N>
-    requires (N % 2 == 0)
-    mixed_stereo_sample<Sample, N / 2> mix(const std::span<const Sample, N> samples)
-    {
-        const auto left_channels = samples | std::views::stride(2);
-        const auto right_channels = samples | std::views::drop(1) | std::views::stride(2);
-
-        return mix(left_channels, right_channels);
+        return stereo_mixed_t
+        {
+            mixed_t{ (raw_sample_t{} + ... + samples.left.data()) },
+            mixed_t{ (raw_sample_t{} + ... + samples.right.data()) }
+        };
     }
 
 }

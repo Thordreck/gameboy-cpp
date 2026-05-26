@@ -25,6 +25,11 @@ namespace audio
         substraction = 1
     };
 
+    export constexpr std::uint8_t num_apu_channels = 4;
+
+    export template <typename T>
+    using channel_array_t = std::array<T, num_apu_channels>;
+
     export struct sweep_config
     {
         std::uint8_t pace {};
@@ -85,7 +90,7 @@ namespace audio
 
         { T::min } -> std::convertible_to<typename T::underlying_type>;
         { T::max } -> std::convertible_to<typename T::underlying_type>;
-        { static_cast<T::underlying_type>(sample) } -> std::convertible_to<typename T::underlying_type>;
+        { sample.data() } -> std::convertible_to<typename T::underlying_type>;
     };
 
     export template <typename T>

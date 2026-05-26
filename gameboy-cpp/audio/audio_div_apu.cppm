@@ -1,6 +1,8 @@
 
 export module audio:div_apu;
+
 import std;
+import utilities;
 
 namespace audio
 {
@@ -9,16 +11,24 @@ namespace audio
     public:
         [[nodiscard]] std::uint8_t value() const { return counter; }
 
-        void tick()
+        [[nodiscard]] bool tick(const std::uint16_t div)
         {
-            if (++counter > 0b111)
+            const std::uint16_t falling_bits = prev_div & ~div;
+            const bool should_advance = utils::is_bit_set<12>(falling_bits);
+
+            prev_div = div;
+
+            if (should_advance && ++counter > 0b111)
             {
                 counter = 0;
             }
+
+            return should_advance;
         }
 
     private:
         std::uint8_t counter { 0 };
+        std::uint16_t prev_div { 0 };
 
     };
 }

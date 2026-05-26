@@ -2,14 +2,16 @@
 export module audio;
 
 export import :common;
+export import :memory;
 export import :dac;
 export import :mixer;
 export import :amplifier;
 export import :hpf;
 export import :div_apu;
 export import :pulse;
+export import :wave;
+export import :noise;
 export import :buffer;
-
-export import :memory;
-export import :processing;
+export import :panning;
+export import :normalization;
 export import :apu;

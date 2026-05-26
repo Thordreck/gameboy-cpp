@@ -14,9 +14,30 @@ namespace audio
         return Output { Output::min + output_range * t };
     }
 
-    export constexpr analog_sample dac(const digital_sample input)
+    export constexpr analog_sample apply_dac(const digital_sample input)
     {
         return convert_sample<analog_sample>(input);
     }
+
+    export class dac
+    {
+    public:
+        [[nodiscard]] bool is_enabled() const { return enabled; }
+        void set_enabled(const bool enabled) { this->enabled = enabled; }
+
+        analog_sample convert(const digital_sample input)
+        {
+            return enabled ? convert_sample<analog_sample>(input) : analog_sample { };
+        }
+
+        stereo<analog_sample> convert(const stereo<digital_sample> input)
+        {
+            return { convert(input.left), convert(input.right) };
+        }
+
+    private:
+        bool enabled { true };
+
+    };
 
 }

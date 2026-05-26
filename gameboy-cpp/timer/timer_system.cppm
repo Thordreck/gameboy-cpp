@@ -28,17 +28,17 @@ namespace timer
     export class timer_system
     {
     public:
-        div& divider() { return divider_register; }
-        const div& divider() const { return divider_register; }
+        [[nodiscard]] div& divider() { return divider_register; }
+        [[nodiscard]] const div& divider() const { return divider_register; }
 
-        tima& counter() { return timer_counter; }
-        const tima& counter() const { return timer_counter; }
+        [[nodiscard]] tima& counter() { return timer_counter; }
+        [[nodiscard]] const tima& counter() const { return timer_counter; }
 
-        tma& modulo() { return timer_modulo; }
-        const tma& modulo() const { return timer_modulo; }
+        [[nodiscard]] tma& modulo() { return timer_modulo; }
+        [[nodiscard]] const tma& modulo() const { return timer_modulo; }
 
-        tac& control() { return timer_control; }
-        const tac& control() const { return timer_control; }
+        [[nodiscard]] tac& control() { return timer_control; }
+        [[nodiscard]] const tac& control() const { return timer_control; }
 
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
