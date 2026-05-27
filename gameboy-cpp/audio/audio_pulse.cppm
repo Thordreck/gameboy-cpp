@@ -113,6 +113,24 @@ namespace audio
         [[nodiscard]] bool active() const { return enabled; }
         [[nodiscard]] digital_sample output() const { return current_output; }
 
+        [[nodiscard]] sweep_config get_sweep_config() const { return {}; }
+        void set_sweep_config(const sweep_config config) {}
+
+        [[nodiscard]] duty_cycle get_duty_cycle() const { return {}; }
+        void set_duty_cycle(const duty_cycle) {}
+
+        [[nodiscard]] bool is_length_timer_enabled() const { return false; }
+        void set_length_timer_enabled(const bool enabled) {}
+
+        [[nodiscard]] std::uint8_t get_length_timer() const { return {}; }
+        void set_length_timer(const std::uint8_t value) {}
+
+        [[nodiscard]] envelope_config get_envelope_config() const { return {}; }
+        void set_envelope_config(const envelope_config envelope) {}
+
+        [[nodiscard]] std::uint16_t get_period() const { return {}; }
+        void set_period(const std::uint16_t period) {}
+
         void trigger()
         {
             length.reset_if_expired();

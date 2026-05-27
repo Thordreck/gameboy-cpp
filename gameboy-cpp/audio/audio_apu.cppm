@@ -37,23 +37,23 @@ namespace audio
         [[nodiscard]] stereo_panning get_channel_1_panning() const { return channels_panning[0].get_config(); }
         void set_channel_1_panning(const stereo_panning panning) { channels_panning[0].set_config(panning); }
 
-        [[nodiscard]] sweep_config get_channel_1_sweep() const { return {}; }
-        void set_channel_1_sweep(const sweep_config) {}
+        [[nodiscard]] sweep_config get_channel_1_sweep() const { return channel_1.get_sweep_config(); }
+        void set_channel_1_sweep(const sweep_config config) { channel_1.set_sweep_config(config); }
 
-        [[nodiscard]] duty_cycle get_channel_1_duty_cycle() const { return {}; }
-        void set_channel_1_duty_cycle(const duty_cycle) {}
+        [[nodiscard]] duty_cycle get_channel_1_duty_cycle() const { return channel_1.get_duty_cycle(); }
+        void set_channel_1_duty_cycle(const duty_cycle duty) { channel_1.set_duty_cycle(duty); }
 
-        [[nodiscard]] bool is_channel_1_length_timer_enabled() const { return false; }
-        void enable_channel_1_length_timer(const bool value) { }
+        [[nodiscard]] bool is_channel_1_length_timer_enabled() const { return channel_1.is_length_timer_enabled(); }
+        void enable_channel_1_length_timer(const bool value) { channel_1.set_length_timer_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_channel_1_length_timer() const { return {}; }
-        void set_channel_1_length_timer(const std::uint8_t) {}
+        [[nodiscard]] std::uint8_t get_channel_1_length_timer() const { return channel_1.get_length_timer(); }
+        void set_channel_1_length_timer(const std::uint8_t value) { channel_1.set_length_timer(value); }
 
-        [[nodiscard]] envelope_config get_channel_1_envelope() const { return {}; }
-        void set_channel_1_envelope(const envelope_config) {}
+        [[nodiscard]] envelope_config get_channel_1_envelope() const { return channel_1.get_envelope_config(); }
+        void set_channel_1_envelope(const envelope_config config) { channel_1.set_envelope_config(config); }
 
-        [[nodiscard]] std::uint16_t get_channel_1_period() const { return {}; }
-        void set_channel_1_period(const std::uint16_t) {}
+        [[nodiscard]] std::uint16_t get_channel_1_period() const { return channel_1.get_period(); }
+        void set_channel_1_period(const std::uint16_t value) { channel_1.set_period(value); }
 
         // Channel 2
         void trigger_channel_2() { channel_2.trigger(); }
@@ -62,20 +62,20 @@ namespace audio
         [[nodiscard]] stereo_panning get_channel_2_panning() const { return channels_panning[1].get_config(); }
         void set_channel_2_panning(const stereo_panning panning) { channels_panning[1].set_config(panning); }
 
-        [[nodiscard]] duty_cycle get_channel_2_duty_cycle() const { return {}; }
-        void set_channel_2_duty_cycle(const duty_cycle) {}
+        [[nodiscard]] duty_cycle get_channel_2_duty_cycle() const { return channel_2.get_duty_cycle(); }
+        void set_channel_2_duty_cycle(const duty_cycle duty) { channel_2.set_duty_cycle(duty); }
 
-        [[nodiscard]] bool is_channel_2_length_timer_enabled() const { return false; }
-        void enable_channel_2_length_timer(const bool value) { }
+        [[nodiscard]] bool is_channel_2_length_timer_enabled() const { return channel_2.is_length_timer_enabled(); }
+        void enable_channel_2_length_timer(const bool value) { channel_2.set_length_timer_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_channel_2_length_timer() const { return {}; }
-        void set_channel_2_length_timer(const std::uint8_t) {}
+        [[nodiscard]] std::uint8_t get_channel_2_length_timer() const { return channel_2.get_length_timer(); }
+        void set_channel_2_length_timer(const std::uint8_t value) { channel_2.set_length_timer(value); }
 
-        [[nodiscard]] envelope_config get_channel_2_envelope() const { return {}; }
-        void set_channel_2_envelope(const envelope_config) {}
+        [[nodiscard]] envelope_config get_channel_2_envelope() const { return channel_2.get_envelope_config(); }
+        void set_channel_2_envelope(const envelope_config config) { channel_2.set_envelope_config(config); }
 
-        [[nodiscard]] std::uint16_t get_channel_2_period() const { return {}; }
-        void set_channel_2_period(const std::uint16_t) {}
+        [[nodiscard]] std::uint16_t get_channel_2_period() const { return channel_2.get_period(); }
+        void set_channel_2_period(const std::uint16_t value) { channel_2.set_period(value); }
 
         // Channel 3
         void trigger_channel_3() { channel_3.trigger(); }
@@ -84,20 +84,20 @@ namespace audio
         [[nodiscard]] stereo_panning get_channel_3_panning() const { return channels_panning[2].get_config(); }
         void set_channel_3_panning(const stereo_panning panning) { channels_panning[2].set_config(panning); }
 
-        [[nodiscard]] bool is_channel_3_dac_enabled() const { return false; }
-        void enable_channel_3_dac(const bool value) { }
+        [[nodiscard]] bool is_channel_3_dac_enabled() const { return channels_dac[2].is_enabled(); }
+        void enable_channel_3_dac(const bool value) { channels_dac[2].set_enabled(value); }
 
-        [[nodiscard]] bool is_channel_3_length_timer_enabled() const { return false; }
-        void enable_channel_3_length_timer(const bool value) { }
+        [[nodiscard]] bool is_channel_3_length_timer_enabled() const { return channel_3.is_length_timer_enabled(); }
+        void enable_channel_3_length_timer(const bool value) { channel_3.set_length_timer_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_channel_3_length_timer() const { return {}; }
-        void set_channel_3_length_timer(const std::uint8_t) {}
+        [[nodiscard]] std::uint8_t get_channel_3_length_timer() const { return channel_3.get_length_timer(); }
+        void set_channel_3_length_timer(const std::uint8_t value) { channel_3.set_length_timer(value); }
 
-        [[nodiscard]] volume_level get_channel_3_output_level() const { return {}; }
-        void set_channel_3_output_level(const volume_level) {}
+        [[nodiscard]] volume_level get_channel_3_output_level() const { return channel_3.get_volume(); }
+        void set_channel_3_output_level(const volume_level value) { channel_3.set_volume(value); }
 
-        [[nodiscard]] std::uint16_t get_channel_3_period() const { return {}; }
-        void set_channel_3_period(const std::uint16_t) {}
+        [[nodiscard]] std::uint16_t get_channel_3_period() const { return channel_3.get_period(); }
+        void set_channel_3_period(const std::uint16_t value) { channel_3.set_period(value); }
 
         // Channel 4
         void trigger_channel_4() { channel_4.trigger(); }
@@ -106,17 +106,17 @@ namespace audio
         [[nodiscard]] stereo_panning get_channel_4_panning() const { return channels_panning[3].get_config(); }
         void set_channel_4_panning(const stereo_panning panning) { channels_panning[3].set_config(panning); }
 
-        [[nodiscard]] bool is_channel_4_length_timer_enabled() const { return false; }
-        void enable_channel_4_length_timer(const bool value) { }
+        [[nodiscard]] bool is_channel_4_length_timer_enabled() const { return channel_4.is_length_timer_enabled(); }
+        void enable_channel_4_length_timer(const bool value) { channel_4.set_length_timer_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_channel_4_length_timer() const { return {}; }
-        void set_channel_4_length_timer(const std::uint8_t) {}
+        [[nodiscard]] std::uint8_t get_channel_4_length_timer() const { return channel_4.get_length_timer(); }
+        void set_channel_4_length_timer(const std::uint8_t value) { channel_4.set_length_timer(value); }
 
-        [[nodiscard]] envelope_config get_channel_4_envelope() const { return {}; }
-        void set_channel_4_envelope(const envelope_config) {}
+        [[nodiscard]] envelope_config get_channel_4_envelope() const { return channel_4.get_envelope_config(); }
+        void set_channel_4_envelope(const envelope_config config) { channel_4.set_envelope_config(config); }
 
-        [[nodiscard]] randomness_config get_channel_4_randomness() const { return {}; }
-        void set_channel_4_randomness(const randomness_config) {}
+        [[nodiscard]] randomness_config get_channel_4_randomness() const { return channel_4.get_randomness_config(); }
+        void set_channel_4_randomness(const randomness_config config) { channel_4.set_randomness_config(config); }
 
         // Others
         [[nodiscard]] bool active() const { return is_enabled(); }
