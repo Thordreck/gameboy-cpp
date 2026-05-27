@@ -81,6 +81,7 @@ namespace audio
 
     export constexpr std::uint8_t wave_ram_size = 0xF;
     export using wave_ram_view_t = std::span<std::uint8_t, wave_ram_size>;
+    export using const_wave_ram_view_t = std::span<const std::uint8_t, wave_ram_size>;
 
     export template <typename T>
     concept AudioSample = requires(T& sample)

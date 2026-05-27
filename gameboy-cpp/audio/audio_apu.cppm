@@ -127,12 +127,12 @@ namespace audio
         }
 
         template<AudioSink<float> Sink>
-        void tick(const std::uint32_t ticks, const timer::div div, Sink& sink)
+        void tick(const std::uint32_t ticks, const timer::div div, const_wave_ram_view_t wave_ram, Sink& sink)
         {
             PROFILER_SCOPE("APU::tick()");
 
             tick_frame_sequencer(div);
-            tick_channels(ticks, sink);
+            tick_channels(ticks, wave_ram, sink);
         }
 
     private:
@@ -180,7 +180,7 @@ namespace audio
         }
 
         template<AudioSink<float> Sink>
-        void tick_channels(std::uint32_t num_ticks, Sink& sink)
+        void tick_channels(std::uint32_t num_ticks, const_wave_ram_view_t wave_ram, Sink& sink)
         {
             const std::uint32_t output_sample_rate = sink.sample_rate();
 
@@ -194,7 +194,7 @@ namespace audio
 
                 channel_1.tick(ticks_to_consume);
                 channel_2.tick(ticks_to_consume);
-                channel_3.tick(ticks_to_consume);
+                channel_3.tick(ticks_to_consume, wave_ram);
                 channel_4.tick(ticks_to_consume);
 
                 num_ticks -= ticks_to_consume;

@@ -8,6 +8,7 @@ export import :mixer;
 export import :amplifier;
 export import :hpf;
 export import :div_apu;
+export import :channels;
 export import :pulse;
 export import :wave;
 export import :noise;

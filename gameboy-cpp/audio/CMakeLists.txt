@@ -17,6 +17,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_panning.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_apu.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_memory.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_channels.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_pulse.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_wave.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_noise.cppm

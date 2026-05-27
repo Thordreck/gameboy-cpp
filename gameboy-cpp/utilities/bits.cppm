@@ -28,14 +28,22 @@ namespace utils
 	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits) && (BitIndex >= 0)
 	constexpr void set_bit(T& input)
 	{
-		input |= (1 << BitIndex);
+		input |= (T{1} << BitIndex);
 	}
 
 	export template<auto BitIndex, std::unsigned_integral T>
 	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits) && (BitIndex >= 0)
 	constexpr void unset_bit(T& input)
 	{
-		input |= ~(1 << BitIndex);
+		input &= ~(T{1} << BitIndex);
+	}
+
+	export template<auto BitIndex, std::unsigned_integral T>
+	requires std::integral<decltype(BitIndex)> && (BitIndex < std::numeric_limits<T>::digits) && (BitIndex >= 0)
+	constexpr void write_bit(T& input, bool value)
+	{
+		const T mask = T{1} << BitIndex;
+		input = (input & ~mask) | (T(value) << BitIndex);
 	}
 
 	export template<auto BitIndex, std::unsigned_integral T>

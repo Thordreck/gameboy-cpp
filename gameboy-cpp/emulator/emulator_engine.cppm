@@ -71,7 +71,7 @@ namespace emulator
                 adapt_for_scheduler(timers, memory_buses.timers_bus()),
                 adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter),
                 adapt_for_scheduler(oam_dma, memory_buses.oam_bus()),
-                adapt_for_scheduler(apu, timers.divider(), audio_sink),
+                adapt_for_scheduler(apu, timers.divider(), internal_memory.wave_ram, audio_sink),
                 adapt_for_scheduler(serial_link, serial));
         }
 
