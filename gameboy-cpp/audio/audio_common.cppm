@@ -79,7 +79,7 @@ namespace audio
         std::uint8_t clock_divider {};
     };
 
-    export constexpr std::uint8_t wave_ram_size = 0xF;
+    export constexpr std::uint8_t wave_ram_size = 0x10;
     export using wave_ram_view_t = std::span<std::uint8_t, wave_ram_size>;
     export using const_wave_ram_view_t = std::span<const std::uint8_t, wave_ram_size>;
 

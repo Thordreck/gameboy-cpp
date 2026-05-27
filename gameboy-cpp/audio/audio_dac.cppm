@@ -36,7 +36,7 @@ namespace audio
         }
 
     private:
-        bool enabled { true };
+        bool enabled { false };
 
     };
 

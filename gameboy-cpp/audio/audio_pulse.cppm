@@ -101,7 +101,7 @@ namespace audio
         }
 
     private:
-        bool enabled{true};
+        bool enabled{false};
         digital_sample current_output{};
 
         sweep_unit sweep{};

@@ -25,10 +25,21 @@ namespace audio
     public:
         // Global
         [[nodiscard]] bool is_enabled() const { return enabled; }
-        void set_enabled(const bool value) { enabled = value; }
+        void set_enabled(const bool value)
+        {
+            enabled = value;
+
+            if (!enabled)
+            {
+                reset();
+            }
+        }
 
         [[nodiscard]] stereo_volume get_master_volume() const { return master_volume; }
         void set_master_volume(const stereo_volume volume) { master_volume = volume; }
+
+        [[nodiscard]] stereo_panning get_vin_panning() const { return vin_panning; }
+        void set_vin_panning(const stereo_panning panning) { vin_panning = panning; }
 
         // Channel 1
         void trigger_channel_1() { channel_1.trigger(); }
@@ -236,10 +247,23 @@ namespace audio
             const auto mixed = mix(stereo_analog_ch1, stereo_analog_ch2, stereo_analog_ch3, stereo_analog_ch4);
             const auto normalized = normalize<num_apu_channels>(mixed);
 
-            const stereo master_gain { (1 + master_volume.left) / 8.0f, 1 + master_volume.right / 8.0f };
+            const stereo master_gain { (1 + master_volume.left) / 8.0f, (1 + master_volume.right) / 8.0f };
             const auto amplified = apply_gain(normalized, master_gain);
 
             return high_pass_filter.apply(amplified);
+        }
+
+        void reset()
+        {
+            channels_panning = {};
+            master_volume = {};
+            vin_panning = {};
+            channels_dac = {};
+
+            channel_1 = {};
+            channel_2 = {};
+            channel_3 = {};
+            channel_4 = {};
         }
 
         bool enabled { true };
@@ -247,6 +271,7 @@ namespace audio
 
         div_apu div_apu {};
         stereo_volume master_volume {};
+        stereo_panning vin_panning {};
 
         pulse_channel channel_1 {};
         pulse_channel channel_2 {};

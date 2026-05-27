@@ -43,7 +43,8 @@ namespace audio
             | (apu.channel_4_on() << 3)
             | (apu.channel_3_on() << 2)
             | (apu.channel_2_on() << 1)
-            | apu.channel_1_on();
+            | apu.channel_1_on()
+            | 0x70;
     }
 
     export [[nodiscard]] memory::memory_data_t read_sound_panning_address(const audio_processing_unit& apu)
@@ -62,25 +63,27 @@ namespace audio
     export [[nodiscard]] memory::memory_data_t read_master_volume_address(const audio_processing_unit& apu)
     {
         const auto [master_left, master_right] = apu.get_master_volume();
-        return (master_left & 0b111 << 6) | (master_right & 0b111);
+        const auto [vin_left, vin_right] = apu.get_vin_panning();
+
+        return (vin_left << 7) | ((master_left & 0b111) << 4) | (vin_right << 3) | (master_right & 0b111);
     }
 
     // Channel 1 - Read
     export [[nodiscard]] memory::memory_data_t read_channel_1_sweep_address(const audio_processing_unit& apu)
     {
         const auto [pace, direction, step] = apu.get_channel_1_sweep();
-        return ((pace & 0b111) << 6) | ((std::to_underlying(direction) & 0b1)<< 3) | (step & 0b111);
+        return 0x80 | ((pace & 0b111) << 4) | ((std::to_underlying(direction) & 0b1)<< 3) | (step & 0b111);
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_1_length_and_cycle_address(const audio_processing_unit& apu)
     {
-        return ((std::to_underlying(apu.get_channel_1_duty_cycle()) & 0b11) << 7) | (apu.get_channel_1_length_timer() & 0b111111);
+        return ((std::to_underlying(apu.get_channel_1_duty_cycle()) & 0b11) << 6) | 0b111111;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_1_envelope_address(const audio_processing_unit& apu)
     {
         const auto [volume, direction, pace] = apu.get_channel_1_envelope();
-        return ((volume & 0b1111) << 7) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
+        return ((volume & 0b1111) << 4) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_1_period_low_address(const audio_processing_unit& apu)
@@ -91,19 +94,19 @@ namespace audio
 
     export [[nodiscard]] memory::memory_data_t read_channel_1_period_high_and_control_address(const audio_processing_unit& apu)
     {
-        return apu.is_channel_1_length_timer_enabled() << 6;
+        return 0xBF | (apu.is_channel_1_length_timer_enabled() << 6);
     }
 
     // Channel 2 - Read
     export [[nodiscard]] memory::memory_data_t read_channel_2_length_and_cycle_address(const audio_processing_unit& apu)
     {
-        return ((std::to_underlying(apu.get_channel_2_duty_cycle()) & 0b11) << 7) | (apu.get_channel_2_length_timer() & 0b111111);
+        return ((std::to_underlying(apu.get_channel_2_duty_cycle()) & 0b11) << 6) | 0b111111;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_2_envelope_address(const audio_processing_unit& apu)
     {
         const auto [volume, direction, pace] = apu.get_channel_2_envelope();
-        return ((volume & 0b1111) << 7) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
+        return ((volume & 0b1111) << 4) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_2_period_low_address(const audio_processing_unit& apu)
@@ -114,23 +117,23 @@ namespace audio
 
     export [[nodiscard]] memory::memory_data_t read_channel_2_period_high_and_control_address(const audio_processing_unit& apu)
     {
-        return apu.is_channel_2_length_timer_enabled() << 6;
+        return 0xBF | (apu.is_channel_2_length_timer_enabled() << 6);
     }
 
     // Channel 3 - Read
     export [[nodiscard]] memory::memory_data_t read_channel_3_dac_enable_address(const audio_processing_unit& apu)
     {
-        return apu.is_channel_3_dac_enabled() << 7;
+        return (apu.is_channel_3_dac_enabled() << 7) | 0x7F;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_3_length_timer_address(const audio_processing_unit& apu)
     {
-        return apu.get_channel_3_length_timer();
+        return 0xFF;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_3_output_level_address(const audio_processing_unit& apu)
     {
-        return (std::to_underlying(apu.get_channel_3_output_level()) & 0b11) << 6;
+        return ((std::to_underlying(apu.get_channel_3_output_level()) & 0b11) << 5) | 0x9F;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_3_period_low_address(const audio_processing_unit& apu)
@@ -141,30 +144,30 @@ namespace audio
 
     export [[nodiscard]] memory::memory_data_t read_channel_3_period_high_and_control_address(const audio_processing_unit& apu)
     {
-        return apu.is_channel_3_length_timer_enabled() << 6;
+        return (apu.is_channel_3_length_timer_enabled() << 6) | 0xBF;
     }
 
     // Channel 4 - Read
     export [[nodiscard]] memory::memory_data_t read_channel_4_length_timer_address(const audio_processing_unit& apu)
     {
-        return apu.get_channel_4_length_timer() & 0b11111;
+        return 0xFF;
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_4_envelope_address(const audio_processing_unit& apu)
     {
         const auto [volume, direction, pace] = apu.get_channel_4_envelope();
-        return ((volume & 0b1111) << 7) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
+        return ((volume & 0b1111) << 4) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_4_frequency_and_randomness_address(const audio_processing_unit& apu)
     {
         const auto [clock_shift, lfsr_width, clock_divider] = apu.get_channel_4_randomness();
-        return ((clock_shift & 0b1111) << 7) | ((std::to_underlying(lfsr_width) & 0b1) << 3) | (clock_divider & 0b111);
+        return ((clock_shift & 0b1111) << 4) | ((std::to_underlying(lfsr_width) & 0b1) << 3) | (clock_divider & 0b111);
     }
 
     export [[nodiscard]] memory::memory_data_t read_channel_4_control_address(const audio_processing_unit& apu)
     {
-        return apu.is_channel_4_length_timer_enabled() << 6;
+        return (apu.is_channel_4_length_timer_enabled() << 6) | 0xBF;
     }
 
     // Global - Write
@@ -197,7 +200,14 @@ namespace audio
             static_cast<std::uint8_t>(value & 0b111)
         };
 
+        const stereo_panning vin_panning
+        {
+            ((value >> 7) & 0b1) == 1,
+            ((value >> 3) & 0b1) == 1
+        };
+
         apu.set_master_volume(master_volume);
+        apu.set_vin_panning(vin_panning);
     }
 
     // Channel 1 - Write
@@ -394,5 +404,24 @@ namespace audio
             apu.trigger_channel_4();
         }
     }
+
+    export class audio_access_policy
+    {
+    public:
+        explicit audio_access_policy(const audio_processing_unit& apu)
+            : apu { apu }
+        {}
+
+        [[nodiscard]] bool can_read(const memory::memory_address_t) const { return true; }
+
+        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
+        {
+            const bool in_audio_region = address >= channel_1_sweep_address && address <= sound_panning_address;
+            return !in_audio_region || apu.active();
+        }
+
+    private:
+        const audio_processing_unit& apu;
+    };
 
 }

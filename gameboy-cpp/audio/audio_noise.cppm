@@ -83,7 +83,7 @@ namespace audio
         };
 
     private:
-        bool enabled { true };
+        bool enabled { false };
         digital_sample current_output{};
 
         length_unit length {};

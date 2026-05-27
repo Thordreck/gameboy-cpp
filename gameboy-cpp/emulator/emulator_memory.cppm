@@ -137,7 +137,7 @@ case (0xFF80 + (i)): hram[i] = value; break;
 #define UNUSED_HW_IO_CASES(X) \
 X(0xFF03) X(0xFF08) X(0xFF09) X(0xFF0A) X(0xFF0B) X(0xFF0C) X(0xFF0D) X(0xFF0E) \
 X(0xFF15) X(0xFF1F) \
-X(0xFF27) X(0xFF28) X(0xFF29) \
+X(0xFF27) X(0xFF28) X(0xFF29) X(0xFF2A) X(0xFF2B) X(0xFF2C) X(0xFF2D) X(0xFF2E) X(0xFF2F) \
 X(0xFF4C) X(0xFF4D) X(0xFF4E) X(0xFF4F) \
 X(0xFF50) X(0xFF51) X(0xFF52) X(0xFF53) X(0xFF54) X(0xFF55) X(0xFF56) X(0xFF57) X(0xFF58) X(0xFF59) X(0xFF5A) X(0xFF5B) X(0xFF5C) X(0xFF5D) X(0xFF5E) \
 X(0xFF5F) X(0xFF60) X(0xFF61) X(0xFF62) X(0xFF63) X(0xFF64) X(0xFF65) X(0xFF66) X(0xFF67) \
@@ -348,6 +348,7 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_WRITE_CASE)
             default:
                 fallback_memory[address - start] = value;
+                break;
             }
         }
 
@@ -512,7 +513,8 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
         memory_map_t<MBC>,
         graphics::vram_access_policy,
         graphics::oam_dma_access_policy,
-        graphics::oam_ppu_access_policy>;
+        graphics::oam_ppu_access_policy,
+        audio::audio_access_policy>;
 
     export template <mbc::MemoryBankController MBC>
     using timers_memory_bus_t = memory::memory_bus<
@@ -536,16 +538,17 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
         memory_buses(
             memory_map_t<MBC>& map,
             const graphics::pixel_processing_unit& ppu,
-            const graphics::oam_dma& oam_dma)
+            const graphics::oam_dma& oam_dma,
+            const audio::audio_processing_unit& apu)
             : vram_policy{ppu}
-              , oam_dma_policy{oam_dma}
-              , oam_ppu_policy{ppu, oam_dma}
-              , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
-              , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
-              , ppu_bus_{map, oam_ppu_policy}
-              , oam_dma_bus_{map}
-        {
-        }
+            , oam_dma_policy{oam_dma}
+            , oam_ppu_policy{ppu, oam_dma}
+            , audio_policy { apu}
+             , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, audio_policy }
+             , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
+             , ppu_bus_{map, oam_ppu_policy}
+             , oam_dma_bus_{map}
+        {}
 
         [[nodiscard]] auto& cpu_bus() { return cpu_bus_; }
         [[nodiscard]] auto& timers_bus() { return timers_bus_; }
@@ -556,6 +559,7 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
         graphics::vram_access_policy vram_policy;
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
+        audio::audio_access_policy audio_policy;
 
         cpu_memory_bus_t<MBC> cpu_bus_;
         timers_memory_bus_t<MBC> timers_bus_;

@@ -45,7 +45,7 @@ namespace emulator
         , serial { serial }
         , mbc { std::forward<MBC>(mbc_imp) }
         , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad, serial_link, apu }
-        , memory_buses { memory_map.get(), ppu_, oam_dma }
+        , memory_buses { memory_map.get(), ppu_, oam_dma, apu }
         , cpu_runner { cpu }
         , audio_sink { audio_sink }
         {
