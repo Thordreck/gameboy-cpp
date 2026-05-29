@@ -30,24 +30,53 @@ namespace audio
         }
     };
 
-    export struct length_unit
+    export template<std::uint16_t TimerMax>
+    struct length_unit
     {
-        bool enabled{};
-        std::uint8_t initial_timer_value{};
-        std::uint8_t current_timer_value{};
+        [[nodiscard]] bool enabled() const { return is_enabled; }
+        void set_enabled(const bool enabled) { is_enabled = enabled; }
 
-        [[nodiscard]] bool expired() const { return current_timer_value >= 64; }
-        void reset() { current_timer_value = initial_timer_value; }
-        void reset_if_expired() { if (expired()) { reset(); } }
-        void tick() { current_timer_value++; }
+        [[nodiscard]] bool expired() const { return current_value == 0; }
+
+        [[nodiscard]] std::uint8_t get_initial_value() const { return initial_value; }
+        void set_initial_value(const std::uint8_t value)
+        {
+            initial_value = value;
+            current_value = TimerMax - initial_value;
+        }
+
+        void trigger()
+        {
+            if (expired())
+            {
+                current_value = TimerMax;
+            }
+        }
+
+        void tick()
+        {
+            if (current_value > 0)
+            {
+                current_value--;
+            }
+        }
+
+    private:
+        bool is_enabled { false };
+
+        std::uint8_t initial_value{};
+        std::uint16_t current_value{};
     };
+
+    export using length_unit_64 = length_unit<64>;
+    export using length_unit_256 = length_unit<256>;
 
     export std::uint8_t get_pulse_waveform(const duty_cycle cycle)
     {
         static constexpr std::uint8_t waveform_0 = 0b00000001;
-        static constexpr std::uint8_t waveform_1 = 0b10000001;
-        static constexpr std::uint8_t waveform_2 = 0b10000111;
-        static constexpr std::uint8_t waveform_3 = 0b01111110;
+        static constexpr std::uint8_t waveform_1 = 0b00000011;
+        static constexpr std::uint8_t waveform_2 = 0b00001111;
+        static constexpr std::uint8_t waveform_3 = 0b11111100;
 
         using enum duty_cycle;
 
@@ -72,23 +101,29 @@ namespace audio
         std::uint8_t current_volume{};
         std::uint8_t timer{};
 
-        bool enabled{};
-
         void reset()
         {
             current_volume = config.volume;
             timer = config.pace;
-            enabled = timer != 0;
         }
 
         void tick()
         {
+            if (config.pace == 0)
+            {
+                return;
+            }
+
             if (--timer == 0)
             {
-                const auto gain = config.direction == envelope_direction::increase ? 1 : -1;
+                using enum envelope_direction;
 
-                current_volume += gain;
-                enabled = current_volume > 0 && current_volume < 15 && config.pace != 0;
+                if ((current_volume < 0xF && config.direction == increase) || (current_volume > 0x0 && config.direction == decrease))
+                {
+                    const auto gain = config.direction == increase ? 1 : -1;
+                    current_volume += gain;
+                }
+
                 timer = config.pace;
             }
         }

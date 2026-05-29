@@ -13,13 +13,15 @@ namespace audio
     {
     public:
         [[nodiscard]] bool active() const { return enabled; }
+        void set_active(const bool active) { enabled = active; }
+
         [[nodiscard]] digital_sample output() const { return current_output; }
 
-        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled; }
-        void set_length_timer_enabled(const bool value) { length.enabled = value; }
+        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled(); }
+        void set_length_timer_enabled(const bool value) { length.set_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_length_timer() const { return length.initial_timer_value; }
-        void set_length_timer(const std::uint8_t value) { length.initial_timer_value = value;}
+        [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
+        void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }
 
         [[nodiscard]] envelope_config get_envelope_config() const { return envelope.config; }
         void set_envelope_config(const envelope_config value) { envelope.config = value; }
@@ -31,7 +33,7 @@ namespace audio
         {
             enabled = true;
 
-            length.reset_if_expired();
+            length.trigger();
             envelope.reset();
             lfsr = {};
             lfsr_timer = compute_noise_period(randomness);
@@ -39,19 +41,20 @@ namespace audio
 
         void tick_length_timer()
         {
-            if (length.enabled)
+            if (length.enabled())
             {
                 length.tick();
-                enabled = !length.expired();
+
+                if (length.expired())
+                {
+                    enabled = false;
+                }
             }
         }
 
         void tick_envelope()
         {
-            if (envelope.enabled)
-            {
-                envelope.tick();
-            }
+            envelope.tick();
         }
 
         void tick(std::uint32_t num_ticks)
@@ -86,7 +89,7 @@ namespace audio
         bool enabled { false };
         digital_sample current_output{};
 
-        length_unit length {};
+        length_unit_64 length {};
         envelope_unit envelope {};
         randomness_config randomness {};
 

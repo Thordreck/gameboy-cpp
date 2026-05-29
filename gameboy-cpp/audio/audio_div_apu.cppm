@@ -18,7 +18,7 @@ namespace audio
 
             prev_div = div;
 
-            if (should_advance && ++counter > 0b111)
+            if (should_advance && ++counter > 7)
             {
                 counter = 0;
             }

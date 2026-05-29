@@ -42,7 +42,16 @@ namespace audio
         void set_vin_panning(const stereo_panning panning) { vin_panning = panning; }
 
         // Channel 1
-        void trigger_channel_1() { channel_1.trigger(); }
+        void trigger_channel_1()
+        {
+            channel_1.trigger();
+
+            if (!channels_dac[0].is_enabled())
+            {
+                channel_1.set_active(false);
+            }
+        }
+
         [[nodiscard]] bool channel_1_on() const { return channel_1.active(); }
 
         [[nodiscard]] stereo_panning get_channel_1_panning() const { return channels_panning[0].get_config(); }
@@ -61,13 +70,33 @@ namespace audio
         void set_channel_1_length_timer(const std::uint8_t value) { channel_1.set_length_timer(value); }
 
         [[nodiscard]] envelope_config get_channel_1_envelope() const { return channel_1.get_envelope_config(); }
-        void set_channel_1_envelope(const envelope_config config) { channel_1.set_envelope_config(config); }
+        void set_channel_1_envelope(const envelope_config config)
+        {
+            channel_1.set_envelope_config(config);
+
+            const bool dac_enabled = config.volume != 0 || config.direction != envelope_direction::decrease;
+            channels_dac[0].set_enabled(dac_enabled);
+
+            if (!dac_enabled)
+            {
+                channel_1.set_active(false);
+            }
+        }
 
         [[nodiscard]] std::uint16_t get_channel_1_period() const { return channel_1.get_period(); }
         void set_channel_1_period(const std::uint16_t value) { channel_1.set_period(value); }
 
         // Channel 2
-        void trigger_channel_2() { channel_2.trigger(); }
+        void trigger_channel_2()
+        {
+            channel_2.trigger();
+
+            if (!channels_dac[1].is_enabled())
+            {
+                channel_2.set_active(false);
+            }
+        }
+
         [[nodiscard]] bool channel_2_on() const { return channel_2.active(); }
 
         [[nodiscard]] stereo_panning get_channel_2_panning() const { return channels_panning[1].get_config(); }
@@ -83,20 +112,48 @@ namespace audio
         void set_channel_2_length_timer(const std::uint8_t value) { channel_2.set_length_timer(value); }
 
         [[nodiscard]] envelope_config get_channel_2_envelope() const { return channel_2.get_envelope_config(); }
-        void set_channel_2_envelope(const envelope_config config) { channel_2.set_envelope_config(config); }
+        void set_channel_2_envelope(const envelope_config config)
+        {
+            channel_2.set_envelope_config(config);
+
+            const bool dac_enabled = config.volume != 0 || config.direction != envelope_direction::decrease;
+            channels_dac[1].set_enabled(dac_enabled);
+
+            if (!dac_enabled)
+            {
+                channel_2.set_active(false);
+            }
+        }
 
         [[nodiscard]] std::uint16_t get_channel_2_period() const { return channel_2.get_period(); }
         void set_channel_2_period(const std::uint16_t value) { channel_2.set_period(value); }
 
         // Channel 3
-        void trigger_channel_3() { channel_3.trigger(); }
+        void trigger_channel_3()
+        {
+            channel_3.trigger();
+
+            if (!channels_dac[2].is_enabled())
+            {
+                channel_3.set_active(false);
+            }
+        }
+
         [[nodiscard]] bool channel_3_on() const { return channel_3.active(); }
 
         [[nodiscard]] stereo_panning get_channel_3_panning() const { return channels_panning[2].get_config(); }
         void set_channel_3_panning(const stereo_panning panning) { channels_panning[2].set_config(panning); }
 
         [[nodiscard]] bool is_channel_3_dac_enabled() const { return channels_dac[2].is_enabled(); }
-        void enable_channel_3_dac(const bool value) { channels_dac[2].set_enabled(value); }
+        void enable_channel_3_dac(const bool enabled)
+        {
+            channels_dac[2].set_enabled(enabled);
+
+            if (!enabled)
+            {
+                channel_3.set_active(false);
+            }
+        }
 
         [[nodiscard]] bool is_channel_3_length_timer_enabled() const { return channel_3.is_length_timer_enabled(); }
         void enable_channel_3_length_timer(const bool value) { channel_3.set_length_timer_enabled(value); }
@@ -111,7 +168,16 @@ namespace audio
         void set_channel_3_period(const std::uint16_t value) { channel_3.set_period(value); }
 
         // Channel 4
-        void trigger_channel_4() { channel_4.trigger(); }
+        void trigger_channel_4()
+        {
+            channel_4.trigger();
+
+            if (!channels_dac[3].is_enabled())
+            {
+                channel_4.set_active(false);
+            }
+        }
+
         [[nodiscard]] bool channel_4_on() const { return channel_4.active(); }
 
         [[nodiscard]] stereo_panning get_channel_4_panning() const { return channels_panning[3].get_config(); }
@@ -124,12 +190,24 @@ namespace audio
         void set_channel_4_length_timer(const std::uint8_t value) { channel_4.set_length_timer(value); }
 
         [[nodiscard]] envelope_config get_channel_4_envelope() const { return channel_4.get_envelope_config(); }
-        void set_channel_4_envelope(const envelope_config config) { channel_4.set_envelope_config(config); }
+        void set_channel_4_envelope(const envelope_config config)
+        {
+            channel_4.set_envelope_config(config);
+
+            const bool dac_enabled = config.volume != 0 || config.direction != envelope_direction::decrease;
+            channels_dac[3].set_enabled(dac_enabled);
+
+            if (!dac_enabled)
+            {
+                channel_4.set_active(false);
+            }
+        }
 
         [[nodiscard]] randomness_config get_channel_4_randomness() const { return channel_4.get_randomness_config(); }
         void set_channel_4_randomness(const randomness_config config) { channel_4.set_randomness_config(config); }
 
         // Others
+        //[[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
@@ -153,16 +231,21 @@ namespace audio
 
             switch (div_apu.value())
             {
-            case 2:
-            case 6:
+            case 0:
                 tick_length_timer();
                 break;
-            case 4:
+            case 2:
                 tick_length_timer();
                 tick_ch1_sweep();
                 break;
-            case 8:
+            case 4:
                 tick_length_timer();
+                break;
+            case 6:
+                tick_length_timer();
+                tick_ch1_sweep();
+                break;
+            case 7:
                 tick_envelope_sweep();
                 break;
             default:
@@ -259,6 +342,7 @@ namespace audio
             master_volume = {};
             vin_panning = {};
             channels_dac = {};
+            div_apu = {};
 
             channel_1 = {};
             channel_2 = {};

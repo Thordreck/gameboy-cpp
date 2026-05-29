@@ -10,6 +10,8 @@ namespace audio
     {
     public:
         [[nodiscard]] bool active() const { return enabled; }
+        void set_active(const bool active) { enabled = active; }
+
         [[nodiscard]] digital_sample output() const { return current_output; }
 
         [[nodiscard]] sweep_config get_sweep_config() const { return sweep.config; }
@@ -18,11 +20,11 @@ namespace audio
         [[nodiscard]] duty_cycle get_duty_cycle() const { return duty_cycle; }
         void set_duty_cycle(const duty_cycle duty) { duty_cycle = duty; }
 
-        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled; }
-        void set_length_timer_enabled(const bool enabled) { length.enabled = enabled; }
+        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled(); }
+        void set_length_timer_enabled(const bool enabled) { length.set_enabled(enabled); }
 
-        [[nodiscard]] std::uint8_t get_length_timer() const { return length.initial_timer_value; }
-        void set_length_timer(const std::uint8_t value) { length.initial_timer_value = value; }
+        [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
+        void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }
 
         [[nodiscard]] envelope_config get_envelope_config() const { return envelope.config; }
         void set_envelope_config(const envelope_config config) { envelope.config = config; }
@@ -32,7 +34,8 @@ namespace audio
 
         void trigger()
         {
-            length.reset_if_expired();
+            enabled = true;
+            length.trigger();
             period.reset();
             envelope.reset();
             sweep.reset(period.current_value);
@@ -49,18 +52,19 @@ namespace audio
 
         void tick_envelope()
         {
-            if (envelope.enabled)
-            {
-                envelope.tick();
-            }
+            envelope.tick();
         }
 
         void tick_length_timer()
         {
-            if (length.enabled)
+            if (length.enabled())
             {
                 length.tick();
-                enabled = !length.expired();
+
+                if (length.expired())
+                {
+                    enabled = false;
+                }
             }
         }
 
@@ -105,7 +109,7 @@ namespace audio
         digital_sample current_output{};
 
         sweep_unit sweep{};
-        length_unit length{};
+        length_unit_64 length{};
         duty_cycle duty_cycle{};
         envelope_unit envelope{};
         period_unit period{};

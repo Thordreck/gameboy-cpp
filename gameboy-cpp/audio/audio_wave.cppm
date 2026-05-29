@@ -11,13 +11,15 @@ namespace audio
     {
     public:
         [[nodiscard]] bool active() const { return enabled; }
+        void set_active(const bool active) { enabled = active; }
+
         [[nodiscard]] digital_sample output() const { return current_output; }
 
-        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled; }
-        void set_length_timer_enabled(const bool value) { length.enabled = value; }
+        [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled(); }
+        void set_length_timer_enabled(const bool value) { length.set_enabled(value); }
 
-        [[nodiscard]] std::uint8_t get_length_timer() const { return length.initial_timer_value; }
-        void set_length_timer(const std::uint8_t value) { length.initial_timer_value = value; }
+        [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
+        void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }
 
         [[nodiscard]] volume_level get_volume() const { return volume.initial_value; }
         void set_volume(const volume_level value) { volume.initial_value = value; }
@@ -28,7 +30,7 @@ namespace audio
         void trigger()
         {
             enabled = true;
-            length.reset_if_expired();
+            length.trigger();
             period.reset();
             volume.reset();
             wave_ram_index = 0;
@@ -37,10 +39,14 @@ namespace audio
 
         void tick_length_timer()
         {
-            if (length.enabled)
+            if (length.enabled())
             {
                 length.tick();
-                enabled = !length.expired();
+
+                if (length.expired())
+                {
+                    enabled = false;
+                }
             }
         }
 
@@ -73,7 +79,7 @@ namespace audio
         bool enabled { false };
         digital_sample current_output{};
 
-        length_unit length {};
+        length_unit_256 length {};
         period_unit period {};
         volume_unit volume {};
 
