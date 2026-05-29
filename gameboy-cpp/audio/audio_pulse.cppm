@@ -25,6 +25,7 @@ namespace audio
 
         [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
         void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }
+        [[nodiscard]] bool is_length_timer_at_max_value() const { return length.is_at_max_value(); }
 
         [[nodiscard]] envelope_config get_envelope_config() const { return envelope.config; }
         void set_envelope_config(const envelope_config config) { envelope.config = config; }

@@ -37,6 +37,7 @@ namespace audio
         void set_enabled(const bool enabled) { is_enabled = enabled; }
 
         [[nodiscard]] bool expired() const { return current_value == 0; }
+        [[nodiscard]] bool is_at_max_value() const { return current_value == TimerMax; }
 
         [[nodiscard]] std::uint8_t get_initial_value() const { return initial_value; }
         void set_initial_value(const std::uint8_t value)

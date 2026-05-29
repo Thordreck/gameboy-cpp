@@ -13,7 +13,7 @@ TEST_CASE("blargg.dmg_sound.02-len ctr")
 
 TEST_CASE("blargg.dmg_sound.03-trigger")
 {
-    blargg::run_memory_test("03-trigger.gb", "03-trigger\n\n\nPassed\n", 30e6);
+    blargg::run_memory_test("03-trigger.gb", "03-trigger\n\n0 1 2 3 \nPassed\n", 80e6);
 }
 
 TEST_CASE("blargg.dmg_sound.04-sweep")

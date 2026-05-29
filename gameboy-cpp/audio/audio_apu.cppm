@@ -50,6 +50,14 @@ namespace audio
             {
                 channel_1.set_active(false);
             }
+
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+            if (channel_1.is_length_timer_enabled()
+                && next_div_apu_step_does_not_clock_length
+                && channel_1.is_length_timer_at_max_value())
+            {
+                channel_1.tick_length_timer();
+            }
         }
 
         [[nodiscard]] bool channel_1_on() const { return channel_1.active(); }
@@ -64,7 +72,18 @@ namespace audio
         void set_channel_1_duty_cycle(const duty_cycle duty) { channel_1.set_duty_cycle(duty); }
 
         [[nodiscard]] bool is_channel_1_length_timer_enabled() const { return channel_1.is_length_timer_enabled(); }
-        void enable_channel_1_length_timer(const bool value) { channel_1.set_length_timer_enabled(value); }
+        void enable_channel_1_length_timer(const bool enabled)
+        {
+            const bool was_length_enabled = channel_1.is_length_timer_enabled();
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+
+            channel_1.set_length_timer_enabled(enabled);
+
+            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            {
+                channel_1.tick_length_timer();
+            }
+        }
 
         [[nodiscard]] std::uint8_t get_channel_1_length_timer() const { return channel_1.get_length_timer(); }
         void set_channel_1_length_timer(const std::uint8_t value) { channel_1.set_length_timer(value); }
@@ -95,6 +114,14 @@ namespace audio
             {
                 channel_2.set_active(false);
             }
+
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+            if (channel_2.is_length_timer_enabled()
+                && next_div_apu_step_does_not_clock_length
+                && channel_2.is_length_timer_at_max_value())
+            {
+                channel_2.tick_length_timer();
+            }
         }
 
         [[nodiscard]] bool channel_2_on() const { return channel_2.active(); }
@@ -106,7 +133,18 @@ namespace audio
         void set_channel_2_duty_cycle(const duty_cycle duty) { channel_2.set_duty_cycle(duty); }
 
         [[nodiscard]] bool is_channel_2_length_timer_enabled() const { return channel_2.is_length_timer_enabled(); }
-        void enable_channel_2_length_timer(const bool value) { channel_2.set_length_timer_enabled(value); }
+        void enable_channel_2_length_timer(const bool enabled)
+        {
+            const bool was_length_enabled = channel_2.is_length_timer_enabled();
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+
+            channel_2.set_length_timer_enabled(enabled);
+
+            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            {
+                channel_2.tick_length_timer();
+            }
+        }
 
         [[nodiscard]] std::uint8_t get_channel_2_length_timer() const { return channel_2.get_length_timer(); }
         void set_channel_2_length_timer(const std::uint8_t value) { channel_2.set_length_timer(value); }
@@ -137,6 +175,14 @@ namespace audio
             {
                 channel_3.set_active(false);
             }
+
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+            if (channel_3.is_length_timer_enabled()
+                && next_div_apu_step_does_not_clock_length
+                && channel_3.is_length_timer_at_max_value())
+            {
+                channel_3.tick_length_timer();
+            }
         }
 
         [[nodiscard]] bool channel_3_on() const { return channel_3.active(); }
@@ -156,7 +202,18 @@ namespace audio
         }
 
         [[nodiscard]] bool is_channel_3_length_timer_enabled() const { return channel_3.is_length_timer_enabled(); }
-        void enable_channel_3_length_timer(const bool value) { channel_3.set_length_timer_enabled(value); }
+        void enable_channel_3_length_timer(const bool enabled)
+        {
+            const bool was_length_enabled = channel_3.is_length_timer_enabled();
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+
+            channel_3.set_length_timer_enabled(enabled);
+
+            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            {
+                channel_3.tick_length_timer();
+            }
+        }
 
         [[nodiscard]] std::uint8_t get_channel_3_length_timer() const { return channel_3.get_length_timer(); }
         void set_channel_3_length_timer(const std::uint8_t value) { channel_3.set_length_timer(value); }
@@ -176,6 +233,14 @@ namespace audio
             {
                 channel_4.set_active(false);
             }
+
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+            if (channel_4.is_length_timer_enabled()
+                && next_div_apu_step_does_not_clock_length
+                && channel_4.is_length_timer_at_max_value())
+            {
+                channel_4.tick_length_timer();
+            }
         }
 
         [[nodiscard]] bool channel_4_on() const { return channel_4.active(); }
@@ -184,7 +249,18 @@ namespace audio
         void set_channel_4_panning(const stereo_panning panning) { channels_panning[3].set_config(panning); }
 
         [[nodiscard]] bool is_channel_4_length_timer_enabled() const { return channel_4.is_length_timer_enabled(); }
-        void enable_channel_4_length_timer(const bool value) { channel_4.set_length_timer_enabled(value); }
+        void enable_channel_4_length_timer(const bool enabled)
+        {
+            const bool was_length_enabled = channel_4.is_length_timer_enabled();
+            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
+
+            channel_4.set_length_timer_enabled(enabled);
+
+            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            {
+                channel_4.tick_length_timer();
+            }
+        }
 
         [[nodiscard]] std::uint8_t get_channel_4_length_timer() const { return channel_4.get_length_timer(); }
         void set_channel_4_length_timer(const std::uint8_t value) { channel_4.set_length_timer(value); }

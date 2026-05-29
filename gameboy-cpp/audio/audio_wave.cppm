@@ -17,6 +17,7 @@ namespace audio
 
         [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled(); }
         void set_length_timer_enabled(const bool value) { length.set_enabled(value); }
+        [[nodiscard]] bool is_length_timer_at_max_value() const { return length.is_at_max_value(); }
 
         [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
         void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }
