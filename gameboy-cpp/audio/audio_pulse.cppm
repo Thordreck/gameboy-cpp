@@ -15,7 +15,20 @@ namespace audio
         [[nodiscard]] digital_sample output() const { return current_output; }
 
         [[nodiscard]] sweep_config get_sweep_config() const { return sweep.config; }
-        void set_sweep_config(const sweep_config config) { sweep.config = config; }
+        void set_sweep_config(const sweep_config config)
+        {
+            using enum sweep_direction;
+            const bool was_in_sub_mode = sweep.config.direction == substraction;
+
+            sweep.config = config;
+
+            if (was_in_sub_mode
+                && config.direction != substraction
+                && sweep.sweep_calculation_done_in_sub_mode)
+            {
+                enabled = false;
+            }
+        }
 
         [[nodiscard]] duty_cycle get_duty_cycle() const { return duty_cycle; }
         void set_duty_cycle(const duty_cycle duty) { duty_cycle = duty; }
@@ -71,7 +84,7 @@ namespace audio
 
         void tick_sweep()
         {
-            if (sweep.enabled && sweep.config.pace != 0)
+            if (sweep.tick() && sweep.enabled && sweep.config.pace != 0)
             {
                 const auto sweep_frequency = sweep.compute_frequency();
                 const bool overflow = sweep_frequency > 0x7FF;

@@ -10,23 +10,44 @@ namespace audio
         sweep_config config{};
 
         bool enabled{};
+        bool sweep_calculation_done_in_sub_mode {};
         std::uint8_t timer{};
         std::uint16_t period_shadow{};
 
         void reset(const std::uint16_t current_period)
         {
             period_shadow = current_period;
-            timer = config.pace;
+            timer = config.pace > 0 ? config.pace : 8;
             enabled = config.step != 0 || config.pace != 0;
+            sweep_calculation_done_in_sub_mode = false;
         }
 
-        [[nodiscard]] std::uint16_t compute_frequency() const
+        [[nodiscard]] bool tick()
+        {
+            if (timer > 0)
+            {
+                timer--;
+            }
+
+            const bool timer_has_reached_zero = timer == 0;
+
+            if (timer_has_reached_zero)
+            {
+                timer = config.pace > 0 ? config.pace : 8;
+            }
+
+            return timer_has_reached_zero;
+        }
+
+        [[nodiscard]] std::uint16_t compute_frequency()
         {
             const bool should_negate = config.direction == sweep_direction::substraction;
+            sweep_calculation_done_in_sub_mode = should_negate;
             const auto shifted_period = period_shadow >> config.step;
-            const auto direction_applied = should_negate ? !shifted_period : shifted_period;
 
-            return direction_applied + period_shadow;
+            return should_negate
+                ? period_shadow - shifted_period
+                : period_shadow + shifted_period;
         }
     };
 
