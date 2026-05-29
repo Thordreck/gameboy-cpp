@@ -28,7 +28,10 @@ TEST_CASE("blargg.dmg_sound.05-sweep details")
 
 TEST_CASE("blargg.dmg_sound.06-overflow on trigger")
 {
-    blargg::run_memory_test("06-overflow on trigger.gb", "06-overflow on trigger\n\n\nPassed\n", 30e5);
+    blargg::run_memory_test(
+        "06-overflow on trigger.gb",
+        "06-overflow on trigger\n\n0555 0666 071C 0787 07C1 07E0 07F0 \n0556 0667 071D 0788 07C2 07E1 07F1 \nPassed\n",
+        30e6);
 }
 
 TEST_CASE("blargg.dmg_sound.07-len sweep period sync")
