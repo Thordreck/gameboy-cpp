@@ -45,7 +45,7 @@ namespace audio
             if (sweep.config.step != 0)
             {
                 const auto sweep_frequency = sweep.compute_frequency();
-                const bool overflow = sweep_frequency > 0x7FFF;
+                const bool overflow = sweep_frequency > 0x7FF;
 
                 enabled = !overflow;
             }
@@ -74,14 +74,22 @@ namespace audio
             if (sweep.enabled && sweep.config.pace != 0)
             {
                 const auto sweep_frequency = sweep.compute_frequency();
-                const bool overflow = sweep_frequency > 0x7FFF;
+                const bool overflow = sweep_frequency > 0x7FF;
+
+                if (overflow)
+                {
+                    enabled = false;
+                }
 
                 if (!overflow && sweep.config.step != 0)
                 {
                     sweep.period_shadow = sweep_frequency;
                     period.initial_value = sweep_frequency;
 
-                    enabled = sweep.compute_frequency() <= 0x7FFF;
+                    if (sweep.compute_frequency() > 0x7FF)
+                    {
+                        enabled = false;
+                    }
                 }
             }
         }

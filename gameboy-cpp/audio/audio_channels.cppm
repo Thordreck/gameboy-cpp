@@ -24,7 +24,7 @@ namespace audio
         {
             const bool should_negate = config.direction == sweep_direction::substraction;
             const auto shifted_period = period_shadow >> config.step;
-            const auto direction_applied = (shifted_period ^ !should_negate) + should_negate;
+            const auto direction_applied = should_negate ? !shifted_period : shifted_period;
 
             return direction_applied + period_shadow;
         }
