@@ -228,7 +228,11 @@ namespace audio
         const auto duty = static_cast<duty_cycle>((value >> 6) & 0b11);
         const std::uint8_t length_timer = value & 0b111111;
 
-        apu.set_channel_1_duty_cycle(duty);
+        if (apu.is_enabled())
+        {
+            apu.set_channel_1_duty_cycle(duty);
+        }
+
         apu.set_channel_1_length_timer(length_timer);
     }
 
@@ -276,7 +280,11 @@ namespace audio
         const auto duty = static_cast<duty_cycle>((value >> 6) & 0b11);
         const std::uint8_t length_timer = value & 0b111111;
 
-        apu.set_channel_2_duty_cycle(duty);
+        if (apu.is_enabled())
+        {
+            apu.set_channel_2_duty_cycle(duty);
+        }
+
         apu.set_channel_2_length_timer(length_timer);
     }
 
@@ -416,8 +424,38 @@ namespace audio
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
-            const bool in_audio_region = address >= channel_1_sweep_address && address <= sound_panning_address;
+            const bool in_audio_region
+                = address >= channel_1_sweep_address
+                && address <= sound_panning_address
+                && address != channel_1_length_and_cycle_address
+                && address != channel_2_length_and_cycle_address
+                && address != channel_3_length_timer_address
+                && address != channel_4_length_timer_address;
+
             return !in_audio_region || apu.active();
+        }
+
+    private:
+        const audio_processing_unit& apu;
+    };
+
+    export class wave_ram_access_policy
+    {
+    public:
+        explicit wave_ram_access_policy(const audio_processing_unit& apu)
+            : apu { apu }
+        {}
+
+        [[nodiscard]] bool can_read(const memory::memory_address_t address) const
+        {
+            const bool in_wave_region = address >= wave_ram_start_address && address <= wave_ram_end_address;
+            return !in_wave_region || !apu.channel_3_on() || apu.get_channel_3_read_timer() <= 2;
+        }
+
+        [[nodiscard]] bool can_write(const memory::memory_address_t address) const
+        {
+            const bool in_wave_region = address >= wave_ram_start_address && address <= wave_ram_end_address;
+            return !in_wave_region || !apu.channel_3_on() || apu.get_channel_3_read_timer() <= 2;
         }
 
     private:

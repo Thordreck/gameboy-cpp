@@ -28,6 +28,9 @@ namespace audio
         [[nodiscard]] std::uint16_t get_period() const { return period.initial_value; }
         void set_period(const std::uint16_t value) { period.initial_value = value; }
 
+        [[nodiscard]] std::uint32_t get_wave_read_timer() const { return wave_timer; }
+        [[nodiscard]] std::uint8_t get_wave_index() const { return wave_ram_index / 2; }
+
         void trigger()
         {
             enabled = true;
@@ -35,7 +38,7 @@ namespace audio
             period.reset();
             volume.reset();
             wave_ram_index = 0;
-            wave_timer = (2048 - period.current_value) * 2;
+            wave_timer = (2048 - period.current_value) * 2 + 6;
         }
 
         void tick_length_timer()

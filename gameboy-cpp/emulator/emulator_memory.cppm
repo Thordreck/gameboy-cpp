@@ -155,10 +155,19 @@ X(0x00) X(0x01) X(0x02) X(0x03) X(0x04) X(0x05) X(0x06) X(0x07) \
 X(0x08) X(0x09) X(0x0A) X(0x0B) X(0x0C) X(0x0D) X(0x0E) X(0x0F)
 
 #define WAVE_RAM_READ_CASE(i) \
-case (audio::wave_ram_start_address + (i)): return wave_ram[i];
+case (audio::wave_ram_start_address + (i)): \
+    { \
+    const size_t effective_index = apu.channel_3_on() ? apu.get_channel_3_wave_index() : (i); \
+    return wave_ram[effective_index]; \
+    }
 
 #define WAVE_RAM_WRITE_CASE(i) \
-case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
+case (audio::wave_ram_start_address + (i)): \
+    { \
+    const size_t effective_index = apu.channel_3_on() ? apu.get_channel_3_wave_index() : (i); \
+    wave_ram[effective_index] = value; \
+    } \
+    break;
 
     export class io_hram_interrupt_memory_page
     {
@@ -514,7 +523,8 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
         graphics::vram_access_policy,
         graphics::oam_dma_access_policy,
         graphics::oam_ppu_access_policy,
-        audio::audio_access_policy>;
+        audio::audio_access_policy,
+        audio::wave_ram_access_policy>;
 
     export template <mbc::MemoryBankController MBC>
     using timers_memory_bus_t = memory::memory_bus<
@@ -543,8 +553,9 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
             : vram_policy{ppu}
             , oam_dma_policy{oam_dma}
             , oam_ppu_policy{ppu, oam_dma}
-            , audio_policy { apu}
-             , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, audio_policy }
+            , audio_policy { apu }
+            , wave_ram_policy { apu }
+             , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, audio_policy, wave_ram_policy }
              , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
              , ppu_bus_{map, oam_ppu_policy}
              , oam_dma_bus_{map}
@@ -560,6 +571,7 @@ case (audio::wave_ram_start_address + (i)): wave_ram[i] = value; break;
         graphics::oam_dma_access_policy oam_dma_policy;
         graphics::oam_ppu_access_policy oam_ppu_policy;
         audio::audio_access_policy audio_policy;
+        audio::wave_ram_access_policy wave_ram_policy;
 
         cpu_memory_bus_t<MBC> cpu_bus_;
         timers_memory_bus_t<MBC> timers_bus_;

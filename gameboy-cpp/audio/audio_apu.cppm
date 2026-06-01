@@ -27,9 +27,10 @@ namespace audio
         [[nodiscard]] bool is_enabled() const { return enabled; }
         void set_enabled(const bool value)
         {
+            const bool was_enabled = enabled;
             enabled = value;
 
-            if (!enabled)
+            if (was_enabled && !enabled)
             {
                 reset();
             }
@@ -224,6 +225,9 @@ namespace audio
         [[nodiscard]] std::uint16_t get_channel_3_period() const { return channel_3.get_period(); }
         void set_channel_3_period(const std::uint16_t value) { channel_3.set_period(value); }
 
+        [[nodiscard]] std::uint32_t get_channel_3_read_timer() const { return channel_3.get_wave_read_timer(); }
+        [[nodiscard]] std::uint8_t get_channel_3_wave_index() const { return channel_3.get_wave_index(); }
+
         // Channel 4
         void trigger_channel_4()
         {
@@ -283,21 +287,33 @@ namespace audio
         void set_channel_4_randomness(const randomness_config config) { channel_4.set_randomness_config(config); }
 
         // Others
-        //[[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
             // TODO: implement properly
-            return 4;
+            return 2;
         }
 
         template<AudioSink<float> Sink>
-        void tick(const std::uint32_t ticks, const timer::div div, const_wave_ram_view_t wave_ram, Sink& sink)
+        void tick(std::uint32_t ticks, const timer::div div, const_wave_ram_view_t wave_ram, Sink& sink)
         {
             PROFILER_SCOPE("APU::tick()");
 
-            tick_frame_sequencer(div);
-            tick_channels(ticks, wave_ram, sink);
+            while (ticks > 0)
+            {
+                const std::uint32_t consumed_ticks = std::min(remaining_ticks, ticks);
+
+                remaining_ticks -= consumed_ticks;
+                ticks -= consumed_ticks;
+
+                if (remaining_ticks == 0)
+                {
+                    remaining_ticks = 2;
+
+                    tick_frame_sequencer(div);
+                    tick_channels(consumed_ticks, wave_ram, sink);
+                }
+            }
         }
 
     private:
@@ -441,6 +457,8 @@ namespace audio
         channel_array_t<panning> channels_panning {};
         channel_array_t<dac> channels_dac {};
         stereo_high_pass_filter high_pass_filter {};
+
+        std::uint32_t remaining_ticks { 2 };
     };
 
 }

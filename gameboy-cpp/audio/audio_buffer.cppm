@@ -18,18 +18,17 @@ namespace audio
 
         template<typename Rep, typename Period>
         audio_buffer(const std::chrono::duration<Rep, Period>& duration, const std::uint32_t sample_rate)
-            : audio_buffer(sample_rate * std::chrono::duration_cast<std::chrono::seconds>(duration).count())
+            : audio_buffer(sample_rate * std::chrono::duration_cast<std::chrono::duration<float>>(duration).count())
         {}
 
-        // TODO: read
         size_t write(std::span<const T> samples)
         {
-            return 0;
+            return buffer.push(samples);
         }
 
         size_t read(std::span<T> samples)
         {
-            return 0;
+            return buffer.pop(samples);
         }
 
     private:

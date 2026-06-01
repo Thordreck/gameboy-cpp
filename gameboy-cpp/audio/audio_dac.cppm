@@ -27,7 +27,7 @@ namespace audio
 
         analog_sample convert(const digital_sample input)
         {
-            return enabled ? convert_sample<analog_sample>(input) : analog_sample { };
+            return enabled ? analog_sample { 1.0f * convert_sample<analog_sample>(input).data() } : analog_sample { };
         }
 
         stereo<analog_sample> convert(const stereo<digital_sample> input)

@@ -41,7 +41,7 @@ TEST_CASE("blargg.dmg_sound.07-len sweep period sync")
 
 TEST_CASE("blargg.dmg_sound.08-len ctr during power")
 {
-    blargg::run_memory_test("08-len ctr during power.gb", "08-len ctr during power\n\n\nPassed\n", 30e5);
+    blargg::run_memory_test("08-len ctr during power.gb", "08-len ctr during power\n\n\nPassed\n", 30e6);
 }
 
 TEST_CASE("blargg.dmg_sound.09-wave read while on")

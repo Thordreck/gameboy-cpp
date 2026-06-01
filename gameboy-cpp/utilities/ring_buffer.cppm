@@ -20,10 +20,10 @@ namespace utils
 
         [[nodiscard]] bool push(const T& t) { return imp.push(t); }
         [[nodiscard]] bool push(T&& t) { return imp.push(std::forward<T>(t)); }
-        [[nodiscard]] size_t push(std::span<const T> buffer) { return imp.push(buffer); }
+        [[nodiscard]] size_t push(std::span<const T> buffer) { return imp.push(buffer.data(), buffer.size()); }
 
         [[nodiscard]] std::optional<T> pop() { return imp.pop(boost::lockfree::uses_optional); }
-        [[nodiscard]] size_t pop(std::span<T> buffer) { return imp.pop(buffer); }
+        [[nodiscard]] size_t pop(std::span<T> buffer) { return imp.pop(buffer.data(), buffer.size()); }
 
     private:
         boost::lockfree::spsc_queue<T, boost::lockfree::capacity<Capacity>> imp;
@@ -39,16 +39,16 @@ namespace utils
 
         void clear() { imp.reset(); }
 
-        [[nodiscard]] size_t capacity() const { return imp.capacity(); }
+        [[nodiscard]] size_t capacity() const { return write_available() + read_available(); }
         [[nodiscard]] size_t write_available() const { return imp.write_available(); }
         [[nodiscard]] size_t read_available() const { return imp.read_available(); }
 
         [[nodiscard]] bool push(const T& t) { return imp.push(t); }
         [[nodiscard]] bool push(T&& t) { return imp.push(std::forward<T>(t)); }
-        [[nodiscard]] size_t push(std::span<const T> buffer) { return imp.push(buffer); }
+        [[nodiscard]] size_t push(std::span<const T> buffer) { return imp.push(buffer.data(), buffer.size()); }
 
         [[nodiscard]] std::optional<T> pop() { return imp.pop(boost::lockfree::uses_optional); }
-        [[nodiscard]] size_t pop(std::span<T> buffer) { return imp.pop(buffer); }
+        [[nodiscard]] size_t pop(std::span<T> buffer) { return imp.pop(buffer.data(), buffer.size()); }
 
     private:
         boost::lockfree::spsc_queue<T> imp;
