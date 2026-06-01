@@ -12,7 +12,7 @@ namespace audio
         [[nodiscard]] bool active() const { return enabled; }
         void set_active(const bool active) { enabled = active; }
 
-        [[nodiscard]] digital_sample output() const { return current_output; }
+        [[nodiscard]] digital_sample output() const { return enabled ? current_output : digital_sample{}; }
 
         [[nodiscard]] sweep_config get_sweep_config() const { return sweep.config; }
         void set_sweep_config(const sweep_config config)
