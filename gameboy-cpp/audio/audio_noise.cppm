@@ -70,17 +70,16 @@ namespace audio
                 if (lfsr_timer == 0)
                 {
                     using namespace utils;
-                    const std::uint8_t new_value = (lfsr & 0b1) ^ (lfsr >> 1 & 0b1) & 0b1;
-
-                    utils::write_bit<15>(lfsr, new_value);
+                    const std::uint8_t new_value = (lfsr & 0b1) ^ ((lfsr & 0b10) >> 1);
+                    lfsr = (lfsr >> 1) | (new_value << 14);
 
                     if (randomness.lfsr_width == lfsr_width::_7_bit)
                     {
-                        utils::write_bit<7>(lfsr, new_value);
+                        lfsr &= !(1 << 6);
+                        lfsr |= new_value << 6;
                     }
 
-                    lfsr >>= 1;
-                    current_output = (lfsr & 0b1) ? envelope.current_volume : 0;
+                    current_output = (~lfsr & 0x01) * envelope.current_volume;
                     lfsr_timer = compute_noise_period(randomness);
                 }
             }

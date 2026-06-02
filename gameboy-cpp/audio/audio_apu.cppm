@@ -291,7 +291,7 @@ namespace audio
         [[nodiscard]] std::uint32_t tick_batch() const
         {
             // TODO: implement properly
-            return 2;
+            return 4;
         }
 
         template<AudioSink<float> Sink>
@@ -299,21 +299,8 @@ namespace audio
         {
             PROFILER_SCOPE("APU::tick()");
 
-            while (ticks > 0)
-            {
-                const std::uint32_t consumed_ticks = std::min(remaining_ticks, ticks);
-
-                remaining_ticks -= consumed_ticks;
-                ticks -= consumed_ticks;
-
-                if (remaining_ticks == 0)
-                {
-                    remaining_ticks = 2;
-
-                    tick_frame_sequencer(div);
-                    tick_channels(consumed_ticks, wave_ram, sink);
-                }
-            }
+            tick_frame_sequencer(div);
+            tick_channels(ticks, wave_ram, sink);
         }
 
     private:
@@ -391,9 +378,8 @@ namespace audio
                     tick_accumulator -= master_clock_rate;
 
                     const auto [left, right] = generate_sample();
-                    const std::array raw_samples { left.data(), right.data() };
-
-                    sink.write(raw_samples);
+                    const std::array raw_sample { left.data(), right.data() };
+                    sink.write(raw_sample);
                 }
             }
         }
@@ -457,8 +443,6 @@ namespace audio
         channel_array_t<panning> channels_panning {};
         channel_array_t<dac> channels_dac {};
         stereo_high_pass_filter high_pass_filter {};
-
-        std::uint32_t remaining_ticks { 2 };
     };
 
 }
