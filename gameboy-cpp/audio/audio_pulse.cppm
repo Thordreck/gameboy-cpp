@@ -117,9 +117,7 @@ namespace audio
 
                 if (duty_timer == 0)
                 {
-                    const std::uint8_t sampled_waveform = sample_pulse_waveform(duty_step, duty_cycle);
-                    current_output = sampled_waveform * envelope.current_volume;
-
+                    current_output = sample_pulse_waveform(duty_step, duty_cycle) * envelope.current_volume;
                     duty_timer = (2048 - period.current_value) * 4;
                     duty_step = (duty_step + 1) & 7;
                 }

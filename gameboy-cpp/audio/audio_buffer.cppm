@@ -17,19 +17,15 @@ namespace audio
         {}
 
         template<typename Rep, typename Period>
-        audio_buffer(const std::chrono::duration<Rep, Period>& duration, const std::uint32_t sample_rate)
-            : audio_buffer(sample_rate * std::chrono::duration_cast<std::chrono::duration<float>>(duration).count())
+        audio_buffer(const std::chrono::duration<Rep, Period>& duration, const std::uint32_t sample_rate, const std::uint8_t channels)
+            : audio_buffer(sample_rate * channels * std::chrono::duration_cast<std::chrono::duration<float>>(duration).count())
         {}
 
-        size_t write(std::span<const T> samples)
-        {
-            return buffer.push(samples);
-        }
+        [[nodiscard]] size_t read_available() const { return buffer.read_available(); }
+        [[nodiscard]] size_t write_available() const { return buffer.write_available(); }
 
-        size_t read(std::span<T> samples)
-        {
-            return buffer.pop(samples);
-        }
+        size_t write(std::span<const T> samples) { return buffer.push(samples); }
+        size_t read(std::span<T> samples) { return buffer.pop(samples); }
 
     private:
         utils::ring_buffer<T> buffer;

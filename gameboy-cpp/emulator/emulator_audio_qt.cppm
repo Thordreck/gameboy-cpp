@@ -26,7 +26,7 @@ namespace emulator
             update_audio_config();
 
             sink = std::make_unique<QAudioSink>(format);
-            buffer = std::make_unique<audio::audio_buffer<float>>(500ms, sample_rate());
+            buffer = std::make_unique<audio::audio_buffer<float>>(500ms, sample_rate(), channel_count());
             sink->start([this] (const QSpan<float> output) { audio_callback(*this->buffer, output); } );
 
             (utils::assert)(sink->error() == QtAudio::Error::NoError, "Could not open output audio device");
@@ -40,7 +40,12 @@ namespace emulator
 
         void write(const std::span<const float> samples)
         {
-            buffer->write(samples);
+            const std::size_t written = buffer->write(samples);
+
+            if (written != samples.size())
+            {
+                qWarning("Audio buffer overflow");
+            }
         }
 
     private:
@@ -57,10 +62,15 @@ namespace emulator
         static void audio_callback(audio::audio_buffer<float>& buffer, QSpan<float> output)
         {
             const std::size_t samples_read = buffer.read(output);
-
             const std::size_t remaining_start = std::min(static_cast<std::size_t>(output.size()), samples_read);
             const auto remaining_slice = output.subspan(remaining_start);
+
             std::memset(remaining_slice.data(), 0, remaining_slice.size());
+
+            if (samples_read != output.size())
+            {
+                qWarning("Audio buffer underflow");
+            }
         };
 
         QAudioFormat format;

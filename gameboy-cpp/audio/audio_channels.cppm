@@ -114,7 +114,7 @@ namespace audio
 
     export std::uint8_t sample_pulse_waveform(const std::uint8_t sample, const duty_cycle cycle)
     {
-        return get_pulse_waveform(cycle) >> sample & 0b1;
+        return (get_pulse_waveform(cycle) >> sample) & 0b1;
     }
 
     export struct envelope_unit
