@@ -15,7 +15,7 @@ namespace serial
 
     export [[nodiscard]] memory::memory_data_t read_serial_transfer_control_address(const link& serial)
     {
-        return serial.is_transfer_enabled() << 7 | serial.is_master();
+        return serial.is_transfer_enabled() << 7 | serial.is_master() | 0b01111110;
     }
 
     export void write_serial_transfer_data_address(link& serial, const memory::memory_data_t value)

@@ -14,6 +14,7 @@ target_sources(timer PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/timer_tima.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/timer_tac.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/timer_tma.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/timer_memory.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/timer_system.cppm
 )
 

@@ -3,7 +3,7 @@ target_compile_features(mooneye_suite_core PUBLIC cxx_std_23)
 add_library(mooneye_suite::core ALIAS mooneye_suite_core)
 
 set_target_properties(mooneye_suite_core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(mooneye_suite_core PUBLIC emulator::core emulator::gameboy doctest)
+target_link_libraries(mooneye_suite_core PUBLIC emulator::core emulator::gameboy doctest stb_image)
 target_sources(mooneye_suite_core PUBLIC
         FILE_SET
         CXX_MODULES

@@ -1,6 +1,7 @@
 export module timer;
 
 export import :common;
+export import :memory;
 export import :div;
 export import :tima;
 export import :tac;

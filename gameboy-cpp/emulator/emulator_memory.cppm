@@ -203,13 +203,13 @@ case (audio::wave_ram_start_address + (i)): \
             case timer::div_address: return static_cast<memory::memory_data_t>(timers.divider() >> 8);
             case timer::tima_address: return timers.counter();
             case timer::tma_address: return timers.modulo().value;
-            case timer::tac_address: return timers.control();
+            case timer::tac_address: return timer::read_tac_address(timers);
             case graphics::lcd_status_address: return graphics::lcd_status(ppu);
             case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
             case graphics::oam_dma_transfer_address: return oam_dma.start_address() / static_cast<memory::memory_address_t>(0x100);
-            case interrupts::if_address: return interrupts.flag;
+            case interrupts::if_address: return interrupts.flag | 0xE0;
             case interrupts::ie_address: return interrupts.enable;
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             case serial::serial_transfer_data_address: return serial::read_serial_transfer_data_address(serial);
@@ -257,7 +257,7 @@ case (audio::wave_ram_start_address + (i)): \
                 timers.modulo().value = value;
                 break;
             case timer::tac_address:
-                timers.control() = value;
+                timer::write_tac_address(timers, value);
                 break;
             case graphics::lcd_status_address:
                 graphics::set_lcd_status(value, ppu);

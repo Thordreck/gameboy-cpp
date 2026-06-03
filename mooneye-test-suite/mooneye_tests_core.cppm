@@ -5,6 +5,8 @@ export module mooneye;
 
 import std;
 import mbc;
+import graphics;
+import stb_image;
 import utilities;
 import cartridge;
 import emulator.core;
@@ -52,6 +54,26 @@ namespace mooneye
 		static void write(const std::span<const float>) {}
 	};
 
+	template<emulator::Engine Engine>
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> export_lcd(
+		const Engine& engine,
+		const std::string_view rom_file_path)
+	{
+		const std::filesystem::path output_filepath
+			= std::filesystem::temp_directory_path()
+			/ std::filesystem::path(rom_file_path).filename().replace_extension("png");
+
+		constexpr stb::image_metadata output_metadata
+		{
+			graphics::lcd_width,
+			graphics::lcd_height,
+			graphics::num_color_channels
+		};
+
+		const auto result = stb::write_png(output_filepath, engine.lcd().data(), output_metadata);
+		return result.transform([output_filepath] { return output_filepath; });
+	}
+
 	export void run_test(const std::string_view rom_file_path)
 	{
 		test_serial serial {};
@@ -80,10 +102,13 @@ namespace mooneye
 		}
 
 		constexpr result_sequence_t expected_success_result { 3, 5, 8, 13, 21, 34 };
+		const bool received_expected_result = std::ranges::equal(serial.input_data(), expected_success_result);
 
-		REQUIRE_MESSAGE(
-			std::ranges::equal(serial.input_data(), expected_success_result),
-			std::format("Result sequence received: {}", result));
+		if (!received_expected_result)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
+			FAIL(std::format("Incorrect result sequence received: {}\nGenerated result image at {}", result, image_path.string()));
+		}
 	}
 
 }

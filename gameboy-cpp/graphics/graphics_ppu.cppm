@@ -458,7 +458,8 @@ namespace graphics
             | (mode1 << 4)
             | (mode0 << 3)
             | (lyc_equal_ly << 2)
-            | ppu_mode_reg;
+            | ppu_mode_reg
+            | 0x80;
     }
 
     export void set_lcd_status(const std::uint8_t status, pixel_processing_unit& ppu)
