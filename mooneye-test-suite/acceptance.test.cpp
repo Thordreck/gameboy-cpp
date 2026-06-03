@@ -18,7 +18,7 @@ TEST_CASE("mooneye.acceptance.bits.unused_hwio")
 
 TEST_CASE("mooneye.acceptance.instr.daa")
 {
-    mooneye::run_test("roms/acceptance/bits/daa.gb");
+    mooneye::run_test("roms/acceptance/instr/daa.gb");
 }
 
 TEST_CASE("mooneye.acceptance.interrupts.ie_push")
