@@ -205,11 +205,17 @@
       "inherits": ["ninja-no-profiling-qt", "debug"]
     }
   ],
+  "buildPresets": [
+    {
+      "name": "ninja-no-profiling-sdl-relWithDebInfo",
+      "configurePreset": "ninja-no-profiling-sdl-relWithDebInfo"
+    }
+  ],
   "testPresets": [
     {
-      "name": "test",
-      "displayName": "Test",
-      "configurePreset": "relWithDebInfo",
+      "name": "ninja-no-profiling-sdl-relWithDebInfo",
+      "displayName": "Ninja RelWithDebInfo Test (SDL)",
+      "configurePreset": "ninja-no-profiling-sdl-relWithDebInfo",
       "output": {
         "outputOnFailure": true
       },

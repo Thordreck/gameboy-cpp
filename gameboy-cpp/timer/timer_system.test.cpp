@@ -24,6 +24,16 @@ namespace
 		static constexpr auto clock_select = Clock;
 	};
 
+	class test_memory
+	{
+	public:
+		[[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const { return memory[address]; }
+		void write(const memory::memory_address_t address, const memory::memory_data_t value) { memory[address] = value; }
+
+	private:
+		std::array<memory::memory_data_t, memory::memory_size> memory {};
+	};
+
 #define tac_clock_test_cases \
     tac_clock_test_case<timer::tac_clock::_00, 256 * 4>, \
     tac_clock_test_case<timer::tac_clock::_01, 4 * 4>, \
@@ -33,17 +43,11 @@ namespace
 
 TEST_CASE("timers.Divider register increases correctly with tac enabled")
 {
-	std::array<memory::memory_data_t, memory::memory_size> memory{};
-	auto memory_page = memory::map(memory);
-	auto memory_map = memory::build_memory_map(memory_page);
-	memory::memory_bus bus{ memory_map };
-
+	test_memory memory {};
 	timer::timer_system timers{ };
 	timers.control().enabled = true;
 
-	memory::connect(bus, timers);
-
-	auto tick_timer = [&timers] { timers.tick(1); };
+	auto tick_timer = [&] { timers.tick(1, memory); };
 
 	CHECK_EQ(static_cast<std::uint16_t>(timers.divider()), 0x00);
 
@@ -56,17 +60,11 @@ TEST_CASE("timers.Divider register increases correctly with tac enabled")
 
 TEST_CASE("timers.Divider register increases correctly with tac disabled")
 {
-	std::array<memory::memory_data_t, memory::memory_size> memory{};
-	auto memory_page = memory::map(memory);
-	auto memory_map = memory::build_memory_map(memory_page);
-	memory::memory_bus bus{ memory_map };
-
+	test_memory memory {};
 	timer::timer_system timers{ };
 	timers.control().enabled = false;
 
-	memory::connect(bus, timers);
-
-	auto tick_timer = [&timers] { timers.tick(1); };
+	auto tick_timer = [&] { timers.tick(1, memory); };
 
 	CHECK_EQ(static_cast<std::uint16_t>(timers.divider()), 0x00);
 
@@ -79,18 +77,12 @@ TEST_CASE("timers.Divider register increases correctly with tac disabled")
 
 TEST_CASE_TEMPLATE("timers.Tima is incremented properly based on clock selected", test, tac_clock_test_cases)
 {
-	std::array<memory::memory_data_t, memory::memory_size> memory{};
-	auto memory_page = memory::map(memory);
-	auto memory_map = memory::build_memory_map(memory_page);
-	memory::memory_bus bus{ memory_map };
-
+	test_memory memory {};
 	timer::timer_system timers{ };
 	timers.control().enabled = true;
 	timers.control().clock = test::clock_select;
 
-	memory::connect(bus, timers);
-
-	auto tick_timer = [&timers] { timers.tick(1); };
+	auto tick_timer = [&] { timers.tick(1, memory); };
 	CHECK_EQ(timers.counter(), 0x00);
 
 	repeat<test::ticks_to_increment>(tick_timer);
@@ -102,18 +94,13 @@ TEST_CASE_TEMPLATE("timers.Tima is incremented properly based on clock selected"
 
 TEST_CASE_TEMPLATE("timers.When tima overflows an interrupt is requested after an m-cycle", test, tac_clock_test_cases)
 {
-	std::array<memory::memory_data_t, memory::memory_size> memory{};
-	auto memory_page = memory::map(memory);
-	auto memory_map = memory::build_memory_map(memory_page);
-	memory::memory_bus bus{ memory_map };
-
+	test_memory memory {};
 	timer::timer_system timers{ };
 	timers.modulo().value = 0xAB;
 	timers.control().enabled = true;
 	timers.control().clock = test::clock_select;
 
-	memory::connect(bus, timers);
-	auto tick_timer = [&timers] { timers.tick(1); };
+	auto tick_timer = [&] { timers.tick(1, memory); };
 
 	constexpr size_t ticks_to_overflow 
 		= test::ticks_to_increment 
@@ -121,46 +108,41 @@ TEST_CASE_TEMPLATE("timers.When tima overflows an interrupt is requested after a
 
 	repeat<ticks_to_overflow>(tick_timer);
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 
 	// TIMA stays at zero for a whole m-cycle (4 t-cycles)
 	tick_timer();
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 
 	tick_timer();
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 
 	tick_timer();
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 
 	// TIMA is set to modulo and an interrupt is requested in the next m-cycle
 	tick_timer();
 	CHECK_EQ(timers.counter().value(), 0xAB);
-	CHECK(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK(interrupts::is_requested(interrupts::timer_interrupt, memory));
 }
 
 TEST_CASE_TEMPLATE("timers.Tima does not increment when tac is disabled", test, tac_clock_test_cases)
 {
-	std::array<memory::memory_data_t, memory::memory_size> memory{};
-	auto memory_page = memory::map(memory);
-	auto memory_map = memory::build_memory_map(memory_page);
-	memory::memory_bus bus{ memory_map };
-
+	test_memory memory {};
 	timer::timer_system timers{ };
 	timers.control().enabled = false;
 	timers.control().clock = test::clock_select;
 
-	memory::connect(bus, timers);
-	auto tick_timer = [&timers] { timers.tick(1); };
+	auto tick_timer = [&] { timers.tick(1, memory); };
 
 	repeat<test::ticks_to_increment>(tick_timer);
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 
 	repeat<test::ticks_to_increment * 10>(tick_timer);
 	CHECK_EQ(timers.counter().value(), 0x0);
-	CHECK_FALSE(interrupts::is_requested<interrupts::timer_interrupt>(bus));
+	CHECK_FALSE(interrupts::is_requested(interrupts::timer_interrupt, memory));
 }

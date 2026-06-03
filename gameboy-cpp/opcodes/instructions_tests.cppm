@@ -8,12 +8,32 @@ export import opcodes;
 
 namespace tests
 {
-	export template<opcodes::Instruction instruction>
+	export template<opcodes::Instruction Instruction>
 	void execute_all_instruction_steps(cpu::cpu_state& cpu)
 	{
-		for (std::uint8_t step = 0; step < instruction::num_steps(cpu); step++)
+		for (std::uint8_t step = 0; step < Instruction::num_steps(cpu); step++)
 		{
-			instruction::execute(cpu, step);
+			Instruction::execute(cpu, step);
+		}
+	};
+
+	export template<typename Instruction, memory::AnyMemory Memory>
+	requires opcodes::ReadOnlyMemoryInstruction<Instruction, Memory>
+	void execute_all_instruction_steps(cpu::cpu_state& cpu, const Memory& memory)
+	{
+		for (std::uint8_t step = 0; step < Instruction::num_steps(cpu); step++)
+		{
+			Instruction::execute(cpu, step, memory);
+		}
+	};
+
+	export template<typename Instruction, memory::AnyMemory Memory>
+	requires opcodes::MemoryInstruction<Instruction, Memory>
+	void execute_all_instruction_steps(cpu::cpu_state& cpu, Memory& memory)
+	{
+		for (std::uint8_t step = 0; step < Instruction::num_steps(cpu); step++)
+		{
+			Instruction::execute(cpu, step, memory);
 		}
 	};
 
@@ -39,6 +59,14 @@ namespace tests
 		static cpu::register_8 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
 	};
 
+	export template<typename OpCode, memory::ReadOnlyMemory Memory, auto RegFn>
+	requires opcodes::ReadOnlyMemoryInstruction<OpCode, Memory> && R8RegisterFetchFn<RegFn>
+	struct r8_read_memory_test_case
+	{
+		static void execute(cpu::cpu_state& cpu, const Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
+		static cpu::register_8 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
+	};
+
     export template <auto RegFn>
     concept R16RegisterFetchFn = requires(cpu::cpu_state & cpu)
     {
@@ -55,6 +83,30 @@ namespace tests
 	struct r16_test_case
 	{
 		static void execute(cpu::cpu_state& cpu) { execute_all_instruction_steps<OpCode>(cpu); }
+		static cpu::register_16 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
+	};
+
+	export template<typename OpCode, memory::ReadOnlyMemory Memory, auto RegFn>
+	requires opcodes::ReadOnlyMemoryInstruction<OpCode, Memory> && R16RegisterFetchFn<RegFn>
+	struct r16_read_memory_test_case
+	{
+		static void execute(cpu::cpu_state& cpu, const Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
+		static cpu::register_16 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
+	};
+
+	export template<typename OpCode, memory::WriteOnlyMemory Memory, auto RegFn>
+	requires opcodes::MemoryInstruction<OpCode, Memory> && R16RegisterFetchFn<RegFn>
+	struct r16_write_memory_test_case
+	{
+		static void execute(cpu::cpu_state& cpu, Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
+		static cpu::register_16 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
+	};
+
+	export template<typename OpCode, memory::Memory Memory, auto RegFn>
+	requires opcodes::MemoryInstruction<OpCode, Memory> && R16RegisterFetchFn<RegFn>
+	struct r16_memory_test_case
+	{
+		static void execute(cpu::cpu_state& cpu, Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
 		static cpu::register_16 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
 	};
 
@@ -105,10 +157,11 @@ namespace tests
 		{ T::set(cpu) } -> std::same_as<void>;
 	};
 
-	export template<opcodes::Instruction OpCode, CpuStateConditionSetter condition_setter>
+	export template<typename OpCode, memory::Memory Memory, CpuStateConditionSetter condition_setter>
+	requires opcodes::MemoryInstruction<OpCode, Memory>
 	struct cc_test_case
 	{
-		static void execute(cpu::cpu_state& cpu) { execute_all_instruction_steps<OpCode>(cpu); }
+		static void execute(cpu::cpu_state& cpu, Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
 		static void set_condition(cpu::cpu_state& cpu) { condition_setter::set(cpu); }
 	};
 
@@ -121,41 +174,33 @@ namespace tests
 		static cpu::register_8 rhs(cpu::cpu_state& cpu) { return RhsRegFn(cpu); }
 	};
 
-	export template<opcodes::Instruction OpCode, auto RegFn, cpu::register_16::type_t memory_pos, cpu::register_8::type_t target_value>
-    requires R8RegisterFetchFn<RegFn>
-	struct r8_pos_value_test_case
+	export template<typename OpCode, memory::Memory Memory, auto RegFn, cpu::register_16::type_t memory_pos, cpu::register_8::type_t target_value>
+    requires opcodes::MemoryInstruction<OpCode, Memory> && R8RegisterFetchFn<RegFn>
+	struct r8_memory_pos_value_test_case
 	{
         static constexpr auto memory_pos = memory_pos;
         static constexpr auto target_value = target_value;
 
-		static void execute(cpu::cpu_state& cpu) { execute_all_instruction_steps<OpCode>(cpu); }
+		static void execute(cpu::cpu_state& cpu, Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
 		static cpu::register_8 reg(cpu::cpu_state& cpu) { return RegFn(cpu); }
 	};
 
-	export template<opcodes::Instruction OpCode, std::uint8_t vec>
-	requires opcodes::RSTVector<vec>
+	export template<typename OpCode, memory::WriteOnlyMemory Memory, std::uint8_t vec>
+	requires opcodes::MemoryInstruction<OpCode, Memory> && opcodes::RSTVector<vec>
 	struct rst_vec_test_case
 	{
-		static void execute(cpu::cpu_state& cpu) { execute_all_instruction_steps<OpCode>(cpu); }
+		static void execute(cpu::cpu_state& cpu, Memory& memory) { execute_all_instruction_steps<OpCode>(cpu, memory); }
 		static constexpr auto vector = vec;
 	};
 
-	export class mock_memory_bus
+	export class test_memory
 	{
 	public:
-		mock_memory_bus()
-			: memory {}
-			, memory_region{ memory }
-			, memory_map{ memory::build_memory_map(memory_region) }
-			, memory_bus{ memory_map }
-		{}
-
-		memory::memory_bus& bus() { return memory_bus; }
+		[[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const { return memory[address]; }
+		void write(const memory::memory_address_t address, const memory::memory_data_t value) { memory[address] = value; }
 
 	private:
-		std::array<memory::memory_data_t, memory::memory_size> memory;
-		memory::span_map<memory::memory_size> memory_region;
-		memory::memory_map_array_t memory_map;
-		memory::memory_bus memory_bus;
+		std::array<memory::memory_data_t, memory::memory_size> memory {};
 	};
+
 }

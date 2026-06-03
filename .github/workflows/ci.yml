@@ -1,0 +1,22 @@
+name: Run Tests
+on:
+  push:
+jobs:
+  run-ctest-window:
+    name: Run Ctest
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure & Build
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: 'ninja-no-profiling-sdl-relWithDebInfo'
+          buildPreset: 'ninja-no-profiling-sdl-relWithDebInfo'
+          testPreset: 'ninja-no-profiling-sdl-relWithDebInfo'

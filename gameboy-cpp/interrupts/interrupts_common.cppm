@@ -40,6 +40,8 @@ namespace interrupts
 		[[nodiscard]] std::uint8_t if_flag() const { return if_flag_; }
 		[[nodiscard]] std::uint16_t handler_address() const { return handler_address_; }
 
+		auto operator<=>(const interrupt&) const = default;
+
 	private:
 		constexpr interrupt(const std::uint8_t ie_flag, const std::uint8_t if_flag, const std::uint16_t handler_address)
 			: ie_flag_ (ie_flag)

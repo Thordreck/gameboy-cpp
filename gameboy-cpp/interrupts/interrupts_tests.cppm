@@ -6,57 +6,23 @@ export import interrupts;
 
 namespace tests
 {
-	export template<interrupts::InterruptDescriptor interrupt, std::uint16_t handler_address, std::uint8_t if_flag, std::uint8_t ie_flag>
-	requires interrupts::InterruptAddress<handler_address> && interrupts::InterruptFlag<if_flag> && interrupts::InterruptFlag<ie_flag>
-	struct interrupt_test_case
+	export template<interrupts::InterruptDescriptor Interrupt, memory::Memory Memory>
+	void execute_complete_dispatch(const Interrupt& interrupt, cpu::cpu_state& cpu, Memory& memory)
 	{
-		using interrupt_t = interrupt;
-		static constexpr auto handler = handler_address;
-		static constexpr auto if_flag = if_flag;
-		static constexpr auto ie_flag = ie_flag;
-	};
-
-	export using vblank_interrupt_test_case = interrupt_test_case<interrupts::vblank_interrupt, 0x40, 0x1, 0x1>;
-	export using lcd_interrupt_test_case = interrupt_test_case<interrupts::lcd_interrupt, 0x48, 0x2, 0x2>;
-	export using timer_interrupt_test_case = interrupt_test_case<interrupts::timer_interrupt, 0x50, 0x4, 0x4>;
-	export using serial_interrupt_test_case = interrupt_test_case<interrupts::serial_interrupt, 0x58, 0x8, 0x8>;
-	export using joypad_interrupt_test_case = interrupt_test_case<interrupts::joypad_interrupt, 0x60, 0x10, 0x10>;
-
-	export template<interrupts::InterruptDispatcher interrupt_dispatcher>
-	void execute_complete_dispatch(interrupt_dispatcher dispatcher, cpu::cpu_state& cpu)
-	{
-		const std::uint8_t num_steps = dispatcher.num_steps();
-
+		constexpr std::uint8_t num_steps = interrupts::dispatcher::num_steps();
 		for (std::uint8_t step = 0; step < num_steps; ++step)
 		{
-			dispatcher.execute(cpu);
+			interrupts::dispatcher::execute(interrupt, cpu, step, memory);
 		}
 	}
 
-	export template<interrupts::InterruptDescriptor interrupt>
-	void execute_complete_dispatch(cpu::cpu_state& cpu)
-	{
-		using dispatcher_t = typename interrupts::dispatcher<interrupt>;
-		execute_complete_dispatch<dispatcher_t>({}, cpu);
-	}
-
-	export class mock_memory_bus
+	export class test_memory
 	{
 	public:
-		mock_memory_bus()
-			: memory {}
-			, memory_region{ memory::map(memory) }
-			, memory_map{ memory::build_memory_map(memory_region) }
-			, memory_bus{ memory_map }
-		{}
-
-		memory::memory_bus& bus() { return memory_bus; }
+		[[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const { return memory[address]; }
+		void write(const memory::memory_address_t address, const memory::memory_data_t value) { memory[address] = value; }
 
 	private:
-		std::array<memory::memory_data_t, memory::memory_size> memory;
-		memory::span_map<memory::memory_size> memory_region;
-		memory::memory_map_array_t memory_map;
-		memory::memory_bus memory_bus;
-
+		std::array<memory::memory_data_t, memory::memory_size> memory {};
 	};
 }

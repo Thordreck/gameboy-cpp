@@ -27,7 +27,7 @@ TEST_CASE("audio.DAC generates expected result")
         test_case{0xC, 0.6},
         test_case{0x8, 0.06}
         );
-    const auto computed_value = audio::dac(test.input);
 
-    CHECK(computed_value.raw() == doctest::Approx(test.expected_output.raw()).epsilon(0.1f));
+    const auto computed_value = audio::apply_dac(test.input);
+    CHECK(computed_value.data() == doctest::Approx(test.expected_output.data()).epsilon(0.1f));
 }

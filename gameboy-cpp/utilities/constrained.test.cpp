@@ -9,7 +9,7 @@ namespace utils
     template <typename T, T lower_bound, T upper_bound>
     doctest::String toString(const constrained<T, lower_bound, upper_bound>& value)
     {
-        return std::format("{} [{}, {}]", value.raw(), lower_bound, upper_bound).c_str();
+        return std::format("{} [{}, {}]", value.data(), lower_bound, upper_bound).c_str();
     }
 }
 

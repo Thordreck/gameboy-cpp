@@ -9,58 +9,53 @@ import interrupts;
 namespace
 {
 	#define request_test_cases \
-		tests::vblank_interrupt_test_case, \
-		tests::lcd_interrupt_test_case, \
-		tests::timer_interrupt_test_case, \
-		tests::serial_interrupt_test_case, \
-		tests::joypad_interrupt_test_case
+		interrupts::vblank_interrupt, \
+		interrupts::lcd_interrupt, \
+		interrupts::timer_interrupt, \
+		interrupts::serial_interrupt, \
+		interrupts::joypad_interrupt
 }
 
-TEST_CASE_TEMPLATE("interrupts.Requested interrupts have their if flag set", test, request_test_cases)
+TEST_CASE("interrupts.Requested interrupts have their if flag set")
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
+	const auto interrupt = GENERATE(request_test_cases);
 
-	cpu::cpu_state cpu{ };
-	tests::mock_memory_bus memory{};
+	tests::test_memory memory{};
+	interrupts::request(interrupt, memory);
 
-	memory::connect(memory.bus(), cpu);
-
-	interrupts::request<typename test::interrupt_t>(cpu.memory());
-	CHECK_EQ(memory.bus().read(if_address) & test::if_flag, test::if_flag);
+	CHECK_EQ(memory.read(if_address) & interrupt.if_flag(), interrupt.if_flag());
 }
 
-TEST_CASE_TEMPLATE("interrupts.Unrequestd interrupts have their flag unset", test, request_test_cases)
+TEST_CASE("interrupts.Unrequestd interrupts have their flag unset")
 {
 	constexpr std::uint16_t if_address = 0xFF0F;
+	const auto interrupt = GENERATE(request_test_cases);
 
-	cpu::cpu_state cpu{ };
-	tests::mock_memory_bus memory{};
+	tests::test_memory memory{};
 
-	memory::connect(memory.bus(), cpu);
+	interrupts::request(interrupt, memory);
+	interrupts::clear_request(interrupt, memory);
 
-	interrupts::request<typename test::interrupt_t>(cpu.memory());
-	interrupts::clear_request<typename test::interrupt_t>(cpu.memory());
-	CHECK_EQ(memory.bus().read(if_address) & test::if_flag, 0x0);
+	CHECK_EQ(memory.read(if_address) & interrupt.if_flag(), 0x0);
 }
 
-TEST_CASE_TEMPLATE("interrupts.Requested interrupts are detected as is_requested", test, request_test_cases)
+TEST_CASE("interrupts.Requested interrupts are detected as is_requested")
 {
-	cpu::cpu_state cpu{ };
-	tests::mock_memory_bus memory{};
+	const auto interrupt = GENERATE(request_test_cases);
 
-	memory::connect(memory.bus(), cpu);
+	tests::test_memory memory{};
+	interrupts::request(interrupt, memory);
 
-	interrupts::request<typename test::interrupt_t>(cpu.memory());
-	CHECK(interrupts::is_requested<typename test::interrupt_t>(cpu.memory()));
+	CHECK(interrupts::is_requested(interrupt, memory));
 }
 
-TEST_CASE_TEMPLATE("interrupts.Unrequested interrupts are not detected as is_requested", test, request_test_cases)
+TEST_CASE("interrupts.Unrequested interrupts are not detected as is_requested")
 {
-	cpu::cpu_state cpu{ };
-	tests::mock_memory_bus memory{};
+	const auto interrupt = GENERATE(request_test_cases);
 
-	memory::connect(memory.bus(), cpu);
+	tests::test_memory memory{};
 
-	interrupts::clear_request<typename test::interrupt_t>(cpu.memory());
-	CHECK_FALSE(interrupts::is_requested<typename test::interrupt_t>(cpu.memory()));
+	interrupts::clear_request(interrupt, memory);
+	CHECK_FALSE(interrupts::is_requested(interrupt, memory));
 }

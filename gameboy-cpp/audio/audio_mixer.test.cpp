@@ -16,23 +16,16 @@ namespace
             const sample_t expected_left,
             const sample_t expected_right)
         {
-            std::ranges::transform(
-                left_samples,
-                left_channels.begin(),
-                [](const auto sample) { return Sample { sample }; });
-
-            std::ranges::transform(
-                right_samples,
-                right_channels.begin(),
-                [](const auto sample) { return Sample { sample }; });
+            for (int i = 0; i < N; ++i)
+            {
+                samples[0] = audio::stereo { Sample{ left_samples[i] }, Sample { right_samples[i] } };
+            }
 
             expected_output.left = expected_left;
             expected_output.right = expected_right;
         }
 
-        std::array<Sample, N> left_channels;
-        std::array<Sample, N> right_channels;
-
+        std::array<audio::stereo<Sample>, N> samples;
         audio::mixed_stereo_sample<Sample, N> expected_output;
     };
 }
@@ -63,8 +56,8 @@ TEST_CASE("audio.Mixer generates expected result")
         }
         );
 
-    const auto [left, right] = audio::mix(std::span { test.left_channels }, std::span { test.right_channels });
+    const auto [left, right] = audio::mix(test.samples[0], test.samples[1], test.samples[2]);
 
-    CHECK(left.raw() == doctest::Approx(test.expected_output.left.raw()).epsilon(0.1f));
-    CHECK(right.raw() == doctest::Approx(test.expected_output.right.raw()).epsilon(0.1f));
+    CHECK(left.data() == doctest::Approx(test.expected_output.left.data()).epsilon(0.1f));
+    CHECK(right.data() == doctest::Approx(test.expected_output.right.data()).epsilon(0.1f));
 }

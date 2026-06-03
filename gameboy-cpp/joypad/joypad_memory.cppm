@@ -97,7 +97,8 @@ namespace joypad
             | (!is_multiplexed_input_pressed<start, down>(source, state) << 3)
             | (!is_multiplexed_input_pressed<select, up>(source, state) << 2)
             | (!is_multiplexed_input_pressed<b, left>(source, state) << 1)
-            | !is_multiplexed_input_pressed<a, right>(source, state);
+            | !is_multiplexed_input_pressed<a, right>(source, state)
+            | 0xC0;
     }
 
 }
