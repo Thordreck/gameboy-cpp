@@ -4,5 +4,5 @@ import blargg;
 
 TEST_CASE("blargg.halt_bug.halt_bug")
 {
-	blargg::run_test("halt_bug.gb", "halt_bug\n\n\nPassed\n", 30e5);
+	blargg::run_test("roms/halt_bug/halt_bug.gb", "halt_bug\n\n\nPassed\n", 30e5);
 }

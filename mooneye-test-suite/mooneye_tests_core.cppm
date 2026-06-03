@@ -3,64 +3,77 @@ module;
 
 export module mooneye;
 
-import emulator.core;
+import std;
+import mbc;
 import utilities;
+import cartridge;
+import emulator.core;
+import emulator.engine;
+import emulator.gameboy;
 
 namespace mooneye
 {
 	template<typename TExpected, typename TError>
-	TExpected require_success(const std::expected<TExpected, TError>& result)
+	TExpected require_success(std::expected<TExpected, TError>&& result)
 	{
 		REQUIRE_MESSAGE(result.has_value(), std::format("Unexpected error. {}", result.error()));
-		return result.value();
+		return std::forward<TExpected>(result.value());
 	}
 
-	template<memory::Memory Memory>
-	std::optional<std::uint8_t> read_io_result_output(Memory& memory)
+	class test_serial
 	{
-		constexpr memory::memory_address_t sb = 0xFF01;
-		constexpr memory::memory_address_t sc = 0xFF02;
-		constexpr memory::memory_data_t transfer_start = 0x80;
+	public:
+		[[nodiscard]] const std::vector<std::uint8_t>& input_data() const { return buffer; }
 
-		if (memory.read(sc) & transfer_start)
+		[[nodiscard]] std::uint8_t transfer_bit(const std::uint8_t bit)
 		{
-			memory.write(sc, 0);
-			return memory.read(sb);
+			current_byte = current_byte << 1  | (bit & 0b1);
+
+			if (++bits_received >= 8)
+			{
+				buffer.push_back(current_byte);
+				bits_received = 0;
+			}
+
+			return 0x00;
 		}
 
-		return std::nullopt;
-	}
+	private:
+		std::vector<std::uint8_t> buffer {};
+		std::uint8_t current_byte {};
+		std::uint8_t bits_received {};
+	};
+
+	class test_audio_sink
+	{
+	public:
+		static [[nodiscard]] std::uint8_t channel_count() { return 2; }
+		static [[nodiscard]] std::uint32_t sample_rate() { return 44100; }
+		static void write(const std::span<const float>) {}
+	};
 
 	export void run_test(const std::string_view rom_file_path)
 	{
-		// engine
-		emulator::engine engine {};
+		test_serial serial {};
+		test_audio_sink audio_sink {};
 
-		{
-			const auto rom_data = require_success(utils::read_binary_file(rom_file_path));
-			engine.load_rom(rom_data);
-		}
+		auto cartridge = require_success(cartridge::load_rom_file(rom_file_path));
+		auto engine = require_success(emulator::create_engine(cartridge, audio_sink, serial));
 
 		// results
 		// Note: all tests in mooneye' suite are configured to last at max 120 emulated seconds
-		constexpr size_t max_num_timer_cycles = 127e6;
+		constexpr size_t max_num_seconds = 120;
+		constexpr size_t ticks_per_second = 4.19e6;
 		constexpr size_t expected_num_result_numbers = 6;
-
-		size_t num_result_numbers_read { 0 };
 
 		using result_sequence_t = std::array<std::uint8_t, expected_num_result_numbers>;
 		result_sequence_t result {};
 
-		for (size_t i = 0; i < max_num_timer_cycles; i++)
+		for (size_t i = 0; i < max_num_seconds; i++)
 		{
-			engine.tick(4);
+			engine->tick(ticks_per_second);
 
-			if (const auto read_result = read_io_result_output(engine.memory()); read_result.has_value())
-			{
-				result[num_result_numbers_read++] = read_result.value();
-			}
-
-			if (num_result_numbers_read >= expected_num_result_numbers)
+			if (serial.input_data().size() >= expected_num_result_numbers)
 			{
 				break;
 			}
@@ -69,7 +82,7 @@ namespace mooneye
 		constexpr result_sequence_t expected_success_result { 3, 5, 8, 13, 21, 34 };
 
 		REQUIRE_MESSAGE(
-			std::ranges::equal(result, expected_success_result),
+			std::ranges::equal(serial.input_data(), expected_success_result),
 			std::format("Result sequence received: {}", result));
 	}
 

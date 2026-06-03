@@ -4,5 +4,5 @@ import blargg;
 
 TEST_CASE("blargg.interrupt_time.interrupt_time")
 {
-	blargg::run_serial_test("interrupt_time.gb", "interrupt_time\n\n\nPassed\n", 30e6);
+	blargg::run_serial_test("roms/interrupt-time/interrupt_time.gb", "interrupt_time\n\n\nPassed\n", 30e6);
 }

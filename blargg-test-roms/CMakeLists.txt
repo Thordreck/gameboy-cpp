@@ -15,7 +15,7 @@ add_executable(blargg_tests)
 target_compile_features(blargg_tests PUBLIC cxx_std_23)
 target_link_libraries(blargg_tests PUBLIC blargg_tests_utilities doctest::doctest_with_main)
 set_target_properties(blargg_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-doctest_discover_tests(blargg_tests)
+doctest_discover_tests(blargg_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_sources(blargg_tests 
 	PRIVATE 
@@ -27,12 +27,3 @@ target_sources(blargg_tests
 		${CMAKE_CURRENT_SOURCE_DIR}/dmg_sound.test.cpp
 		#${CMAKE_CURRENT_SOURCE_DIR}/halt_bug.test.cpp
 )
-
-# Copy ROMs to build directory
-file(GLOB_RECURSE TEST_ROMS "${CMAKE_CURRENT_SOURCE_DIR}/roms/*.gb")
-
-foreach(ROM ${TEST_ROMS})
-    configure_file(${ROM}
-                   ${CMAKE_CURRENT_BINARY_DIR}
-                   COPYONLY)
-endforeach()
