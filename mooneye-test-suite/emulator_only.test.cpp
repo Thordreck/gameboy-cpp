@@ -103,3 +103,44 @@ TEST_CASE("mooneye.emulator_only.mbc2.rom_512kb")
 {
     mooneye::run_test("roms/emulator-only/mbc2/rom_512kb.gb");
 }
+
+// MBC5
+TEST_CASE("mooneye.emulator_only.mbc5.rom_1Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_1Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_2Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_2Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_4Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_4Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_8Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_8Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_16Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_16Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_32Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_32Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_64Mb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_64Mb.gb");
+}
+
+TEST_CASE("mooneye.emulator_only.mbc5.rom_512kb")
+{
+    mooneye::run_test("roms/emulator-only/mbc5/rom_512kb.gb");
+}

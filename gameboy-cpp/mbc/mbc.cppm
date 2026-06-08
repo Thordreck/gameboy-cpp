@@ -6,3 +6,4 @@ export import :only_rom;
 export import :mbc1;
 export import :mbc2;
 export import :mbc3;
+export import :mbc5;

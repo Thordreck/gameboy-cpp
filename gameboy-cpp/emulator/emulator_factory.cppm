@@ -45,6 +45,13 @@ namespace emulator
         case mbc3_timer_battery:
         case mbc3_timer_ram_battery:
             return std::make_unique<engine<mbc::mbc3, AudioSink, Serial>>(mbc::mbc3{ rom.data, rom.header.rom_size, rom.header.ram_size }, audio_sink, serial);
+        case mbc5:
+        case mbc5_ram:
+        case mbc5_ram_battery:
+        case mbc5_rumble:
+        case mbc5_rumble_ram:
+        case mbc5_rumble_ram_battery:
+            return std::make_unique<engine<mbc::mbc5, AudioSink, Serial>>(mbc::mbc5{ rom.data, rom.header.rom_size, rom.header.ram_size }, audio_sink, serial);
         default:
             return std::unexpected{ std::format("Unsupported rom type {}", cartridge::pretty_print(rom.header.hardware)) };
         }
