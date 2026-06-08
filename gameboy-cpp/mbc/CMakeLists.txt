@@ -11,6 +11,7 @@ target_sources(mbc PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/mbc_common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/mbc_only_rom.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/mbc_mbc1.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/mbc_mbc2.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/mbc_mbc3.cppm
 )
 

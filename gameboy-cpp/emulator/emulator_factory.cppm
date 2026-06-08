@@ -36,6 +36,9 @@ namespace emulator
         case mbc1_ram:
         case mbc1_ram_battery:
             return std::make_unique<engine<mbc::mbc1, AudioSink, Serial>>(mbc::mbc1{ rom.data, rom.header.rom_size, rom.header.ram_size }, audio_sink, serial);
+        case mbc2:
+        case mbc2_battery:
+            return std::make_unique<engine<mbc::mbc2, AudioSink, Serial>>(mbc::mbc2{ rom.data, rom.header.rom_size }, audio_sink, serial);
         case mbc3:
         case mbc3_ram:
         case mbc3_ram_battery:
