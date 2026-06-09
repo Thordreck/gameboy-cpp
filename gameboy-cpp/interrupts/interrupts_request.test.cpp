@@ -18,44 +18,46 @@ namespace
 
 TEST_CASE("interrupts.Requested interrupts have their if flag set")
 {
-	constexpr std::uint16_t if_address = 0xFF0F;
+	using namespace interrupts;
 	const auto interrupt = GENERATE(request_test_cases);
 
-	tests::test_memory memory{};
-	interrupts::request(interrupt, memory);
+	interrupt_controller controller {};
+	controller.request(interrupt);
 
-	CHECK_EQ(memory.read(if_address) & interrupt.if_flag(), interrupt.if_flag());
+	CHECK_EQ(read_if_register(controller) & interrupt.if_flag(), interrupt.if_flag());
 }
 
 TEST_CASE("interrupts.Unrequestd interrupts have their flag unset")
 {
-	constexpr std::uint16_t if_address = 0xFF0F;
+	using namespace interrupts;
 	const auto interrupt = GENERATE(request_test_cases);
 
-	tests::test_memory memory{};
+	interrupt_controller controller {};
+	controller.request(interrupt);
+	controller.clear_request(interrupt);
 
-	interrupts::request(interrupt, memory);
-	interrupts::clear_request(interrupt, memory);
-
-	CHECK_EQ(memory.read(if_address) & interrupt.if_flag(), 0x0);
+	CHECK_EQ(read_if_register(controller) & interrupt.if_flag(), 0);
 }
 
 TEST_CASE("interrupts.Requested interrupts are detected as is_requested")
 {
+	using namespace interrupts;
 	const auto interrupt = GENERATE(request_test_cases);
 
-	tests::test_memory memory{};
-	interrupts::request(interrupt, memory);
+	interrupt_controller controller {};
+	controller.request(interrupt);
 
-	CHECK(interrupts::is_requested(interrupt, memory));
+	CHECK(controller.is_requested(interrupt));
 }
 
 TEST_CASE("interrupts.Unrequested interrupts are not detected as is_requested")
 {
+	using namespace interrupts;
 	const auto interrupt = GENERATE(request_test_cases);
 
-	tests::test_memory memory{};
+	interrupt_controller controller {};
+	controller.request(interrupt);
+	controller.clear_request(interrupt);
 
-	interrupts::clear_request(interrupt, memory);
-	CHECK_FALSE(interrupts::is_requested(interrupt, memory));
+	CHECK_FALSE(controller.is_requested(interrupt));
 }

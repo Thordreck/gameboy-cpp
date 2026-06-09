@@ -1,20 +1,27 @@
 export module interrupts:dispatch;
 
-export import std;
-export import cpu;
-export import utilities;
-export import :common;
-export import :request;
+import std;
+
+import cpu;
 import memory;
+import utilities;
+
+import :common;
+import :control;
 
 namespace interrupts
 {
-    export struct dispatcher
+    export struct interrupt_dispatcher
     {
         static constexpr std::uint8_t num_steps() { return 5; }
 
-        template<InterruptDescriptor Interrupt, memory::Memory Memory>
-        static void execute(const Interrupt& interrupt, cpu::cpu_state& cpu, const std::uint8_t step, Memory& memory)
+        template<memory::Memory Memory, InterruptRequestController Controller>
+        static void execute(
+            const interrupt request,
+            cpu::cpu_state& cpu,
+            const std::uint8_t step,
+            Memory& memory,
+            Controller& controller)
         {
             switch (step)
             {
@@ -23,7 +30,8 @@ namespace interrupts
                     cpu.ime.enabled = false;
                     cpu.ime.requested = false;
                     cpu.ime.enabling = false;
-                    clear_request(interrupt, memory);
+
+                    controller.clear_request(request);
                 }
                 break;
             case 1:
@@ -35,7 +43,7 @@ namespace interrupts
                 memory.write(--cpu.sp, utils::less_significant_byte(cpu.pc.value()));
                 break;
             case 4:
-                cpu.pc = interrupt.handler_address();
+                cpu.pc = request.handler_address();
                 break;
             default: std::unreachable();
             }

@@ -19,46 +19,46 @@ namespace
 
 TEST_CASE("interrupts.Enabled interrupts have their ie flag set")
 {
-	constexpr std::uint16_t ie_address = 0xFFFF;
+	using namespace interrupts;
 	const auto interrupt = GENERATE(enable_test_cases);
 
-	tests::test_memory memory {};
-	interrupts::enable(interrupt, memory);
+	interrupt_controller controller {};
+	controller.enable(interrupt);
 
-	CHECK_EQ(memory.read(ie_address) & interrupt.ie_flag(), interrupt.ie_flag());
+	CHECK_EQ(read_ie_register(controller) & interrupt.ie_flag(), interrupt.ie_flag());
 }
 
 TEST_CASE("interrupts.Disabled interrupts have their flag unset")
 {
-	constexpr std::uint16_t ie_address = 0xFFFF;
+	using namespace interrupts;
 	const auto interrupt = GENERATE(enable_test_cases);
 
-	tests::test_memory memory{};
+	interrupt_controller controller {};
+	controller.enable(interrupt);
+	controller.disable(interrupt);
 
-	interrupts::enable(interrupt, memory);
-	interrupts::disable(interrupt, memory);
-
-	CHECK_EQ(memory.read(ie_address) & interrupt.ie_flag(), 0x0);
+	CHECK_EQ(read_ie_register(controller) & interrupt.ie_flag(), 0x0);
 }
 
 TEST_CASE("interrupts.Enabled interrupts are detected as is_enabled")
 {
+	using namespace interrupts;
 	const auto interrupt = GENERATE(enable_test_cases);
 
-	tests::test_memory memory{};
+	interrupt_controller controller {};
+	controller.enable(interrupt);
 
-	interrupts::enable(interrupt, memory);
-	CHECK(interrupts::is_enabled(interrupt, memory));
+	CHECK(controller.is_enabled(interrupt));
 }
 
 TEST_CASE("interrupts.Disabled interrupts are not detected as is_enabled")
 {
+	using namespace interrupts;
 	const auto interrupt = GENERATE(enable_test_cases);
 
-	tests::test_memory memory{};
+	interrupt_controller controller {};
+	controller.enable(interrupt);
+	controller.disable(interrupt);
 
-	interrupts::enable(interrupt, memory);
-	interrupts::disable(interrupt, memory);
-
-	CHECK_FALSE(interrupts::is_enabled(interrupt, memory));
+	CHECK_FALSE(controller.is_enabled(interrupt));
 }

@@ -1,18 +1,26 @@
 export module tests;
 
-export import std;
-export import memory;
-export import interrupts;
+import std;
+
+import cpu;
+import memory;
+import interrupts;
 
 namespace tests
 {
-	export template<interrupts::InterruptDescriptor Interrupt, memory::Memory Memory>
-	void execute_complete_dispatch(const Interrupt& interrupt, cpu::cpu_state& cpu, Memory& memory)
+	export template<memory::Memory Memory, interrupts::InterruptController InterruptController>
+	void execute_complete_dispatch(
+		const interrupts::interrupt interrupt,
+		cpu::cpu_state& cpu,
+		Memory& memory,
+		InterruptController& interrupts)
 	{
-		constexpr std::uint8_t num_steps = interrupts::dispatcher::num_steps();
+		using namespace interrupts;
+		constexpr std::uint8_t num_steps = interrupt_dispatcher::num_steps();
+
 		for (std::uint8_t step = 0; step < num_steps; ++step)
 		{
-			interrupts::dispatcher::execute(interrupt, cpu, step, memory);
+			interrupt_dispatcher::execute(interrupt, cpu, step, memory, interrupts);
 		}
 	}
 

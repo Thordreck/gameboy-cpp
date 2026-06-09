@@ -10,11 +10,9 @@ target_sources(interrupts PUBLIC
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_common.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_request.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_enable.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_control.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_dispatch.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_service.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_processor.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/interrupts_memory.cppm
 )
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)

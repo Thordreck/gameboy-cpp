@@ -6,13 +6,14 @@ export import memory;
 export import :lcd;
 
 import std;
-import interrupts;
-import utilities;
 
+import utilities;
+import interrupts;
+
+import :oam;
 import :fifo;
 import :common;
 import :pixel_fetcher;
-import :oam;
 import :object_buffer;
 
 namespace graphics
@@ -135,8 +136,8 @@ namespace graphics
             }
         }
 
-        template<memory::Memory Memory, LCD Screen>
-        void tick(std::uint32_t num_ticks, Memory& memory, Screen& screen)
+        template<memory::Memory Memory, LCD Screen, interrupts::InterruptRequestController InterruptController>
+        void tick(std::uint32_t num_ticks, Memory& memory, Screen& screen, InterruptController& interrupts)
         {
             PROFILER_SCOPE("PPU::tick()");
 
@@ -144,7 +145,7 @@ namespace graphics
 
             while (num_ticks > 0)
             {
-                const std::uint32_t consumed_ticks = step(num_ticks, memory, screen);
+                const std::uint32_t consumed_ticks = step(num_ticks, memory, screen, interrupts);
                 num_ticks -= consumed_ticks;
             }
         }
@@ -169,40 +170,38 @@ namespace graphics
             }
         }
 
-        void set_interrupts(const ppu_interrupt_sources new_config)
+        template<interrupts::InterruptRequestController InterruptController>
+        void set_interrupts(const ppu_interrupt_sources new_config, InterruptController& interrupts)
         {
             interrupt_sources = new_config;
-
-            // TODO: re-enable when interrupts do not need access to memory
-            //update_stat_line();
+            update_stat_line(interrupts);
         }
 
-        void set_lyc(const std::uint8_t lyc)
+        template<interrupts::InterruptRequestController InterruptController>
+        void set_lyc(const std::uint8_t lyc, InterruptController& interrupts)
         {
             scanline_compare = lyc;
-
-            // TODO: re-enable when interrupts do not need access to memory
-            //update_stat_line();
+            update_stat_line(interrupts);
         }
 
     private:
-        template<memory::Memory Memory, LCD Screen>
-        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory, Screen& screen)
+        template<memory::Memory Memory, LCD Screen, interrupts::InterruptRequestController InterruptController>
+        std::uint32_t step(const std::uint32_t num_ticks, Memory& memory, Screen& screen, InterruptController& interrupts)
         {
             using enum ppu_mode;
 
             switch (current_mode)
             {
-            case h_blank: return handle_h_blank(num_ticks, memory, screen);
-            case v_blank: return handle_v_blank(num_ticks, memory);
-            case oam_scan: return handle_scan_oam(num_ticks, memory);
-            case drawing: return handle_draw(num_ticks, memory);
+            case h_blank: return handle_h_blank(num_ticks,screen, interrupts);
+            case v_blank: return handle_v_blank(num_ticks, interrupts);
+            case oam_scan: return handle_scan_oam(num_ticks, memory, interrupts);
+            case drawing: return handle_draw(num_ticks, memory, interrupts);
             default: std::unreachable();
             }
         }
 
-        template<memory::Memory Memory>
-        std::uint32_t handle_scan_oam(const std::uint32_t num_ticks, Memory& memory)
+        template<memory::Memory Memory, interrupts::InterruptRequestController InterruptController>
+        std::uint32_t handle_scan_oam(const std::uint32_t num_ticks, Memory& memory, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
 
@@ -233,14 +232,14 @@ namespace graphics
                 pixels_drawn_in_scanline = 0;
                 pixels_to_discard = scx(memory) % 8;
 
-                update_stat_line(memory);
+                update_stat_line(interrupts);
             }
 
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory>
-        std::uint32_t handle_draw(const std::uint32_t, Memory& memory)
+	    template<memory::Memory Memory, interrupts::InterruptRequestController InterruptController>
+        std::uint32_t handle_draw(const std::uint32_t, Memory& memory, InterruptController& interrupts)
         {
             constexpr std::uint32_t ticks_consumed = 1;
             scanline_cycle += ticks_consumed;
@@ -330,14 +329,14 @@ namespace graphics
             if (pixels_drawn_in_scanline == 160)
             {
                 current_mode = ppu_mode::h_blank;
-                update_stat_line(memory);
+                update_stat_line(interrupts);
             }
 
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory, LCD Screen>
-        std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Memory& memory, Screen& screen)
+	    template<LCD Screen, interrupts::InterruptRequestController InterruptController>
+        std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Screen& screen, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
             scanline_cycle += ticks_consumed;
@@ -364,19 +363,17 @@ namespace graphics
                 else
                 {
                     current_mode = ppu_mode::v_blank;
-
-                    using namespace interrupts;
-                    request(vblank_interrupt, memory);
+                    interrupts.request(interrupts::vblank_interrupt);
                 }
 
-                update_stat_line(memory);
+                update_stat_line(interrupts);
             }
 
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory>
-        std::uint32_t handle_v_blank(const std::uint32_t num_ticks, Memory& memory)
+	    template<interrupts::InterruptRequestController InterruptController>
+        std::uint32_t handle_v_blank(const std::uint32_t num_ticks, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
             scanline_cycle += ticks_consumed;
@@ -393,14 +390,14 @@ namespace graphics
                     current_mode = ppu_mode::oam_scan;
                 }
 
-                update_stat_line(memory);
+                update_stat_line(interrupts);
             }
 
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory>
-        void update_stat_line(Memory& memory)
+	    template<interrupts::InterruptRequestController InterruptController>
+        void update_stat_line(InterruptController& interrupts)
         {
             if (!enabled) [[unlikely]] { return; }
 
@@ -415,8 +412,7 @@ namespace graphics
 
             if (should_trigger_stat_interrupt)
             {
-                using namespace interrupts;
-                request(lcd_interrupt, memory);
+                interrupts.request(interrupts::lcd_interrupt);
             }
 
             stat_line = new_stat_line;
@@ -462,9 +458,10 @@ namespace graphics
             | 0x80;
     }
 
-    export void set_lcd_status(const std::uint8_t status, pixel_processing_unit& ppu)
+    export template <interrupts::InterruptRequestController InterruptController>
+    void set_lcd_status(const std::uint8_t status, pixel_processing_unit& ppu, InterruptController& interrupts)
     {
-        const ppu_interrupt_sources interrupts
+        const ppu_interrupt_sources sources
         {
             utils::is_bit_set<6>(status),
             utils::is_bit_set<5>(status),
@@ -472,7 +469,7 @@ namespace graphics
             utils::is_bit_set<3>(status),
         };
 
-        ppu.set_interrupts(interrupts);
+        ppu.set_interrupts(sources, interrupts);
     }
 
 }

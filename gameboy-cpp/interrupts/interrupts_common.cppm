@@ -1,8 +1,6 @@
 export module interrupts:common;
 
-export import std;
-export import memory;
-export import cpu;
+import std;
 
 namespace interrupts
 {
@@ -78,9 +76,31 @@ namespace interrupts
 	export constexpr auto serial_interrupt = interrupt::create<serial_ie_flag, serial_if_flag, serial_handler_address>();
 	export constexpr auto joypad_interrupt = interrupt::create<joypad_ie_flag, joypad_if_flag, joypad_handler_address>();
 
-	export struct interrupt_registers
+	export template <typename T>
+	concept InterruptRequestController = requires(T& instance, const T& const_instance, const interrupt request)
 	{
-		memory::memory_data_t enable {};
-		memory::memory_data_t flag {};
+		{ instance.request(request) } -> std::same_as<void>;
+		{ instance.clear_request(request) } -> std::same_as<void>;
+		{ const_instance.is_requested(request) } -> std::convertible_to<bool>;
 	};
+
+	export template <typename T>
+	concept InterruptEnableController = requires(T& instance, const T& const_instance, const interrupt request)
+	{
+		{ instance.enable(request) } -> std::same_as<void>;
+		{ instance.disable(request) } -> std::same_as<void>;
+		{ const_instance.is_enabled(request) } -> std::convertible_to<bool>;
+	};
+
+	export template <typename T>
+	concept InterruptServiceController = requires(const T& const_instance, const interrupt request)
+	{
+		{ const_instance.get_first_pending() } -> std::convertible_to<std::optional<interrupt>>;
+		{ const_instance.is_pending(request) } -> std::convertible_to<bool>;
+		{ const_instance.is_any_pending() } -> std::convertible_to<bool>;
+	};
+
+	export template <typename T>
+	concept InterruptController = InterruptRequestController<T> && InterruptEnableController<T> && InterruptServiceController<T>;
+
 }

@@ -67,7 +67,7 @@ namespace emulator
         [[nodiscard]] lcd_view_t lcd() const override { return lcd_memory; }
         [[nodiscard]] memory_view memory() const override { return memory_view{ memory_map.get() }; }
 
-        void update_joypad_state(const joypad::const_input_state_view_t state) override { joypad.set_state(state); }
+        void update_joypad_state(const joypad::const_input_state_view_t state) override { joypad.set_state(state, interrupts); }
 
         void tick(const std::uint32_t num_ticks) override
         {
@@ -75,23 +75,23 @@ namespace emulator
 
             batch_schedule(
                 num_ticks,
-                adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus()),
-                adapt_for_scheduler(timers, memory_buses.timers_bus()),
-                adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter),
+                adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus(), interrupts),
+                adapt_for_scheduler(timers, interrupts),
+                adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter, interrupts),
                 adapt_for_scheduler(oam_dma, memory_buses.oam_bus()),
                 adapt_for_scheduler(apu, timers.divider(), internal_memory.wave_ram, audio_sink),
-                adapt_for_scheduler(serial_link, serial));
+                adapt_for_scheduler(serial_link, serial, interrupts));
         }
 
         void tick_external_serial_clock() override
         {
-            serial_link.external_tick(serial);
+            serial_link.external_tick(serial, interrupts);
         }
 
     private:
         cpu::cpu_state cpu {};
         timer::timer_system timers {};
-        interrupts::interrupt_registers interrupts {};
+        interrupts::interrupt_controller interrupts {};
         graphics::oam_dma oam_dma {};
 
         joypad::joypad joypad {};

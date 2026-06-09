@@ -2,8 +2,6 @@
 export module interrupts;
 
 export import :common;
+export import :control;
 export import :dispatch;
-export import :enable;
-export import :request;
-export import :service;
-export import :processor;
+export import :memory;

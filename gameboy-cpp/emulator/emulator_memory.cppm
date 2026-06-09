@@ -177,7 +177,7 @@ case (audio::wave_ram_start_address + (i)): \
 
         io_hram_interrupt_memory_page(
             timer::timer_system& timers,
-            interrupts::interrupt_registers& interrupts,
+            interrupts::interrupt_controller& interrupts,
             graphics::pixel_processing_unit& ppu,
             const memory::memory_span_t<0x7F> hram,
             joypad::joypad& joypad,
@@ -209,8 +209,8 @@ case (audio::wave_ram_start_address + (i)): \
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
             case graphics::oam_dma_transfer_address: return oam_dma.start_address() / static_cast<memory::memory_address_t>(0x100);
-            case interrupts::if_address: return interrupts.flag | 0xE0;
-            case interrupts::ie_address: return interrupts.enable;
+            case interrupts::if_address: return interrupts::read_if_register(interrupts);
+            case interrupts::ie_address: return interrupts::read_ie_register(interrupts);
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             case serial::serial_transfer_data_address: return serial::read_serial_transfer_data_address(serial);
             case serial::serial_transfer_control_address: return serial::read_serial_transfer_control_address(serial);
@@ -260,7 +260,7 @@ case (audio::wave_ram_start_address + (i)): \
                 timer::write_tac_address(timers, value);
                 break;
             case graphics::lcd_status_address:
-                graphics::set_lcd_status(value, ppu);
+                graphics::set_lcd_status(value, ppu, interrupts);
                 break;
             case graphics::lcdc_address:
                 ppu.set_enabled(utils::is_bit_set<7>(value));
@@ -272,13 +272,13 @@ case (audio::wave_ram_start_address + (i)): \
                 oam_dma.start_transfer(value * static_cast<memory::memory_address_t>(0x100));
                 break;
             case graphics::lcd_cy_address:
-                ppu.set_lyc(value);
+                ppu.set_lyc(value, interrupts);
                 break;
             case interrupts::if_address:
-                interrupts.flag = value;
+                interrupts::write_if_register(interrupts, value);
                 break;
             case interrupts::ie_address:
-                interrupts.enable = value;
+                interrupts::write_ie_register(interrupts, value);
                 break;
             case joypad::joypad_memory_address:
                 joypad::write_joypad_register(joypad, value);
@@ -363,7 +363,7 @@ case (audio::wave_ram_start_address + (i)): \
 
     private:
         timer::timer_system& timers;
-        interrupts::interrupt_registers& interrupts;
+        interrupts::interrupt_controller& interrupts;
         graphics::pixel_processing_unit& ppu;
         memory::memory_span_t<0x7F> hram;
         joypad::joypad& joypad;
@@ -472,7 +472,7 @@ case (audio::wave_ram_start_address + (i)): \
             MBC& mbc,
             graphics::oam_dma& oam_dma,
             timer::timer_system& timers,
-            interrupts::interrupt_registers& interrupts,
+            interrupts::interrupt_controller& interrupts,
             graphics::pixel_processing_unit& ppu,
             joypad::joypad& joypad,
             serial::link& serial,
@@ -527,13 +527,6 @@ case (audio::wave_ram_start_address + (i)): \
         audio::wave_ram_access_policy>;
 
     export template <mbc::MemoryBankController MBC>
-    using timers_memory_bus_t = memory::memory_bus<
-        memory_map_t<MBC>,
-        graphics::vram_access_policy,
-        graphics::oam_access_policy,
-        graphics::dma_access_policy>;
-
-    export template <mbc::MemoryBankController MBC>
     using ppu_memory_bus_t = memory::memory_bus<
         memory_map_t<MBC>,
         graphics::dma_access_policy>;
@@ -556,13 +549,11 @@ case (audio::wave_ram_start_address + (i)): \
             , audio_policy { apu }
             , wave_ram_policy { apu }
              , cpu_bus_{map, vram_policy, oam_policy, dma_policy, audio_policy, wave_ram_policy }
-             , timers_bus_{map, vram_policy, oam_policy, dma_policy }
              , ppu_bus_{map, dma_policy}
              , oam_dma_bus_{map}
         {}
 
         [[nodiscard]] auto& cpu_bus() { return cpu_bus_; }
-        [[nodiscard]] auto& timers_bus() { return timers_bus_; }
         [[nodiscard]] auto& ppu_bus() { return ppu_bus_; }
         [[nodiscard]] auto& oam_bus() { return oam_dma_bus_; }
 
@@ -574,7 +565,6 @@ case (audio::wave_ram_start_address + (i)): \
         audio::wave_ram_access_policy wave_ram_policy;
 
         cpu_memory_bus_t<MBC> cpu_bus_;
-        timers_memory_bus_t<MBC> timers_bus_;
         ppu_memory_bus_t<MBC> ppu_bus_;
         oam_dma_memory_bus_t<MBC> oam_dma_bus_;
     };

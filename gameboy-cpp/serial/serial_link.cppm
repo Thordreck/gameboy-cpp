@@ -4,6 +4,7 @@ module;
 export module serial:link;
 
 import std;
+import interrupts;
 import :common;
 
 namespace serial
@@ -33,8 +34,8 @@ namespace serial
             return (8 - num_bits_transferred) * serial_master_clock_steps;
         }
 
-        template<SerialInterface Interface>
-        void tick(const std::uint32_t num_ticks, Interface& imp)
+        template<SerialInterface Interface, interrupts::InterruptRequestController InterruptController>
+        void tick(const std::uint32_t num_ticks, Interface& imp, InterruptController& interrupts)
         {
             PROFILER_SCOPE("Serial::tick()");
 
@@ -45,24 +46,24 @@ namespace serial
             while (cycle_accumulator >= serial_master_clock_steps)
             {
                 cycle_accumulator -= serial_master_clock_steps;
-                transfer_bit(imp);
+                transfer_bit(imp, interrupts);
             }
         }
 
-        template<SerialInterface Interface>
-        void external_tick(Interface& imp)
+        template<SerialInterface Interface, interrupts::InterruptRequestController InterruptController>
+        void external_tick(Interface& imp, InterruptController& interrupts)
         {
             PROFILER_SCOPE("Serial::external_tick()");
 
             if (transfer_enabled && !master)
             {
-                transfer_bit(imp);
+                transfer_bit(imp, interrupts);
             }
         }
 
     private:
-        template<SerialInterface Interface>
-        void transfer_bit(Interface& imp)
+        template<SerialInterface Interface, interrupts::InterruptRequestController InterruptController>
+        void transfer_bit(Interface& imp, InterruptController& interrupts)
         {
             const std::uint8_t sent_bit = transfer_data >> 7;
             const std::uint8_t received_bit = imp.transfer_bit(sent_bit);
@@ -72,9 +73,10 @@ namespace serial
 
             if (num_bits_transferred >= 8)
             {
-                // TODO: interrupt
                 transfer_enabled = false;
                 num_bits_transferred = 0;
+
+                interrupts.request(interrupts::serial_interrupt);
             }
         }
 

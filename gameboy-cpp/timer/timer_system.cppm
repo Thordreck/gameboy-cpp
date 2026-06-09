@@ -3,9 +3,8 @@ module;
 
 export module timer:timer_system;
 
-export import std;
-export import memory;
-export import interrupts;
+import std;
+import interrupts;
 
 export import :div;
 export import :tima;
@@ -56,8 +55,8 @@ namespace timer
             return number_of_ticks_for_tima_increment(divider_register, timer_control.clock);
         }
 
-        template<memory::Memory Memory>
-        void tick(const std::uint32_t num_ticks, Memory& memory)
+        template<interrupts::InterruptRequestController InterruptController>
+        void tick(const std::uint32_t num_ticks, InterruptController& interrupts)
         {
             PROFILER_SCOPE("Timer System::tick()");
 
@@ -66,7 +65,7 @@ namespace timer
             while (remaining_ticks > 0)
             {
                 const std::uint32_t batch = std::min(remaining_ticks, tick_batch());
-                advance(batch, memory);
+                advance(batch, interrupts);
 
                 remaining_ticks -= batch;
             }
@@ -79,8 +78,8 @@ namespace timer
         }
 
     private:
-        template<memory::Memory Memory>
-        void advance(const std::uint32_t tick_batch, Memory& memory)
+        template<interrupts::InterruptRequestController InterruptController>
+        void advance(const std::uint32_t tick_batch, InterruptController& interrupts)
         {
             if (overflow_detected)
             {
@@ -91,8 +90,7 @@ namespace timer
                     timer_counter = timer_modulo.value;
                     overflow_detected = false;
 
-                    using namespace interrupts;
-                    request(timer_interrupt, memory);
+                    interrupts.request(interrupts::timer_interrupt);
                 }
 
                 divider_register = divider_register + tick_batch;

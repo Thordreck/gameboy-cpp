@@ -31,9 +31,11 @@ namespace opcodes
         template<memory::ReadOnlyMemory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t, const Memory& memory)
         {
+            using namespace interrupts;
+
             cpu.halt.enabled = true;
             cpu.halt.ime_flag_set = cpu.ime.enabled;
-            cpu.halt.interrupts_pending = interrupts::is_any_interrupt_pending(memory);
+            cpu.halt.interrupts_pending = (memory.read(ie_address) & ie_mask) & (memory.read(if_address) & if_mask);
         }
     };
 
