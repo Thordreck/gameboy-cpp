@@ -171,29 +171,14 @@ TEST_CASE("mooneye.acceptance.add_sp_e_timing")
     mooneye::run_test("roms/acceptance/add_sp_e_timing.gb");
 }
 
-TEST_CASE("mooneye.acceptance.boot_div-dmg0")
-{
-    mooneye::run_test("roms/acceptance/boot_div-dmg0.gb");
-}
-
 TEST_CASE("mooneye.acceptance.boot_div-dmgABCmgb")
 {
     mooneye::run_test("roms/acceptance/boot_div-dmgABCmgb.gb");
 }
 
-TEST_CASE("mooneye.acceptance.boot_hwio-dmg0")
-{
-    mooneye::run_test("roms/acceptance/boot_hwio-dmg0.gb");
-}
-
 TEST_CASE("mooneye.acceptance.boot_hwio-dmgABCmgb")
 {
     mooneye::run_test("roms/acceptance/boot_hwio-dmgABCmgb.gb");
-}
-
-TEST_CASE("mooneye.acceptance.boot_regs-dmg0")
-{
-    mooneye::run_test("roms/acceptance/boot_regs-dmg0.gb");
 }
 
 TEST_CASE("mooneye.acceptance.boot_regs-dmgABC")

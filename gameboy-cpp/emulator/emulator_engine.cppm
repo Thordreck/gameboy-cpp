@@ -51,7 +51,15 @@ namespace emulator
         {
             cpu.pc = 0x100;
             cpu.sp = 0xFFFE;
-            timers.divider() = 0xAB;
+            cpu.reg.a() = 0x01;
+            cpu.reg.f() = 0xB0;
+            cpu.reg.b() = 0x00;
+            cpu.reg.c() = 0x13;
+            cpu.reg.d() = 0x00;
+            cpu.reg.e() = 0xD8;
+            cpu.reg.h() = 0x01;
+            cpu.reg.l() = 0x4D;
+            timers.divider() = 0xAC00;
         }
 
         ~engine() override = default;

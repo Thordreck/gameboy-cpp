@@ -36,7 +36,7 @@ namespace joypad
         }
 
     private:
-        joypad_source source{ joypad_source::none };
+        joypad_source source{ joypad_source::both };
         std::array<bool, num_joypad_inputs> state {};
     };
 
