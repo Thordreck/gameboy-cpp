@@ -15,7 +15,7 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 6; }
 
-        template<memory::Memory Memory>
+        template <memory::Memory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
@@ -23,19 +23,9 @@ namespace opcodes
             case 0:
                 break;
             case 1:
-                {
-                    using namespace literals;
-                    cpu.cache.r16 = cpu.pc + 2_u16;
-                    memory.write(--cpu.sp, utils::most_significant_byte(cpu.cache.r16));
-                }
-                break;
-            case 2:
-                memory.write(--cpu.sp, utils::less_significant_byte(cpu.cache.r16));
-                break;
-            case 3:
                 cpu.cache.r8 = memory.read(cpu.pc++);
                 break;
-            case 4:
+            case 2:
                 {
                     const std::uint8_t low_byte = cpu.cache.r8;
                     const std::uint8_t high_byte = memory.read(cpu.pc++);
@@ -43,8 +33,16 @@ namespace opcodes
                     cpu.cache.r16 = utils::encode_little_endian(low_byte, high_byte);
                 }
                 break;
+            case 3:
+                break;
+            case 4:
+                memory.write(--cpu.sp, utils::most_significant_byte(cpu.pc.value()));
+                break;
             case 5:
-                cpu.pc = cpu.cache.r16;
+                {
+                    memory.write(--cpu.sp, utils::less_significant_byte(cpu.pc.value()));
+                    cpu.pc = cpu.cache.r16;
+                }
                 break;
             default: std::unreachable();
             }
@@ -59,7 +57,7 @@ namespace opcodes
             return condition::evaluate(cpu) ? 6 : 3;
         }
 
-        template<memory::Memory Memory>
+        template <memory::Memory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             if (condition::evaluate(cpu))
@@ -82,7 +80,7 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        template<memory::ReadOnlyMemory Memory>
+        template <memory::ReadOnlyMemory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
@@ -116,7 +114,7 @@ namespace opcodes
             return condition::evaluate(cpu) ? 5 : 2;
         }
 
-        template<memory::ReadOnlyMemory Memory>
+        template <memory::ReadOnlyMemory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             if (condition::evaluate(cpu))
@@ -135,7 +133,7 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        template<memory::ReadOnlyMemory Memory>
+        template <memory::ReadOnlyMemory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, const Memory& memory)
         {
             switch (step)
@@ -171,7 +169,7 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 4; }
 
-        template<memory::WriteOnlyMemory Memory>
+        template <memory::WriteOnlyMemory Memory>
         static void execute(cpu::cpu_state& cpu, const step_t step, Memory& memory)
         {
             switch (step)
