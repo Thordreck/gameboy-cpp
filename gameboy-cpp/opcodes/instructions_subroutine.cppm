@@ -119,7 +119,18 @@ namespace opcodes
         {
             if (condition::evaluate(cpu))
             {
-                ret::execute(cpu, step, memory);
+                switch (step)
+                {
+                case 0:
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    ret::execute(cpu, step - 1, memory);
+                    break;
+                default: std::unreachable();
+                }
             }
         }
     };
@@ -139,24 +150,24 @@ namespace opcodes
             switch (step)
             {
             case 0:
-                break;
-            case 1:
                 {
                     cpu.ime.enabled = true;
                     cpu.ime.enabling = false;
                     cpu.ime.requested = false;
                 }
                 break;
-            case 2:
+            case 1:
                 cpu.cache.r8 = memory.read(cpu.sp++);
                 break;
-            case 3:
+            case 2:
                 {
                     const std::uint8_t less_significant = cpu.cache.r8;
                     const std::uint8_t most_significant = memory.read(cpu.sp++);
 
                     cpu.pc = utils::encode_little_endian(less_significant, most_significant);
                 }
+                break;
+            case 3:
                 break;
             default: std::unreachable();
             }
