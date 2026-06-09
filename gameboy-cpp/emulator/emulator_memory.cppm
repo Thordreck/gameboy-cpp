@@ -521,8 +521,8 @@ case (audio::wave_ram_start_address + (i)): \
     using cpu_memory_bus_t = memory::memory_bus<
         memory_map_t<MBC>,
         graphics::vram_access_policy,
-        graphics::oam_dma_access_policy,
-        graphics::oam_ppu_access_policy,
+        graphics::oam_access_policy,
+        graphics::dma_access_policy,
         audio::audio_access_policy,
         audio::wave_ram_access_policy>;
 
@@ -530,13 +530,13 @@ case (audio::wave_ram_start_address + (i)): \
     using timers_memory_bus_t = memory::memory_bus<
         memory_map_t<MBC>,
         graphics::vram_access_policy,
-        graphics::oam_dma_access_policy,
-        graphics::oam_ppu_access_policy>;
+        graphics::oam_access_policy,
+        graphics::dma_access_policy>;
 
     export template <mbc::MemoryBankController MBC>
     using ppu_memory_bus_t = memory::memory_bus<
         memory_map_t<MBC>,
-        graphics::oam_ppu_access_policy>;
+        graphics::dma_access_policy>;
 
     export template <mbc::MemoryBankController MBC>
     using oam_dma_memory_bus_t = memory::memory_bus<memory_map_t<MBC>>;
@@ -551,13 +551,13 @@ case (audio::wave_ram_start_address + (i)): \
             const graphics::oam_dma& oam_dma,
             const audio::audio_processing_unit& apu)
             : vram_policy{ppu}
-            , oam_dma_policy{oam_dma}
-            , oam_ppu_policy{ppu, oam_dma}
+            , oam_policy{ppu}
+            , dma_policy{oam_dma}
             , audio_policy { apu }
             , wave_ram_policy { apu }
-             , cpu_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy, audio_policy, wave_ram_policy }
-             , timers_bus_{map, vram_policy, oam_dma_policy, oam_ppu_policy }
-             , ppu_bus_{map, oam_ppu_policy}
+             , cpu_bus_{map, vram_policy, oam_policy, dma_policy, audio_policy, wave_ram_policy }
+             , timers_bus_{map, vram_policy, oam_policy, dma_policy }
+             , ppu_bus_{map, dma_policy}
              , oam_dma_bus_{map}
         {}
 
@@ -568,8 +568,8 @@ case (audio::wave_ram_start_address + (i)): \
 
     private:
         graphics::vram_access_policy vram_policy;
-        graphics::oam_dma_access_policy oam_dma_policy;
-        graphics::oam_ppu_access_policy oam_ppu_policy;
+        graphics::oam_access_policy oam_policy;
+        graphics::dma_access_policy dma_policy;
         audio::audio_access_policy audio_policy;
         audio::wave_ram_access_policy wave_ram_policy;
 

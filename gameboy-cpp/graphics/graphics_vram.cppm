@@ -20,12 +20,14 @@ namespace graphics
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
             return !memory::is_in_region<vram_start_address, vram_end_address>(address)
+                || !ppu.is_enabled()
                 || ppu.mode() != ppu_mode::drawing;
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
             return !memory::is_in_region<vram_start_address, vram_end_address>(address)
+                || !ppu.is_enabled()
                 || ppu.mode() != ppu_mode::drawing;
         }
 

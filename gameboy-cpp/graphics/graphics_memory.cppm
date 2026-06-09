@@ -3,75 +3,92 @@ export module graphics:memory;
 
 export import :ppu;
 export import :oam;
+export import :vram;
 export import memory;
 export import std;
 
 namespace graphics
 {
-    export class oam_dma_access_policy
+    export class dma_access_policy
     {
     public:
-        explicit oam_dma_access_policy(const oam_dma& oam_dma)
+        explicit dma_access_policy(const oam_dma& oam_dma)
             : dma { oam_dma }
         {}
 
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
-            if (!dma.is_transfer_active())
-            {
-                return true;
-            }
-
-            using namespace memory;
-
-            return !(is_in_region<0x0000, 0x7FFF>(address) && is_in_region<0x0000, 0x7FFF>(dma.start_address()))
-                && !(is_in_region<0x8000, 0x9FFF>(address) && is_in_region<0x8000, 0x9FFF>(dma.start_address()))
-                && !(is_in_region<0xA000, 0xBFFF>(address) && is_in_region<0xA000, 0xBFFF>(dma.start_address()));
+            return !check_bus_conflict(dma, address);
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
+            return !check_bus_conflict(dma, address);
+        }
+
+    private:
+        static bool check_bus_conflict(const oam_dma& dma, const memory::memory_address_t address)
+        {
             if (!dma.is_transfer_active())
             {
-                return true;
+                return false;
             }
 
             using namespace memory;
 
-            return !(is_in_region<0x0000, 0x7FFF>(address) && is_in_region<0x0000, 0x7FFF>(dma.start_address()))
-                && !(is_in_region<0x8000, 0x9FFF>(address) && is_in_region<0x8000, 0x9FFF>(dma.start_address()))
-                && !(is_in_region<0xA000, 0xBFFF>(address) && is_in_region<0xA000, 0xBFFF>(dma.start_address()));
+            if (is_in_region<oam_start_address, oam_end_address>(address))
+            {
+                return true;
+            }
+
+            if (is_in_region<vram_start_address, vram_end_address>(dma.active_start_address())
+                && is_in_region<vram_start_address, vram_end_address>(address))
+            {
+                return true;
+            }
+
+            const bool is_dma_in_main_bus
+                = is_in_region<0x0000, 0x7FFF>(dma.active_start_address())
+                || is_in_region<0xA000, 0xFDFF>(dma.active_start_address());
+
+            const bool is_target_in_main_bus
+                = is_in_region<0x0000, 0x7FFF>(address)
+                || is_in_region<0xA000, 0xFDFF>(address);
+
+            if (is_dma_in_main_bus && is_target_in_main_bus)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-    private:
         const oam_dma& dma;
     };
 
-    export class oam_ppu_access_policy
+    export class oam_access_policy
     {
     public:
-        explicit oam_ppu_access_policy(const pixel_processing_unit& ppu, const oam_dma& oam_dma)
+        explicit oam_access_policy(const pixel_processing_unit& ppu)
             : ppu { ppu }
-        , dma { oam_dma }
         {}
 
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
 		    return !(address >= oam_start_address && address <= oam_end_address)
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
-                || !dma.is_transfer_active();
+                || !ppu.is_enabled()
+                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing);
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
 		    return !(address >= oam_start_address && address <= oam_end_address)
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing)
-                || !dma.is_transfer_active();
+                || !ppu.is_enabled()
+                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing);
         }
 
     private:
         const pixel_processing_unit& ppu;
-        const oam_dma& dma;
     };
 
 }
