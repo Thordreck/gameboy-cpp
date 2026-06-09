@@ -178,13 +178,15 @@ namespace opcodes
                 cpu.cache.r16 = cpu.pc;
                 break;
             case 1:
-                memory.write(--cpu.sp, utils::most_significant_byte(cpu.cache.r16));
                 break;
             case 2:
-                memory.write(--cpu.sp, utils::less_significant_byte(cpu.cache.r16));
+                memory.write(--cpu.sp, utils::most_significant_byte(cpu.cache.r16));
                 break;
             case 3:
+                {
+                memory.write(--cpu.sp, utils::less_significant_byte(cpu.cache.r16));
                 cpu.pc = vec;
+                }
                 break;
             default: std::unreachable();
             }
