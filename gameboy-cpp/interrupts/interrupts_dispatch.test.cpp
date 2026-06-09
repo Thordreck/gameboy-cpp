@@ -94,7 +94,7 @@ TEST_CASE("interrupts.Previous pc is push to stack when interrupt is dispatched"
 	CHECK_EQ(cpu.sp, stack_origin - 2);
 }
 
-TEST_CASE("interrupts.Dispatch takes 5 machine cycles")
+TEST_CASE("interrupts.Dispatch takes 4 machine cycles")
 {
-	CHECK_EQ(interrupts::interrupt_dispatcher::num_steps(), 5);
+	CHECK_EQ(interrupts::interrupt_dispatcher::num_steps(), 4);
 }

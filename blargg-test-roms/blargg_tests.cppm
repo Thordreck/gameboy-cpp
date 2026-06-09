@@ -178,4 +178,32 @@ namespace blargg
 
 		std::cout << result;
 	}
+
+	export void run_lcd_test(
+		const std::string_view rom_file_path,
+		const std::string_view expected_output_path,
+		const size_t num_t_cycles)
+	{
+		test_serial serial {};
+		test_audio_sink audio_sink {};
+
+		auto cartridge = require_success(cartridge::load_rom_file(rom_file_path));
+		auto engine = require_success(emulator::create_engine(cartridge, audio_sink, serial));
+
+		engine->tick(num_t_cycles);
+
+		using namespace stb;
+		const stb_result<image> reference_img = load_image(expected_output_path, graphics::num_color_channels);
+		REQUIRE_MESSAGE(reference_img.has_value(), std::format("Could not read reference image. {}", reference_img.error()));
+
+		const auto actual_data = engine->lcd();
+		const auto expected_data = reference_img.value().as_span();
+		const bool generated_expected_output = std::ranges::equal(expected_data, actual_data);
+
+		if (!generated_expected_output)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
+			FAIL(std::format("Incorrect lcd result generated. Generated result image at {}", image_path.string()));
+		}
+	}
 }
