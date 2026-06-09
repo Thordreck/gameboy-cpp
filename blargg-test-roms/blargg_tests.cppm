@@ -6,8 +6,10 @@ export module blargg;
 import std;
 import mbc;
 import memory;
+import graphics;
 import utilities;
 import cartridge;
+import stb_image;
 import emulator.core;
 import emulator.engine;
 import emulator.gameboy;
@@ -38,6 +40,26 @@ namespace blargg
 		}
 
 		return result;
+	}
+
+	template<emulator::Engine Engine>
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> export_lcd(
+		const Engine& engine,
+		const std::string_view rom_file_path)
+	{
+		const std::filesystem::path output_filepath
+			= std::filesystem::temp_directory_path()
+			/ std::filesystem::path(rom_file_path).filename().replace_extension("png");
+
+		constexpr stb::image_metadata output_metadata
+		{
+			graphics::lcd_width,
+			graphics::lcd_height,
+			graphics::num_color_channels
+		};
+
+		const auto result = stb::write_png(output_filepath, engine.lcd().data(), output_metadata);
+		return result.transform([output_filepath] { return output_filepath; });
 	}
 
 	class test_serial
@@ -88,8 +110,14 @@ namespace blargg
 
 		engine->tick(num_t_cycles);
 		const std::string result = serial.result();
+		const bool received_expected_result = result == expected_output;
 
-		REQUIRE_EQ(expected_output, result);
+		if (!received_expected_result)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
+			FAIL(std::format("Incorrect result received: {}\nGenerated result image at {}", result, image_path.string()));
+		}
+
 		std::cout << result;
 	}
 
@@ -114,18 +142,40 @@ namespace blargg
 
 		const std::string result = decode_result_from_memory(0xA004, 0xBFFF, memory);
 
-		REQUIRE_MESSAGE(
-			expected_result_header == result_header,
-			std::format("Unexpected header. Expected: {}. Got: {}. Error message: {}",
-				expected_result_header,
-				result_header,
-				result));
+		if (expected_result_header != result_header)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
 
-		REQUIRE_MESSAGE(result_code == 0,
-			std::format("Unexpected result code. Expected: 0. Got: {}. Error message: {}",
-				result_code,
-				result));
+			FAIL(
+				std::format("Unexpected header. Expected: {}. Got: {}. Error message: {}. Generated result image at: {}",
+					expected_result_header,
+					result_header,
+					result,
+					image_path.string()));
+		}
 
-		REQUIRE_EQ(expected_output, result);
+		if (result_code != 0)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
+
+			FAIL(
+				std::format("Unexpected result code. Expected: 0. Got: {}. Error message: {}. Generated result image at: {}",
+					result_code,
+					result,
+					image_path.string()));
+		}
+
+		if (expected_output != result)
+		{
+			const auto image_path = require_success(export_lcd(*engine, rom_file_path));
+
+			FAIL(
+				std::format("Unexpected result output. Expected: {}. Got: {}. Generated result image at: {}",
+					expected_output,
+					result,
+					image_path.string()));
+		}
+
+		std::cout << result;
 	}
 }
