@@ -14,7 +14,7 @@ import :tac;
 namespace timer
 {
     static std::uint32_t number_of_ticks_for_tima_increment(
-        const std::uint8_t div,
+        const std::uint16_t div,
         const tac_clock selected_clock)
     {
         const std::uint8_t bit_index = get_tack_clock_bit_index(selected_clock);
@@ -24,15 +24,44 @@ namespace timer
         return (mask - lower) + 1;
     }
 
+    static std::uint32_t number_of_ticks_for_div_increment(const std::uint16_t div)
+    {
+        return std::numeric_limits<std::uint8_t>::max() - static_cast<std::uint8_t>(div & 0xFF) + 1;
+    }
+
+    static std::uint32_t number_of_ticks_for_div_clock_bit_set(const std::uint16_t div, const tac_clock selected_clock)
+    {
+        const std::uint8_t bit_index = get_tack_clock_bit_index(selected_clock);
+        const std::uint32_t mask = (1u << bit_index) - 1;
+        const std::uint32_t lower = div & mask;
+        const std::uint32_t raw_num_ticks = mask - lower + 1;
+
+        return std::min(1u, raw_num_ticks);
+    }
+
     export class timer_system
     {
     public:
         [[nodiscard]] const div& divider() const { return divider_register; }
 
         [[nodiscard]] std::uint16_t get_divider() const { return divider_register.value(); }
+
         void set_divider(const std::uint16_t value)
         {
+            const std::uint16_t prev_div = divider_register;
             divider_register = value;
+
+            if (timer_control.enabled)
+            {
+                const std::uint16_t mask = 0b1 << get_tack_clock_bit_index(timer_control.clock);
+                const bool falling_edge = (prev_div & mask) > (divider_register.value() & mask);
+
+                if(falling_edge)
+                {
+                    overflow_detected = timer_counter.tick();
+                    ticks_until_interrupt = overflow_detected ? 4 : 0;
+                }
+            }
         }
 
         [[nodiscard]] std::uint8_t get_counter() const { return timer_counter.value(); }
@@ -54,17 +83,20 @@ namespace timer
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
-            if (overflow_detected)
-            {
-                return ticks_until_interrupt;
-            }
+            const std::uint32_t ticks_until_interrupt_triggered = overflow_detected
+                ? ticks_until_interrupt
+                : std::numeric_limits<std::uint32_t>::max();
 
-            if (!timer_control.enabled)
-            {
-                return std::numeric_limits<std::uint32_t>::max();
-            }
+            const std::uint32_t ticks_until_div_increment = number_of_ticks_for_div_increment(divider_register.value());
+            const std::uint32_t ticks_until_div_bit_set = number_of_ticks_for_div_clock_bit_set(divider_register.value(), timer_control.clock);
 
-            return number_of_ticks_for_tima_increment(divider_register, timer_control.clock);
+            const std::uint32_t ticks_until_tima_increment = timer_control.enabled
+                ? number_of_ticks_for_tima_increment(divider_register, timer_control.clock)
+                : std::numeric_limits<std::uint32_t>::max();
+
+            return std::min(
+                std::min(ticks_until_interrupt_triggered, ticks_until_div_bit_set),
+                std::min(ticks_until_div_increment, ticks_until_tima_increment));
         }
 
         template<interrupts::InterruptRequestController InterruptController>
