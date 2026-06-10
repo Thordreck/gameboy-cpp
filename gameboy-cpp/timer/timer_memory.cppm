@@ -45,17 +45,47 @@ namespace timer
         }
     }
 
+    export [[nodiscard]] memory::memory_data_t read_div_address(const timer_system& timer)
+    {
+        return timer.get_divider() >> 8;
+    }
+
+    export void write_div_address(timer_system& timer, const memory::memory_data_t)
+    {
+        timer.set_divider(0x00);
+    }
+
+    export [[nodiscard]] memory::memory_data_t read_tima_address(const timer_system& timer)
+    {
+        return timer.get_counter();
+    }
+
+    export void write_tima_address(timer_system& timer, const memory::memory_data_t data)
+    {
+        timer.set_counter(data);
+    }
+
+    export [[nodiscard]] memory::memory_data_t read_tma_address(const timer_system& timer)
+    {
+        return timer.get_modulo();
+    }
+
+    export void write_tma_address(timer_system& timer, const std::uint8_t value)
+    {
+        timer.set_modulo(value);
+    }
+
     export [[nodiscard]] memory::memory_data_t read_tac_address(const timer_system& system)
     {
-        return (system.control().enabled << tac_enable_bit)
-            | to_register_value(system.control().clock)
+        return (system.is_control_enabled() << tac_enable_bit)
+            | to_register_value(system.get_control_clock())
             | 0xF8;
     }
 
     export void write_tac_address(timer_system& system, const memory::memory_data_t data)
     {
-        system.control().enabled = utils::is_bit_set<tac_enable_bit>(data);
-        system.control().clock = to_clock_select(data);
+        system.set_control_enabled(utils::is_bit_set<tac_enable_bit>(data));
+        system.set_control_clock(to_clock_select(data));
     }
 
 }

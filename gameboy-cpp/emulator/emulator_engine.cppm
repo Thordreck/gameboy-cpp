@@ -59,7 +59,7 @@ namespace emulator
             cpu.reg.e() = 0xD8;
             cpu.reg.h() = 0x01;
             cpu.reg.l() = 0x4D;
-            timers.divider() = 0xAC00;
+            timers.set_divider(0xAC00);
         }
 
         ~engine() override = default;

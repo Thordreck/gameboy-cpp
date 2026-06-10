@@ -39,7 +39,7 @@ namespace emulator
     template<typename Component, typename... Args>
     auto adapt_for_scheduler(Component& c, Args&... args)
     {
-        return scheduler_adapter<Component, Args...> { c, std::tie(args...) };
+        return scheduler_adapter { c, std::tie(args...) };
     }
 
     export template<BatchSchedulable... Components>

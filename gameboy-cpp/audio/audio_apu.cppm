@@ -295,7 +295,7 @@ namespace audio
         }
 
         template<AudioSink<float> Sink>
-        void tick(std::uint32_t ticks, const timer::div div, const_wave_ram_view_t wave_ram, Sink& sink)
+        void tick(std::uint32_t ticks, const timer::div& div, const_wave_ram_view_t wave_ram, Sink& sink)
         {
             PROFILER_SCOPE("APU::tick()");
 
@@ -304,7 +304,7 @@ namespace audio
         }
 
     private:
-        void tick_frame_sequencer(const timer::div current_div)
+        void tick_frame_sequencer(const std::uint16_t current_div)
         {
             if (!div_apu.tick(current_div)) { return; }
 

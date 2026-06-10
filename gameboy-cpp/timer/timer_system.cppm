@@ -6,10 +6,10 @@ export module timer:timer_system;
 import std;
 import interrupts;
 
-export import :div;
-export import :tima;
-export import :tma;
-export import :tac;
+import :div;
+import :tima;
+import :tma;
+import :tac;
 
 namespace timer
 {
@@ -27,17 +27,29 @@ namespace timer
     export class timer_system
     {
     public:
-        [[nodiscard]] div& divider() { return divider_register; }
         [[nodiscard]] const div& divider() const { return divider_register; }
 
-        [[nodiscard]] tima& counter() { return timer_counter; }
-        [[nodiscard]] const tima& counter() const { return timer_counter; }
+        [[nodiscard]] std::uint16_t get_divider() const { return divider_register.value(); }
+        void set_divider(const std::uint16_t value)
+        {
+            divider_register = value;
+        }
 
-        [[nodiscard]] tma& modulo() { return timer_modulo; }
-        [[nodiscard]] const tma& modulo() const { return timer_modulo; }
+        [[nodiscard]] std::uint8_t get_counter() const { return timer_counter.value(); }
+        void set_counter(const std::uint8_t value)
+        {
+            timer_counter = value;
+            cancel_pending_interrupt();
+        }
 
-        [[nodiscard]] tac& control() { return timer_control; }
-        [[nodiscard]] const tac& control() const { return timer_control; }
+        [[nodiscard]] std::uint8_t get_modulo() const { return timer_modulo.value; }
+        void set_modulo(const std::uint8_t value) { timer_modulo.value = value; }
+
+        [[nodiscard]] bool is_control_enabled() const { return timer_control.enabled; }
+        void set_control_enabled(const bool value) { timer_control.enabled = value; }
+
+        [[nodiscard]] tac_clock get_control_clock() const { return timer_control.clock; }
+        void set_control_clock(const tac_clock value) { timer_control.clock = value; }
 
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
@@ -69,12 +81,6 @@ namespace timer
 
                 remaining_ticks -= batch;
             }
-        }
-
-        void cancel_pending_interrupt()
-        {
-            overflow_detected = false;
-            ticks_until_interrupt = 0;
         }
 
     private:
@@ -118,6 +124,12 @@ namespace timer
                 overflow_detected = timer_counter.tick();
                 ticks_until_interrupt = overflow_detected ? 4 : 0;
             }
+        }
+
+        void cancel_pending_interrupt()
+        {
+            overflow_detected = false;
+            ticks_until_interrupt = 0;
         }
 
         div divider_register{};

@@ -200,9 +200,9 @@ case (audio::wave_ram_start_address + (i)): \
         {
             switch (address)
             {
-            case timer::div_address: return static_cast<memory::memory_data_t>(timers.divider() >> 8);
-            case timer::tima_address: return timers.counter();
-            case timer::tma_address: return timers.modulo().value;
+            case timer::div_address: return timer::read_div_address(timers);
+            case timer::tima_address: return timer::read_tima_address(timers);
+            case timer::tma_address: return timer::read_tma_address(timers);
             case timer::tac_address: return timer::read_tac_address(timers);
             case graphics::lcd_status_address: return graphics::lcd_status(ppu);
             case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
@@ -247,14 +247,13 @@ case (audio::wave_ram_start_address + (i)): \
             switch (address)
             {
             case timer::div_address:
-                timers.divider() = 0x00;
+                timer::write_div_address(timers, value);
                 break;
             case timer::tima_address:
-                timers.counter() = value;
-                timers.cancel_pending_interrupt();
+                timer::write_tima_address(timers, value);
                 break;
             case timer::tma_address:
-                timers.modulo().value = value;
+                timer::write_tma_address(timers, value);
                 break;
             case timer::tac_address:
                 timer::write_tac_address(timers, value);
