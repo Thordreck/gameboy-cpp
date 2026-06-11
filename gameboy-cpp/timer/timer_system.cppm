@@ -64,21 +64,58 @@ namespace timer
             }
         }
 
-        [[nodiscard]] std::uint8_t get_counter() const { return timer_counter.value(); }
+        [[nodiscard]] std::uint8_t get_counter() const
+        {
+            return timer_counter.value();
+        }
+
         void set_counter(const std::uint8_t value)
         {
-            timer_counter = value;
-            cancel_pending_interrupt();
+            if (overflow_detected && ticks_until_interrupt <= 4)
+            {
+                timer_counter = value;
+                overflow_detected = false;
+                ticks_until_interrupt = 0;
+            }
+            else if (!tma_overwrite_performed_this_cycle)
+            {
+                timer_counter = value;
+            }
         }
 
         [[nodiscard]] std::uint8_t get_modulo() const { return timer_modulo.value; }
-        void set_modulo(const std::uint8_t value) { timer_modulo.value = value; }
+        void set_modulo(const std::uint8_t value)
+        {
+            timer_modulo.value = value;
+
+            if (tma_overwrite_performed_this_cycle)
+            {
+                timer_counter = value;
+            }
+        }
 
         [[nodiscard]] bool is_control_enabled() const { return timer_control.enabled; }
         void set_control_enabled(const bool value) { timer_control.enabled = value; }
 
         [[nodiscard]] tac_clock get_control_clock() const { return timer_control.clock; }
-        void set_control_clock(const tac_clock value) { timer_control.clock = value; }
+        void set_control_clock(const tac_clock value)
+        {
+            const auto prev_clock = timer_control.clock;
+            timer_control.clock = value;
+
+            if (timer_control.enabled)
+            {
+                const std::uint16_t prev_mask = 0b1 << get_tack_clock_bit_index(prev_clock);
+                const std::uint16_t current_mask = 0b1 << get_tack_clock_bit_index(timer_control.clock);
+                const bool falling_edge = (divider_register.value() & prev_mask) > (divider_register.value() & current_mask);
+
+                if(falling_edge)
+                {
+                    overflow_detected = timer_counter.tick();
+                    ticks_until_interrupt = overflow_detected ? 4 : 0;
+                }
+            }
+        }
 
         [[nodiscard]] bool active() const { return true; }
         [[nodiscard]] std::uint32_t tick_batch() const
@@ -119,6 +156,9 @@ namespace timer
         template<interrupts::InterruptRequestController InterruptController>
         void advance(const std::uint32_t tick_batch, InterruptController& interrupts)
         {
+            remaining_ticks_in_tma_overwrite_cycle -= std::min(static_cast<std::uint32_t>(remaining_ticks_in_tma_overwrite_cycle), tick_batch);
+            tma_overwrite_performed_this_cycle = remaining_ticks_in_tma_overwrite_cycle > 0;
+
             if (overflow_detected)
             {
                 ticks_until_interrupt -= std::min(tick_batch, static_cast<std::uint32_t>(ticks_until_interrupt));
@@ -127,6 +167,9 @@ namespace timer
                 {
                     timer_counter = timer_modulo.value;
                     overflow_detected = false;
+
+                    tma_overwrite_performed_this_cycle = true;
+                    remaining_ticks_in_tma_overwrite_cycle = 4;
 
                     interrupts.request(interrupts::timer_interrupt);
                 }
@@ -158,12 +201,6 @@ namespace timer
             }
         }
 
-        void cancel_pending_interrupt()
-        {
-            overflow_detected = false;
-            ticks_until_interrupt = 0;
-        }
-
         div divider_register{};
         tima timer_counter{};
         tma timer_modulo{};
@@ -171,5 +208,8 @@ namespace timer
 
         bool overflow_detected{false};
         std::uint8_t ticks_until_interrupt{};
+
+        bool tma_overwrite_performed_this_cycle { false };
+        std::uint8_t remaining_ticks_in_tma_overwrite_cycle { 0 };
     };
 }
