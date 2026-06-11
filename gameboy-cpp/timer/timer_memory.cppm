@@ -2,6 +2,8 @@ export module timer:memory;
 
 import std;
 import memory;
+import interrupts;
+
 import :common;
 import :timer_system;
 
@@ -82,9 +84,10 @@ namespace timer
             | 0xF8;
     }
 
-    export void write_tac_address(timer_system& system, const memory::memory_data_t data)
+    export template<interrupts::InterruptRequestController InterruptController>
+    void write_tac_address(timer_system& system, const memory::memory_data_t data, InterruptController& interrupts)
     {
-        system.set_control_enabled(utils::is_bit_set<tac_enable_bit>(data));
+        system.set_control_enabled(utils::is_bit_set<tac_enable_bit>(data), interrupts);
         system.set_control_clock(to_clock_select(data));
     }
 

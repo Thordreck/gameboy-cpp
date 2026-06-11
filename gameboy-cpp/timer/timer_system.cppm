@@ -95,7 +95,24 @@ namespace timer
         }
 
         [[nodiscard]] bool is_control_enabled() const { return timer_control.enabled; }
-        void set_control_enabled(const bool value) { timer_control.enabled = value; }
+
+        template<interrupts::InterruptRequestController InterruptController>
+        void set_control_enabled(const bool value, InterruptController& interrupts)
+        {
+            const bool was_enabled = timer_control.enabled;
+            timer_control.enabled = value;
+
+            if (was_enabled && !value)
+            {
+                const std::uint16_t mask = 0b1 << get_tack_clock_bit_index(timer_control.clock);
+                const bool clock_bit_high = divider_register.value() & mask;
+
+                if (clock_bit_high && timer_counter.tick())
+                {
+                    interrupts.request(interrupts::timer_interrupt);
+                }
+            }
+        }
 
         [[nodiscard]] tac_clock get_control_clock() const { return timer_control.clock; }
         void set_control_clock(const tac_clock value)

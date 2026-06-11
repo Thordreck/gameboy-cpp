@@ -256,7 +256,7 @@ case (audio::wave_ram_start_address + (i)): \
                 timer::write_tma_address(timers, value);
                 break;
             case timer::tac_address:
-                timer::write_tac_address(timers, value);
+                timer::write_tac_address(timers, value, interrupts);
                 break;
             case graphics::lcd_status_address:
                 graphics::set_lcd_status(value, ppu, interrupts);
