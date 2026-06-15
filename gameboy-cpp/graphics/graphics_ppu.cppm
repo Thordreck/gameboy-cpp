@@ -405,7 +405,7 @@ namespace graphics
                 = (current_scanline == scanline_compare && interrupt_sources.lyc_select)
                 || (current_mode == ppu_mode::h_blank && interrupt_sources.mode0)
                 || (current_mode == ppu_mode::v_blank && interrupt_sources.mode1)
-                || (current_mode == ppu_mode::oam_scan && interrupt_sources.mode2);
+                || ((current_mode == ppu_mode::oam_scan || current_scanline == 144) && interrupt_sources.mode2);
 
             const bool should_trigger_stat_interrupt
                 = !stat_line && new_stat_line;
