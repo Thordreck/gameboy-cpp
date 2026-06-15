@@ -34,7 +34,7 @@ namespace opcodes
             using namespace interrupts;
 
             cpu.halt.enabled = true;
-            cpu.halt.ime_flag_set = cpu.ime.enabled || cpu.ime.requested;
+            cpu.halt.ime_flag_set = cpu.ime.enabled;
             cpu.halt.interrupts_pending = (memory.read(ie_address) & ie_mask) & (memory.read(if_address) & if_mask);
         }
     };

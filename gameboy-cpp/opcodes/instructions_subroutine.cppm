@@ -152,8 +152,7 @@ namespace opcodes
             case 0:
                 {
                     cpu.ime.enabled = true;
-                    cpu.ime.enabling = false;
-                    cpu.ime.requested = false;
+                    cpu.ime.ticks_until_enabled = 0;
                 }
                 break;
             case 1:

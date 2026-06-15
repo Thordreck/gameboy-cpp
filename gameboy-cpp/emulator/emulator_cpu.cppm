@@ -50,6 +50,12 @@ namespace emulator
         {
             using enum state;
 
+            if (cpu.ime.ticks_until_enabled > 0)
+            {
+                cpu.ime.ticks_until_enabled -= std::min(num_ticks, cpu.ime.ticks_until_enabled);
+                cpu.ime.enabled = cpu.ime.ticks_until_enabled == 0;
+            }
+
             switch (current_state)
             {
             case fetch_decode: return handle_fetch_decode(num_ticks, memory);
@@ -104,6 +110,19 @@ namespace emulator
             && std::same_as<std::invoke_result_t<decltype(Dispatcher), cpu::cpu_state&, opcodes::opcode_t, opcodes::step_t, Memory&>, void>
         std::uint32_t handle_execute(const std::uint32_t num_ticks, Memory& memory, InterruptController& interrupts)
         {
+            // TODO: ensure this does not fire in the middle of prefixed opcodes
+            if (cpu.ime.enabled
+                && interrupts.is_any_pending()
+                && current_execution_cycle == 0)
+            {
+                current_state = state::interrupt;
+                current_execution_cycle = 0;
+                remaining_cycles_in_state = interrupts::interrupt_dispatcher::num_steps() * 4;
+                current_interrupt = interrupts.get_first_pending();
+
+                return 0;
+            }
+
             const std::uint32_t ticks_consumed = std::min(num_ticks, remaining_cycles_in_state);
             remaining_cycles_in_state -= ticks_consumed;
 
@@ -130,21 +149,7 @@ namespace emulator
                 return ticks_consumed;
             }
 
-            if (cpu.ime.requested)
-            {
-                cpu.ime.enabled = cpu.ime.enabling;
-                cpu.ime.enabling = !cpu.ime.enabling;
-                cpu.ime.requested = !cpu.ime.enabled;
-            }
-
-            if (cpu.ime.enabled && interrupts.is_any_pending())
-            {
-                current_state = state::interrupt;
-                current_execution_cycle = 0;
-                remaining_cycles_in_state = interrupts::interrupt_dispatcher::num_steps() * 4;
-                current_interrupt = interrupts.get_first_pending();
-            }
-            else if (cpu.halt.enabled)
+            if (cpu.halt.enabled)
             {
                 current_state = state::halt;
                 remaining_cycles_in_state = std::numeric_limits<std::uint32_t>::max();
@@ -207,6 +212,7 @@ namespace emulator
             if (cpu.halt.ime_flag_set)
             {
                 current_state = interrupt;
+                current_execution_cycle = 0;
                 remaining_cycles_in_state = interrupts::interrupt_dispatcher::num_steps() * 4;
                 current_interrupt = interrupts.get_first_pending();
 
@@ -219,7 +225,9 @@ namespace emulator
             remaining_cycles_in_state = 4;
 
             const std::uint32_t available_ticks = std::min(num_ticks, remaining_cycles_in_state);
-            return handle_fetch_decode(available_ticks, memory);
+            handle_fetch_decode(remaining_cycles_in_state, memory);
+
+            return available_ticks;
         }
 
         cpu::cpu_state& cpu;

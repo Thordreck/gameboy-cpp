@@ -13,7 +13,10 @@ namespace opcodes
 
 		static void execute(cpu::cpu_state& cpu, const step_t)
 		{
-			cpu.ime.requested = true;
+			if (!cpu.ime.enabled && cpu.ime.ticks_until_enabled == 0)
+			{
+				cpu.ime.ticks_until_enabled = 4;
+			}
 		}
 	};
 
@@ -23,9 +26,8 @@ namespace opcodes
 
 		static void execute(cpu::cpu_state& cpu, const step_t)
 		{
-			cpu.ime.requested = false;
 			cpu.ime.enabled = false;
-			cpu.ime.enabling = false;
+			cpu.ime.ticks_until_enabled = 0;
 		}
 	};
 }
