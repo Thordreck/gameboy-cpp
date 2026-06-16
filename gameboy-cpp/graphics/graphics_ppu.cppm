@@ -297,9 +297,6 @@ namespace graphics
                 return ticks_consumed;
             }
 
-            // Background/window fetch
-            pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
-
             if (const std::optional<pixel> bg_pixel = background_fifo.try_pop(); bg_pixel.has_value())
             {
                 if (pixels_to_discard > 0)
@@ -325,6 +322,9 @@ namespace graphics
 
                 pixels_drawn_in_scanline++;
             }
+
+            // Background/window fetch
+            pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
 
             if (pixels_drawn_in_scanline == 160)
             {
