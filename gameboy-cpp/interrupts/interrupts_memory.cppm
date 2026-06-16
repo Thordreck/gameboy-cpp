@@ -13,8 +13,7 @@ namespace interrupts
             | (control.is_enabled(serial_interrupt) << 3)
             | (control.is_enabled(timer_interrupt) << 2)
             | (control.is_enabled(lcd_interrupt) << 1)
-            | (control.is_enabled(vblank_interrupt) << 0)
-            | 0xE0;
+            | (control.is_enabled(vblank_interrupt) << 0);
     }
 
     export void write_ie_register(interrupt_controller& control, const memory::memory_data_t data)

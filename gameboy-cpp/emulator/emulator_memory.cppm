@@ -210,7 +210,7 @@ case (audio::wave_ram_start_address + (i)): \
             case graphics::lcd_cy_address: return ppu.lyc();
             case graphics::oam_dma_transfer_address: return oam_dma.start_address() / static_cast<memory::memory_address_t>(0x100);
             case interrupts::if_address: return interrupts::read_if_register(interrupts);
-            case interrupts::ie_address: return interrupts::read_ie_register(interrupts);
+            case interrupts::ie_address: return interrupts::read_ie_register(interrupts) | (ie_unused_bits & 0xE0);
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);
             case serial::serial_transfer_data_address: return serial::read_serial_transfer_data_address(serial);
             case serial::serial_transfer_control_address: return serial::read_serial_transfer_control_address(serial);
@@ -277,7 +277,10 @@ case (audio::wave_ram_start_address + (i)): \
                 interrupts::write_if_register(interrupts, value);
                 break;
             case interrupts::ie_address:
-                interrupts::write_ie_register(interrupts, value);
+                {
+                    interrupts::write_ie_register(interrupts, value);
+                    ie_unused_bits = value & 0xE0;
+                }
                 break;
             case joypad::joypad_memory_address:
                 joypad::write_joypad_register(joypad, value);
@@ -370,6 +373,10 @@ case (audio::wave_ram_start_address + (i)): \
         serial::link& serial;
         audio::audio_processing_unit& apu;
         audio::wave_ram_view_t wave_ram;
+
+        // The IE is a special register where the unused bits are actually present. ROM tests expect to
+        // be able to write and read back whatever value was set.
+        memory::memory_data_t ie_unused_bits {};
 
         // TODO: replace by remaining missing io registers
         std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
