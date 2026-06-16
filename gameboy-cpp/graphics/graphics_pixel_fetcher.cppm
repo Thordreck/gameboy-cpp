@@ -181,6 +181,7 @@ namespace graphics
 
         void reset()
         {
+            first_fetch_in_line = true;
             fetcher_x = 0;
             current_step = pixel_fetch_step::get_tile_address;
             step_cycle = 0;
@@ -255,10 +256,24 @@ namespace graphics
 
             const std::uint8_t high_byte = memory.read(tile_address + 1);
             decode_background_tile_row(memory, tile_low_byte, high_byte, tile_row);
-            advance_state();
 
-            // TODO: according to pandocs, there's an additional push here, but the wording used
-            // was not clear. I'm not sure how it's supposed to be done.
+            // Tile 0 is discarded the first time and fetched again
+            if (first_fetch_in_line)
+            {
+                first_fetch_in_line = false;
+                current_step = pixel_fetch_step::get_tile_address;
+                step_cycle = 0;
+            }
+            else if (fifo.try_push(tile_row))
+            {
+                fetcher_x++;
+                current_step = pixel_fetch_step::get_tile_address;
+                step_cycle = 0;
+            }
+            else
+            {
+                advance_state();
+            }
         }
 
         void sleep()
@@ -268,7 +283,16 @@ namespace graphics
                 return;
             }
 
-            advance_state();
+            if (fifo.try_push(tile_row))
+            {
+                fetcher_x++;
+                current_step = pixel_fetch_step::get_tile_address;
+                step_cycle = 0;
+            }
+            else
+            {
+                advance_state();
+            }
         }
 
         void push_tile_row()
@@ -299,6 +323,8 @@ namespace graphics
         std::uint16_t tile_address{};
         std::uint8_t tile_low_byte{};
         std::array<pixel, 8> tile_row{};
+
+        bool first_fetch_in_line { true };
     };
 
     enum class sprite_fetch_step : std::uint8_t
