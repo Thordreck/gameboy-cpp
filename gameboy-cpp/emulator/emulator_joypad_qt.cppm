@@ -16,24 +16,21 @@ namespace emulator
     public:
         [[nodiscard]] joypad::const_input_state_view_t read()
         {
-            if (!attached) [[unlikely]]
+            if (filter == nullptr) [[unlikely]]
             {
                 const auto app = QGuiApplication::instance();
                 (utils::assert)(app != nullptr);
 
-                auto* filter = new emulator_joypad_filter(state);
+                filter = std::make_unique<emulator_joypad_filter>(state);
                 filter->moveToThread(app->thread());
-                filter->setParent(app);
-                app->installEventFilter(filter);
-
-                attached = true;
+                app->installEventFilter(filter.get());
             }
 
             return state;
         }
 
     private:
-        bool attached { false };
+        std::unique_ptr<emulator_joypad_filter> filter { nullptr };
         std::array<bool, joypad::num_joypad_inputs> state {};
     };
 
