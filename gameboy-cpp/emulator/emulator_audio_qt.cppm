@@ -41,11 +41,6 @@ namespace emulator
         void write(const std::span<const float> samples)
         {
             const std::size_t written = buffer->write(samples);
-
-            if (written != samples.size())
-            {
-                qWarning("Audio buffer overflow");
-            }
         }
 
     private:
@@ -66,11 +61,6 @@ namespace emulator
             const auto remaining_slice = output.subspan(remaining_start);
 
             std::memset(remaining_slice.data(), 0, remaining_slice.size());
-
-            if (samples_read != output.size())
-            {
-                qWarning("Audio buffer underflow");
-            }
         };
 
         QAudioFormat format;
