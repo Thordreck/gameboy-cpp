@@ -117,7 +117,8 @@ namespace graphics
 
         [[nodiscard]] std::uint8_t scanline() const { return current_scanline; }
         [[nodiscard]] std::uint8_t lyc() const { return scanline_compare; }
-        [[nodiscard]] ppu_mode mode() const { return current_mode; }
+        [[nodiscard]] bool lyc_eq_ly() const { return is_enabled() ? current_scanline == scanline_compare : latched_ly_lyc_bit; }
+        [[nodiscard]] ppu_mode mode() const { return initial_state_after_on ? ppu_mode::h_blank : current_mode; }
         [[nodiscard]] bool is_enabled() const { return enabled; }
         [[nodiscard]] ppu_interrupt_sources interrupts() const { return interrupt_sources; }
 
@@ -150,14 +151,22 @@ namespace graphics
             }
         }
 
-        void set_enabled(const bool enabled)
+        template<interrupts::InterruptRequestController InterruptController>
+        void set_enabled(const bool enabled, InterruptController& interrupts)
         {
+            const bool was_enabled = this->enabled;
             this->enabled = enabled;
 
-            if (!enabled)
+            if (was_enabled && !enabled)
             {
+                latched_ly_lyc_bit = scanline_compare == current_scanline;
                 current_scanline = 0;
-                scanline_cycle = 0;
+
+                // Note: the first time ly == 0 the line is 4 t-cycles shorter after turning off/on
+                scanline_cycle = 4;
+                initial_state_after_on = true;
+                current_mode = ppu_mode::oam_scan;
+
                 window_line = 0;
                 window_fetcher_penalty = 0;
                 window_active_in_scanline = false;
@@ -165,8 +174,10 @@ namespace graphics
                 pixels_to_discard = 0;
                 background_fifo.clear();
                 pixel_fetcher.reset();
-
-                current_mode = ppu_mode::oam_scan;
+            }
+            if (!was_enabled && enabled)
+            {
+                update_stat_line(interrupts);
             }
         }
 
@@ -222,6 +233,8 @@ namespace graphics
 
             if (scanline_cycle >= 80)
             {
+                initial_state_after_on = false;
+
                 current_mode = ppu_mode::drawing;
                 pixel_fetcher.reset();
                 background_fifo.clear();
@@ -439,12 +452,15 @@ namespace graphics
         ppu_interrupt_sources interrupt_sources{};
         bool stat_line{};
         std::array<std::uint8_t, lcd_width * num_color_channels> scanline_buffer {};
+
+        bool initial_state_after_on { false };
+        bool latched_ly_lyc_bit { };
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)
     {
         const auto [lyc_select, mode2, mode1, mode0] = ppu.interrupts();
-        const bool lyc_equal_ly = ppu.lyc() == ppu.scanline();
+        const bool lyc_equal_ly = ppu.lyc_eq_ly();
         const std::uint8_t ppu_mode_reg = ppu.is_enabled()
             ? (std::to_underlying(ppu.mode()) & 0b11)
             : 0;

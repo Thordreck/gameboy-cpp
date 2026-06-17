@@ -262,7 +262,7 @@ case (audio::wave_ram_start_address + (i)): \
                 graphics::set_lcd_status(value, ppu, interrupts);
                 break;
             case graphics::lcdc_address:
-                ppu.set_enabled(utils::is_bit_set<7>(value));
+                ppu.set_enabled(utils::is_bit_set<7>(value), interrupts);
                 fallback_memory[address - start] = value;
                 break;
             case graphics::lcd_y_address: // readonly
