@@ -21,14 +21,18 @@ namespace graphics
         {
             return !memory::is_in_region<vram_start_address, vram_end_address>(address)
                 || !ppu.is_enabled()
-                || ppu.mode() != ppu_mode::drawing;
+                || (ppu.mode() == ppu_mode::oam_scan && ppu.current_scanline_cycle() < 76)
+                || ppu.mode() == ppu_mode::h_blank
+                || ppu.mode() == ppu_mode::v_blank;
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
             return !memory::is_in_region<vram_start_address, vram_end_address>(address)
                 || !ppu.is_enabled()
-                || ppu.mode() != ppu_mode::drawing;
+                || (ppu.mode() == ppu_mode::oam_scan && ppu.current_scanline_cycle() < 79)
+                || ppu.mode() == ppu_mode::h_blank
+                || ppu.mode() == ppu_mode::v_blank;
         }
 
     private:

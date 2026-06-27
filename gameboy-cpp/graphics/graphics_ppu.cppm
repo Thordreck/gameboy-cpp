@@ -115,9 +115,30 @@ namespace graphics
             , sprite_fetcher(sprite_fifo)
         {}
 
-        [[nodiscard]] std::uint8_t scanline() const { return current_scanline; }
+        [[nodiscard]] std::uint8_t scanline() const
+        {
+            // If the cpu reads LY in the same m-cycle as h-blank ends, it reads the new value,
+            return (current_mode == ppu_mode::h_blank && scanline_cycle >= 452)
+                ? current_scanline + 1
+                : current_scanline;
+        }
+
+        [[nodiscard]] std::uint16_t current_scanline_cycle() const { return scanline_cycle; }
+
         [[nodiscard]] std::uint8_t lyc() const { return scanline_compare; }
-        [[nodiscard]] bool lyc_eq_ly() const { return is_enabled() ? current_scanline == scanline_compare : latched_ly_lyc_bit; }
+        [[nodiscard]] bool lyc_eq_ly() const
+        {
+            if (!is_enabled())
+            {
+                return latched_ly_lyc_bit;
+            }
+
+            const bool same_m_cycle_as_update = scanline_cycle == 454;
+            const std::uint8_t ly_for_lyc = same_m_cycle_as_update ? 255 : scanline();
+
+            return ly_for_lyc == lyc();
+        }
+
         [[nodiscard]] ppu_mode mode() const { return initial_state_after_on ? ppu_mode::h_blank : current_mode; }
         [[nodiscard]] bool is_enabled() const { return enabled; }
         [[nodiscard]] ppu_interrupt_sources interrupts() const { return interrupt_sources; }
@@ -162,8 +183,8 @@ namespace graphics
                 latched_ly_lyc_bit = scanline_compare == current_scanline;
                 current_scanline = 0;
 
-                // Note: the first time ly == 0 the line is 4 t-cycles shorter after turning off/on
-                scanline_cycle = 4;
+                // Note: the first time ly == 0 the ppu is delayed by 2 t-cycles
+                scanline_cycle = 2;
                 initial_state_after_on = true;
                 current_mode = ppu_mode::oam_scan;
 
@@ -415,7 +436,7 @@ namespace graphics
             if (!enabled) [[unlikely]] { return; }
 
             const bool new_stat_line
-                = (current_scanline == scanline_compare && interrupt_sources.lyc_select)
+                = (scanline() == lyc() && interrupt_sources.lyc_select)
                 || (current_mode == ppu_mode::h_blank && interrupt_sources.mode0)
                 || (current_mode == ppu_mode::v_blank && interrupt_sources.mode1)
                 || ((current_mode == ppu_mode::oam_scan || current_scanline == 144) && interrupt_sources.mode2);

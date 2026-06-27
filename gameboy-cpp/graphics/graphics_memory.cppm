@@ -75,16 +75,18 @@ namespace graphics
 
         [[nodiscard]] bool can_read(const memory::memory_address_t address) const
         {
-		    return !(address >= oam_start_address && address <= oam_end_address)
+            return !(address >= oam_start_address && address <= oam_end_address)
                 || !ppu.is_enabled()
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing);
+                || (ppu.mode() == ppu_mode::v_blank || ppu.mode() == ppu_mode::h_blank) && ppu.current_scanline_cycle() < 452;
         }
 
         [[nodiscard]] bool can_write(const memory::memory_address_t address) const
         {
-		    return !(address >= oam_start_address && address <= oam_end_address)
+            return !(address >= oam_start_address && address <= oam_end_address)
                 || !ppu.is_enabled()
-                || !(ppu.mode() == ppu_mode::oam_scan || ppu.mode() == ppu_mode::drawing);
+                || (ppu.mode() == ppu_mode::v_blank || ppu.mode() == ppu_mode::h_blank)
+                || (ppu.mode() == ppu_mode::oam_scan && ppu.current_scanline_cycle() >= 76)
+                || (ppu.mode() == ppu_mode::drawing && ppu.current_scanline_cycle() == 80);
         }
 
     private:
