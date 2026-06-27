@@ -335,7 +335,9 @@ namespace graphics
             {
                 if (pixels_to_discard > 0)
                 {
+                    pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
                     pixels_to_discard--;
+
                     return ticks_consumed;
                 }
 
