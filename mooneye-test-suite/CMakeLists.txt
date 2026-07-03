@@ -21,4 +21,5 @@ target_sources(mooneye_suite_tests
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/acceptance.test.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/emulator_only.test.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/manual_only.test.cpp
 )
