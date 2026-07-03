@@ -173,11 +173,14 @@ namespace graphics
     export class pixel_fetcher
     {
     public:
-        explicit pixel_fetcher(pixel_fifo& fifo)
+        explicit pixel_fetcher(bg_fifo& fifo)
             : fifo{fifo}
-              , current_step{pixel_fetch_step::get_tile_address}
+            , current_step{pixel_fetch_step::get_tile_address}
         {
         }
+
+        [[nodiscard]] pixel_fetch_step step() const { return current_step; }
+        [[nodiscard]] std::uint8_t dot() const { return current_dot; }
 
         void reset()
         {
@@ -185,6 +188,7 @@ namespace graphics
             fetcher_x = 0;
             current_step = pixel_fetch_step::get_tile_address;
             step_cycle = 0;
+            current_dot = 0;
         }
 
         template<memory::ReadOnlyMemory Memory>
@@ -215,6 +219,8 @@ namespace graphics
         template<memory::ReadOnlyMemory Memory>
         void fetch_tile_address(const bool is_window_active, const std::uint8_t window_line, const Memory& memory)
         {
+            current_dot++;
+
             if (++step_cycle < 2)
             {
                 return;
@@ -237,6 +243,8 @@ namespace graphics
         template<memory::ReadOnlyMemory Memory>
         void get_tile_data_low(const Memory& memory)
         {
+            current_dot++;
+
             if (++step_cycle < 2)
             {
                 return;
@@ -249,6 +257,8 @@ namespace graphics
         template<memory::ReadOnlyMemory Memory>
         void get_tile_data_high(const Memory& memory)
         {
+            current_dot++;
+
             if (++step_cycle < 2)
             {
                 return;
@@ -260,12 +270,14 @@ namespace graphics
             // Tile 0 is discarded the first time and fetched again
             if (first_fetch_in_line)
             {
+                current_dot = 0;
                 first_fetch_in_line = false;
                 current_step = pixel_fetch_step::get_tile_address;
                 step_cycle = 0;
             }
             else if (fifo.try_push(tile_row))
             {
+                current_dot = 0;
                 fetcher_x++;
                 current_step = pixel_fetch_step::get_tile_address;
                 step_cycle = 0;
@@ -278,6 +290,8 @@ namespace graphics
 
         void sleep()
         {
+            current_dot++;
+
             if (++step_cycle < 2)
             {
                 return;
@@ -285,6 +299,7 @@ namespace graphics
 
             if (fifo.try_push(tile_row))
             {
+                current_dot = 0;
                 fetcher_x++;
                 current_step = pixel_fetch_step::get_tile_address;
                 step_cycle = 0;
@@ -297,8 +312,11 @@ namespace graphics
 
         void push_tile_row()
         {
+            current_dot++;
+
             if (fifo.try_push(tile_row))
             {
+                current_dot = 0;
                 fetcher_x++;
                 advance_state();
             }
@@ -312,7 +330,7 @@ namespace graphics
             step_cycle = 0;
         }
 
-        pixel_fifo& fifo;
+        bg_fifo& fifo;
 
         // Tile coordinate along the scanline (groups of 8 pixels)
         std::uint8_t fetcher_x{};
@@ -323,6 +341,7 @@ namespace graphics
         std::uint16_t tile_address{};
         std::uint8_t tile_low_byte{};
         std::array<pixel, 8> tile_row{};
+        std::uint8_t current_dot {};
 
         bool first_fetch_in_line { true };
     };
@@ -337,7 +356,7 @@ namespace graphics
     export class object_fetcher
     {
     public:
-        explicit object_fetcher(pixel_fifo& fifo)
+        explicit object_fetcher(sprite_fifo& fifo)
             : fifo{ fifo }
             , current_step { sprite_fetch_step::get_tile_address }
             , current_target { std::nullopt }
@@ -345,10 +364,34 @@ namespace graphics
 
         [[nodiscard]] bool is_fetching() const { return current_target.has_value(); }
 
-        void set_target(const object& new_target)
+        template<memory::ReadOnlyMemory Memory>
+        void set_target(const object& new_target, const Memory& memory, const bool is_window_active)
         {
-            reset();
+            current_step = sprite_fetch_step::get_tile_address;
+            step_cycle = 0;
             current_target = new_target;
+
+            const std::uint8_t current_tile_x = compute_tile_x(memory, new_target.x(), is_window_active);
+            const std::uint8_t current_tile = current_tile_x / 8;
+
+            const bool same_tile_as_prev = last_obj_tile
+                .transform([current_tile] (const auto prev_tile) { return prev_tile == current_tile; })
+                .value_or(false);
+
+            const bool same_x_group_prev = last_obj_x
+                .transform([&new_target] (const auto prev_x) { return new_target.x() - prev_x <= 8; })
+                .value_or(false);
+
+            const bool tile_already_claimed = same_tile_as_prev && same_x_group_prev;
+
+            last_obj_x = new_target.x();
+            last_obj_tile = current_tile;
+
+            extra_delay = tile_already_claimed
+                ? 0
+                : new_target.x() == 0
+                    ? 5
+                    : std::max(0, 7 - (new_target.x() % 8) - 2);
         }
 
         void reset()
@@ -356,6 +399,9 @@ namespace graphics
             current_step = sprite_fetch_step::get_tile_address;
             step_cycle = 0;
             current_target = std::nullopt;
+            extra_delay = 0;
+            last_obj_tile = std::nullopt;
+            last_obj_x = std::nullopt;
         }
 
         template<memory::ReadOnlyMemory Memory>
@@ -418,6 +464,11 @@ namespace graphics
                 return;
             }
 
+            if (extra_delay-- > 0)
+            {
+                return;
+            }
+
             const std::uint8_t high_byte = memory.read(tile_address + 1);
             std::array<pixel, 8> tile_row{};
             decode_sprite_tile_row(target, tile_low_byte, high_byte, tile_row);
@@ -457,10 +508,13 @@ namespace graphics
             step_cycle = 0;
         }
 
-        pixel_fifo& fifo;
+        sprite_fifo& fifo;
 
         sprite_fetch_step current_step;
         std::uint8_t step_cycle{};
+        std::optional<std::uint8_t> last_obj_tile {};
+        std::optional<std::uint8_t> last_obj_x {};
+        std::uint8_t extra_delay {};
 
         std::optional<object> current_target;
         std::uint16_t tile_address{};

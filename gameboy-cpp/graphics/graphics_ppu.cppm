@@ -310,24 +310,26 @@ namespace graphics
 
             if (objects_enabled && !sprite_fetcher.is_fetching())
             {
-                if (const std::optional next_object = get_object_at_x(sprite_buffer, pixels_drawn_in_scanline); next_object.has_value())
+                if (const std::optional next_object = pop_object_at_x(sprite_buffer, pixels_drawn_in_scanline);
+                    next_object.has_value())
                 {
-                    sprite_fetcher.set_target(next_object.value());
+                    sprite_fetcher.set_target(next_object.value(), memory, window_active_in_scanline);
                 }
             }
 
-            // Wait for background fifo to reach step 5
-            if (sprite_fetcher.is_fetching() && background_fifo.count() < 8)
+            // Wait for background fifo to free the vram bus
+            if (sprite_fetcher.is_fetching()
+                && !(pixel_fetcher.dot() >= 6 || background_fifo.count() > 0))
             {
                 pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
+
                 return ticks_consumed;
             }
 
             // Wait until sprite fetch completes
-            sprite_fetcher.tick(memory);
-
             if (sprite_fetcher.is_fetching())
             {
+                sprite_fetcher.tick(memory);
                 return ticks_consumed;
             }
 
@@ -460,7 +462,7 @@ namespace graphics
         std::uint8_t current_scanline{};
         std::uint16_t scanline_cycle{};
 
-        pixel_fifo background_fifo{};
+        bg_fifo background_fifo{};
         std::uint8_t window_line {};
         std::uint8_t window_fetcher_penalty{};
         bool window_active_in_scanline {};
@@ -468,7 +470,7 @@ namespace graphics
         std::uint8_t pixels_to_discard{};
         pixel_fetcher pixel_fetcher;
 
-        pixel_fifo sprite_fifo {};
+        sprite_fifo sprite_fifo {};
         object_buffer sprite_buffer {};
         object_fetcher sprite_fetcher;
 

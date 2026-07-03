@@ -5,7 +5,7 @@ export import std;
 namespace utils
 {
     export template<typename T, size_t N>
-    requires (N > 0) && std::destructible<T>
+    requires (N > 0) && std::destructible<T> && std::movable<T>
     class fixed_capacity_vector
     {
     public:
@@ -27,6 +27,15 @@ namespace utils
 
         void push_back(const T& element) { new(elements[num_elements++].data()) T(element); }
         void push_back(T&& element) { new(elements[num_elements++].data()) T(std::move(element)); }
+
+        [[maybe_unused]] auto erase(T* it)
+        {
+            std::move(it + 1, end(), it);
+            std::destroy_at(end() - 1);
+            num_elements--;
+
+            return it;
+        }
 
         void clear()
         {
