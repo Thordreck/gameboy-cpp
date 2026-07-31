@@ -10,6 +10,14 @@ namespace qt
 {
     export class object
     {
+    public:
+        void delete_later()
+        {
+            handle->deleteLater();
+            handle = nullptr;
+        }
+
+    private:
         explicit object(QObject* qt_object)
             : handle{qt_object}
         {}

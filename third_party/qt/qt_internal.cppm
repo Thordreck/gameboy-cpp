@@ -28,4 +28,10 @@ namespace qt
     requires { typename internal::qt_type<Wrapper>; }
     && requires(internal::qt_type<Wrapper> arg) { { internal::create<Wrapper>(arg) } -> std::convertible_to<Wrapper>; };
 
+    export template<typename Wrapper>
+    concept QtObject = requires(Wrapper& wrapper)
+    {
+        { internal::get_qt_object(wrapper) } -> std::convertible_to<QObject*>;
+    };
+
 }

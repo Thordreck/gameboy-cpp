@@ -4,6 +4,7 @@ module;
 
 export module qt:gui;
 import std;
+import :internal;
 
 namespace qt
 {
@@ -33,7 +34,10 @@ namespace qt
         }
 
     private:
+        [[nodiscard]] QObject* qt_object() { return &app; }
+
         QGuiApplication app;
+        friend internal;
     };
 
 }

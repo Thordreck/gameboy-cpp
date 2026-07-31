@@ -40,7 +40,10 @@ namespace emulator
     public:
         graphical_interface(int& argc, char** argv)
             : app{argc, argv}
-        {}
+        {
+            using namespace qt;
+
+        }
 
         template <Emulator Imp>
         int render(Imp& emulator)
@@ -51,8 +54,21 @@ namespace emulator
             emulator_ui_backend ui_backend { ui_adapter };
             emulator_ui_backend_singleton::set_backend(&ui_backend);
 
-            // TODO: replace by LoadFromModule
-            engine.load(":/qt/qml/Gameboy/UI/emulator_ui_qt");
+#ifdef QML_HOT_RELOAD
+            qt::register_shortcut(qt::standard_key::refresh, [this]
+            {
+                std::println("Hot-reloading qml file from path: {}", QML_HOT_RELOAD_PATH);
+
+                std::ranges::for_each(engine.root_objects(), [] (auto object) { object.delete_later(); });
+                engine.clear_singletons();
+                engine.clear_component_cache();
+
+                engine.load(QML_HOT_RELOAD_PATH);
+
+            }, qt::shortcut_context::application, app);
+#endif
+
+            engine.load_from_module("Gameboy.UI", "EmulatorUI");
             return app.execute();
         }
 

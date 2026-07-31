@@ -74,25 +74,42 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	target_sources(emulator-ui-backend-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
 	target_link_libraries(emulator-ui-backend-qml PRIVATE qt)
 	set_target_properties(emulator-ui-backend-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
-	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES  QT_RESOURCE_ALIAS emulator_ui_qt)
+	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
+			QT_RESOURCE_ALIAS emulator_ui_qt
+			QT_QML_SOURCE_TYPENAME EmulatorUI
+	)
 	set_source_files_properties(${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png PROPERTIES  QT_RESOURCE_ALIAS gameboy-icon.png)
 
 	qt_add_qml_module(emulator-ui-backend-qml
 			URI Gameboy.UI
 			VERSION ${PROJECT_VERSION}
-			QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml
+			QML_FILES emulator_ui_qt.qml
 			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Gameboy/UI
 			PLUGIN_TARGET emulator-ui-backend-qml-plugin
+			DEPENDENCIES QtCore QtQuick
+			IMPORTS ${QT_QUICK_CONTROLS}
 	)
+
+	if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
+		set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES QT_QML_SKIP_CACHEGEN TRUE)
+		target_compile_definitions(emulator-ui-backend-qml PUBLIC QML_HOT_RELOAD_PATH="${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml")
+		target_compile_definitions(emulator-ui-backend-qml PUBLIC QML_HOT_RELOAD)
+	endif()
 
 	qt_add_resources(emulator-ui-backend-qml "icons"
 			PREFIX "/icons"
 			FILES ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
 	)
 
+	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")
+	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_DIRECT_CALLS ON)
+
 	target_link_libraries(emulator-ui-backend-qml PUBLIC emulator-ui-backend-qml-plugin)
 
 	target_compile_definitions(emulator-ui-backend PUBLIC UI_QT)
+	target_compile_definitions(emulator-ui-backend PUBLIC "$<$<CONFIG:Debug>:QT_QML_DEBUG>")
+	target_compile_definitions(emulator-ui-backend PUBLIC "$<$<CONFIG:RelWithDebInfo>:QT_QML_DEBUG>")
+
 	target_link_libraries(emulator-ui-backend PRIVATE emulator::core profiling utilities qt emulator-ui-backend-qml)
 
 	target_sources(emulator-ui-backend PUBLIC

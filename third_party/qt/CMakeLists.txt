@@ -16,5 +16,7 @@ target_sources(qt PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/qt_core.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/qt_gui.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/qt_qml.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/qt_shortcuts.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/qt_keys.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/qt_internal.cppm
 )
