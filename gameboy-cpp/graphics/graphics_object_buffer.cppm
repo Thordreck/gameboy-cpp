@@ -13,7 +13,7 @@ namespace graphics
     {
         const auto result_it = std::ranges::find_if(
             objects,
-            [x] (const auto& candidate) { return static_cast<int>(candidate.x() - 8) <= x; });
+            [x] (const auto& candidate) { return static_cast<int>(candidate.x - 8) <= x; });
 
         if (result_it == objects.end())
         {

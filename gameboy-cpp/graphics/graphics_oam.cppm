@@ -33,83 +33,82 @@ namespace graphics
 
     export constexpr std::uint8_t max_num_objects_per_scanline = 10;
 
-    export class object
+    export struct object
     {
-    public:
-        template <std::ranges::contiguous_range R>
-        explicit object(const std::uint8_t oam_index, const R& data)
-            : oam_index{oam_index}
-        {
-            std::ranges::copy(data, memory.begin());
-        }
+        object(const std::uint8_t index, const std::span<const std::uint8_t, 4> memory)
+            : object {
+                index,
+                memory[object_x_position_byte_index],
+                memory[object_y_position_byte_index],
+                memory[object_tile_index_byte_index],
+                memory[object_flags_byte_index],
+            }
+        {}
 
-        [[nodiscard]] std::uint8_t index() const
-        {
-            return oam_index;
-        }
+        object(
+            const std::uint8_t index,
+            const std::uint8_t x_position,
+            const std::uint8_t y_position,
+            const std::uint8_t tile_index,
+            const std::uint8_t flags)
+                : object {
+                    index,
+                    x_position,
+                    y_position,
+                    tile_index,
+                    utils::is_bit_set<object_priority_flag_bit_index>(flags),
+                    utils::is_bit_set<object_x_flip_flag_bit_index>(flags),
+                    utils::is_bit_set<object_y_flip_flag_bit_index>(flags),
+                    utils::is_bit_set<object_palette_bit_index>(flags),
+                    }
+        {}
 
-        [[nodiscard]] std::uint8_t x() const
-        {
-            return memory[object_x_position_byte_index];
-        }
+        object(
+            const std::uint8_t index,
+            const std::uint8_t x_position,
+            const std::uint8_t y_position,
+            const std::uint8_t tile_index,
+            const bool priority,
+            const bool x_flip,
+            const bool y_flip,
+            const bool alternate_palette)
+                : index { index }
+                , x { x_position }
+                , y { y_position }
+                , tile_index { tile_index }
+                , priority { priority }
+                , x_flip { x_flip }
+                , y_flip { y_flip }
+                , alternate_palette { alternate_palette }
+        {}
 
-        [[nodiscard]] std::uint8_t y() const
-        {
-            return memory[object_y_position_byte_index];
-        }
-
-        [[nodiscard]] std::uint8_t tile_index() const
-        {
-            return memory[object_tile_index_byte_index];
-        }
-
-        [[nodiscard]] bool priority() const
-        {
-            const auto flags_byte = memory[object_flags_byte_index];
-            return utils::is_bit_set<object_priority_flag_bit_index>(flags_byte);
-        }
-
-        [[nodiscard]] bool x_flip() const
-        {
-            const auto flags_byte = memory[object_flags_byte_index];
-            return utils::is_bit_set<object_x_flip_flag_bit_index>(flags_byte);
-        }
-
-        [[nodiscard]] bool y_flip() const
-        {
-            const auto flags_byte = memory[object_flags_byte_index];
-            return utils::is_bit_set<object_y_flip_flag_bit_index>(flags_byte);
-        }
-
-        [[nodiscard]] bool alternate_palette() const
-        {
-            const auto flags_byte = memory[object_flags_byte_index];
-            return utils::is_bit_set<object_palette_bit_index>(flags_byte);
-        }
-
-    private:
-        std::uint8_t oam_index;
-        object_memory_t memory{};
+        std::uint8_t index;
+        std::uint8_t x;
+        std::uint8_t y;
+        std::uint8_t tile_index;
+        bool priority;
+        bool x_flip;
+        bool y_flip;
+        bool alternate_palette;
     };
 
     export template <memory::ReadOnlyMemory Memory>
     object get_object(const std::uint8_t index, const Memory& memory)
     {
         const memory::memory_address_t initial_address = oam_start_address + index * object_memory_byte_size;
-        const auto bytes =
-        {
-            memory.read(initial_address),
-            memory.read(initial_address + 1),
-            memory.read(initial_address + 2),
-            memory.read(initial_address + 3)
-        };
 
-        return object{index, bytes};
+        return {
+            index,
+            memory.read(initial_address + object_x_position_byte_index),
+            memory.read(initial_address + object_y_position_byte_index),
+            memory.read(initial_address + object_tile_index_byte_index),
+            memory.read(initial_address + object_flags_byte_index)
+        };
     }
 
     export bool is_in_scanline(const object& object, const std::uint8_t height, const std::uint8_t scanline)
     {
-        const int min_y = static_cast<int>(object.y()) - 16;
+        const int min_y = static_cast<int>(object.y) - 16;
         const int max_y = min_y + height;
 
         return scanline >= min_y && scanline < max_y;

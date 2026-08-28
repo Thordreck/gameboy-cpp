@@ -100,19 +100,19 @@ namespace graphics
         for (int i = 7; i >= 0; i--)
         {
             const color_index_t color = decode_tile(i, low, high);
-            const std::uint8_t palette_index = object.alternate_palette() ? 1 : 0;
-            const bool background_priority = object.priority();
+            const std::uint8_t palette_index = object.alternate_palette ? 1 : 0;
+            const bool background_priority = object.priority;
 
-            pixels[7 - i] = { color, palette_index, background_priority, object.x(), object.index() };
+            pixels[7 - i] = { color, palette_index, background_priority, object.x, object.index };
         }
     }
 
     template<memory::ReadOnlyMemory Memory>
     std::uint8_t compute_sprite_tile_line(const object& object, const Memory& memory)
     {
-        const std::uint8_t tile_line = lcd_y(memory) - (object.y() - 16);
+        const std::uint8_t tile_line = lcd_y(memory) - (object.y - 16);
 
-        return object.y_flip()
+        return object.y_flip
             ? get_objects_height(memory) - 1 - tile_line
             : tile_line;
     }
@@ -123,10 +123,10 @@ namespace graphics
         const std::uint8_t sprite_height = get_objects_height(memory);
 
         return sprite_height < 16
-            ? object.tile_index()
+            ? object.tile_index
             : tile_line < 8
-                ? object.tile_index() & 0xFE
-                : object.tile_index() | 0x01;
+                ? object.tile_index & 0xFE
+                : object.tile_index | 0x01;
     }
 
     pixel resolve_drawing_priority(const pixel& lhs, const pixel& rhs)
@@ -371,7 +371,7 @@ namespace graphics
             step_cycle = 0;
             current_target = new_target;
 
-            const std::uint8_t current_tile_x = compute_tile_x(memory, new_target.x(), is_window_active);
+            const std::uint8_t current_tile_x = compute_tile_x(memory, new_target.x, is_window_active);
             const std::uint8_t current_tile = current_tile_x / 8;
 
             const bool same_tile_as_prev = last_obj_tile
@@ -379,19 +379,19 @@ namespace graphics
                 .value_or(false);
 
             const bool same_x_group_prev = last_obj_x
-                .transform([&new_target] (const auto prev_x) { return new_target.x() - prev_x <= 8; })
+                .transform([&new_target] (const auto prev_x) { return new_target.x - prev_x <= 8; })
                 .value_or(false);
 
             const bool tile_already_claimed = same_tile_as_prev && same_x_group_prev;
 
-            last_obj_x = new_target.x();
+            last_obj_x = new_target.x;
             last_obj_tile = current_tile;
 
             extra_delay = tile_already_claimed
                 ? 0
-                : new_target.x() == 0
+                : new_target.x == 0
                     ? 5
-                    : std::max(0, 7 - (new_target.x() % 8) - 2);
+                    : std::max(0, 7 - (new_target.x % 8) - 2);
         }
 
         void reset()
@@ -440,7 +440,7 @@ namespace graphics
             const std::uint8_t tile_line = compute_sprite_tile_line(target, memory);
             const std::uint8_t tile_index = compute_sprite_tile_index(target, tile_line, memory);
 
-            tile_address = tile_base + tile_index * 16 + tile_line * 2;
+            tile_address = tile_base + tile_index * 16 + (tile_line % 8) * 2;
             advance_state();
         }
 
@@ -473,7 +473,7 @@ namespace graphics
             std::array<pixel, 8> tile_row{};
             decode_sprite_tile_row(target, tile_low_byte, high_byte, tile_row);
 
-            if (target.x_flip())
+            if (target.x_flip)
             {
                 std::ranges::reverse(tile_row);
             }
