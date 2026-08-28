@@ -93,7 +93,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
 		set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES QT_QML_SKIP_CACHEGEN TRUE)
 		target_compile_definitions(emulator-ui-backend-qml PUBLIC QML_HOT_RELOAD_PATH="${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml")
-		target_compile_definitions(emulator-ui-backend-qml PUBLIC QML_HOT_RELOAD)
+		target_compile_definitions(emulator-ui-backend-qml PUBLIC QT_UI_DEBUG_MODE)
 	endif()
 
 	qt_add_resources(emulator-ui-backend-qml "icons"

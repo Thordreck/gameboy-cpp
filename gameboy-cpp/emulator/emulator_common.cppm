@@ -11,30 +11,14 @@ import cartridge;
 namespace emulator
 {
     export using framebuffer_view_t = std::span<const std::uint8_t, graphics::lcd_memory_size>;
+    export using framebuffer_t = std::array<std::uint8_t, graphics::lcd_memory_size>;
     export using load_rom_result_t = std::expected<void, std::string>;
-
-    export template <typename T>
-    concept Emulator = requires(T& emulator, const cartridge::rom& rom)
-    {
-        { emulator.load_rom(rom) } -> std::convertible_to<load_rom_result_t>;
-
-        { emulator.cartridge() } -> std::convertible_to<cartridge::header>;
-        { emulator.framebuffer() } -> std::convertible_to<framebuffer_view_t>;
-        { emulator.is_running() } -> std::convertible_to<bool>;
-        { emulator.has_rom() } -> std::convertible_to<bool>;
-
-        { emulator.resume() } -> std::same_as<void>;
-        { emulator.pause() } -> std::same_as<void>;
-        { emulator.stop() } -> std::same_as<void>;
-    };
-
     export using lcd_view_t = std::span<const memory::memory_data_t, graphics::lcd_memory_size>;
 
     export template <typename T>
     concept Engine = requires(T& engine, const std::uint32_t num_ticks, const joypad::const_input_state_view_t joypad_state)
     {
         { engine.tick(num_ticks) } -> std::same_as<void>;
-        { engine.lcd() } -> std::convertible_to<lcd_view_t>;
         { engine.update_joypad_state(joypad_state) } -> std::same_as<void>;
     };
 
@@ -54,6 +38,16 @@ namespace emulator
     export template<typename T, typename Sample>
     concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T>;
 
+    export template<typename T>
+    concept RendererTarget = requires(T& device)
+    {
+        { device.start_rendering_frames() } -> std::same_as<void>;
+        { device.stop_rendering_frames() } -> std::same_as<void>;
+    };
+
+    export template<typename T>
+    concept FramebufferRenderer = graphics::FramebufferSink<T> && RendererTarget<T>;
+
     export class memory_view
     {
     public:
@@ -67,6 +61,24 @@ namespace emulator
 
     private:
         std::function<memory::memory_data_t(memory::memory_address_t address)> read_fn;
+    };
+
+    export template <typename T>
+    concept Emulator = requires(T& emulator, const cartridge::rom& rom, const std::uint32_t ticks)
+    {
+        { emulator.load_rom(rom) } -> std::convertible_to<load_rom_result_t>;
+
+        { emulator.cartridge() } -> std::convertible_to<cartridge::header>;
+        { emulator.is_running() } -> std::convertible_to<bool>;
+        { emulator.has_rom() } -> std::convertible_to<bool>;
+
+        { emulator.resume() } -> std::same_as<void>;
+        { emulator.pause() } -> std::same_as<void>;
+        { emulator.stop() } -> std::same_as<void>;
+        { emulator.step(ticks) } -> std::same_as<void>;
+
+        { emulator.memory() } -> std::convertible_to<memory_view>;
+        { emulator.framebuffer() } -> std::convertible_to<framebuffer_view_t>;
     };
 
 }

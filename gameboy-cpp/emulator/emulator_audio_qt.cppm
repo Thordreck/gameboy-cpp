@@ -18,6 +18,7 @@ namespace emulator
     public:
         [[nodiscard]] std::uint32_t sample_rate() const { return format.sampleRate(); }
         [[nodiscard]] std::uint8_t channel_count() const { return format.channelCount(); }
+        [[nodiscard]] bool is_open() const { return sink != nullptr; }
 
         void open()
         {
@@ -40,7 +41,7 @@ namespace emulator
 
         void write(const std::span<const float> samples)
         {
-            const std::size_t written = buffer->write(samples);
+            const std::size_t written = buffer != nullptr ? buffer->write(samples) : 0;
         }
 
     private:

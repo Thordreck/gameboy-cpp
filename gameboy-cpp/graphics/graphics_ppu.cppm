@@ -383,7 +383,7 @@ namespace graphics
             if (scanline_cycle >= 456)
             {
                 scanline_cycle = 0;
-                screen.set_scanline(current_scanline, scanline_buffer);
+                screen.write_scanline(current_scanline, scanline_buffer);
 
                 current_scanline++;
 
@@ -401,6 +401,8 @@ namespace graphics
                 else
                 {
                     current_mode = ppu_mode::v_blank;
+
+                    screen.end_frame();
                     interrupts.request(interrupts::vblank_interrupt);
                 }
 

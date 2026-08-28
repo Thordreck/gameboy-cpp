@@ -21,8 +21,6 @@ import emulator.core;
 
 namespace emulator
 {
-    using lcd_memory_t = std::array<std::uint8_t, graphics::lcd_memory_size>;
-
     export class base_engine
     {
     public:
@@ -36,12 +34,16 @@ namespace emulator
         virtual void tick_external_serial_clock() = 0;
     };
 
-    export template<mbc::MemoryBankController MBC, audio::AudioSink<float> AudioSink, serial::SerialInterface Serial>
+    export template<
+        mbc::MemoryBankController MBC,
+        graphics::FramebufferSink FramebufferSink,
+        audio::AudioSink<float> AudioSink,
+        serial::SerialInterface Serial>
     class engine : public base_engine
     {
     public:
-        engine(MBC&& mbc_imp, AudioSink& audio_sink, Serial& serial)
-        : lcd_adapter { lcd_memory }
+        engine(MBC&& mbc_imp, FramebufferSink& framebuffer_sink, AudioSink& audio_sink, Serial& serial)
+        : framebuffer_sink { framebuffer_sink }
         , serial { serial }
         , mbc { std::forward<MBC>(mbc_imp) }
         , memory_map { internal_memory, mbc, oam_dma, timers, interrupts, ppu_, joypad, serial_link, apu }
@@ -66,7 +68,6 @@ namespace emulator
 
         [[nodiscard]] lcd_view_t lcd() const override { return lcd_memory; }
         [[nodiscard]] memory_view memory() const override { return memory_view{ memory_map.get() }; }
-
         void update_joypad_state(const joypad::const_input_state_view_t state) override { joypad.set_state(state, interrupts); }
 
         void tick(const std::uint32_t num_ticks) override
@@ -77,7 +78,7 @@ namespace emulator
                 num_ticks,
                 adapt_for_scheduler(cpu_runner, memory_buses.cpu_bus(), interrupts),
                 adapt_for_scheduler(timers, interrupts),
-                adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), lcd_adapter, interrupts),
+                adapt_for_scheduler(ppu_, memory_buses.ppu_bus(), framebuffer_sink_adapter, interrupts),
                 adapt_for_scheduler(oam_dma, memory_buses.oam_bus()),
                 adapt_for_scheduler(apu, timers.divider(), internal_memory.wave_ram, audio_sink),
                 adapt_for_scheduler(serial_link, serial, interrupts));
@@ -96,8 +97,9 @@ namespace emulator
 
         joypad::joypad joypad {};
 
-        lcd_memory_t lcd_memory {};
-        graphics::raw_memory_lcd lcd_adapter;
+        FramebufferSink& framebuffer_sink;
+        graphics::lcd_memory_t lcd_memory {};
+        graphics::lcd_framebuffer_sink_adapter<FramebufferSink> framebuffer_sink_adapter { framebuffer_sink, lcd_memory };
         graphics::pixel_processing_unit ppu_ {};
 
         Serial& serial;

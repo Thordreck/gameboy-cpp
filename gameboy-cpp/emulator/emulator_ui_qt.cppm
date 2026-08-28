@@ -20,7 +20,6 @@ namespace emulator
 
         [[nodiscard]] bool has_rom() const { return emulator.has_rom(); }
         [[nodiscard]] bool is_running() const { return emulator.is_running(); }
-        [[nodiscard]] ui_framebuffer_t framebuffer() { return emulator.framebuffer(); }
         [[nodiscard]] ui_load_rom_result_t load_rom(const std::string_view path)
         {
             return cartridge::load_rom_file(path)
@@ -30,6 +29,10 @@ namespace emulator
         void resume() { emulator.resume(); }
         void pause() { emulator.pause(); }
         void stop() { emulator.stop(); }
+        void step(const std::uint32_t ticks) { emulator.step(ticks); }
+
+        [[nodiscard]] std::uint8_t read_memory(const std::uint16_t address) { return emulator.memory()[address]; }
+        [[nodiscard]] auto framebuffer() { return emulator.framebuffer(); }
 
     private:
         Emulator& emulator;
@@ -40,9 +43,25 @@ namespace emulator
     public:
         graphical_interface(int& argc, char** argv)
             : app{argc, argv}
-        {
-            using namespace qt;
+        {}
 
+        void start_rendering_frames()
+        {
+            framebuffer_source.start();
+        }
+
+        void stop_rendering_frames()
+        {
+            framebuffer_source.stop();
+        }
+
+        void write_frame(framebuffer_view_t frame)
+        {
+            framebuffer_t copy {};
+            std::ranges::copy(frame, copy.begin());
+
+            framebuffer.write(std::move(copy));
+            framebuffer_source.render();
         }
 
         template <Emulator Imp>
@@ -51,10 +70,14 @@ namespace emulator
             utils::panic_on_error(app.set_window_icon(":/icons/gameboy-icon.png"));
 
             emulator_ui_backend_adapter ui_adapter { emulator };
-            emulator_ui_backend ui_backend { ui_adapter };
-            emulator_ui_backend_singleton::set_backend(&ui_backend);
+            emulator_ui_controls ui_controls { ui_adapter };
 
-#ifdef QML_HOT_RELOAD
+#ifdef QT_UI_DEBUG_MODE
+            emulator_ui_debug ui_debug { ui_adapter };
+            emulator_ui_sprites_image_provider ui_debug_sprites_provider { ui_adapter };
+
+            engine.add_image_provider("sprites", &ui_debug_sprites_provider);
+
             qt::register_shortcut(qt::standard_key::refresh, [this]
             {
                 std::println("Hot-reloading qml file from path: {}", QML_HOT_RELOAD_PATH);
@@ -68,6 +91,16 @@ namespace emulator
             }, qt::shortcut_context::application, app);
 #endif
 
+            engine.set_initial_properties(
+                std::make_pair("controls", &ui_controls),
+                std::make_pair("framebuffer", &framebuffer_source),
+#ifdef QT_UI_DEBUG_MODE
+                std::make_pair("debugMode", true),
+                std::make_pair("debug", &ui_debug));
+#else
+                std::make_pair("debugMode", false));
+#endif
+
             engine.load_from_module("Gameboy.UI", "EmulatorUI");
             return app.execute();
         }
@@ -75,5 +108,8 @@ namespace emulator
     private:
         qt::gui_application app;
         qt::qml_engine engine;
+
+        utils::triple_buffer<framebuffer_t> framebuffer {};
+        emulator_ui_framebuffer framebuffer_source { framebuffer };
     };
 }

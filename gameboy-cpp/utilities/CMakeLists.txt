@@ -23,6 +23,7 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/concepts.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/constrained.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/triple_buffer.cppm
 )
 
 if(BUILD_TESTING)

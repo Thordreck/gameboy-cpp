@@ -1,5 +1,6 @@
 module;
 #include <QQmlApplicationEngine>
+#include <qqmlcontext.h>
 #include <QtCore/QDebug>
 
 export module qt:qml;
@@ -29,6 +30,21 @@ namespace qt
                     { qFatal() << "Could not create qt object from module uri: " <<  url; });
 
             engine.loadFromModule(QString(uri.data()), QString(module_name.data()));
+        }
+
+        template<typename Keys, typename ...Values>
+        requires std::is_convertible_v<Keys, std::string_view>
+        void set_initial_properties(const std::pair<Keys, Values>& ...args)
+        {
+            QVariantMap properties {};
+            (properties.insert(args.first, QVariant::fromValue(args.second)), ...);
+
+            engine.setInitialProperties(properties);
+        }
+
+        void add_image_provider(std::string_view name, QQmlImageProviderBase* provider)
+        {
+            engine.addImageProvider(QString(name.data()), provider);
         }
 
         void clear_singletons() { engine.clearSingletons(); }
