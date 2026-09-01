@@ -32,7 +32,12 @@ namespace emulator
         void step(const std::uint32_t ticks) { emulator.step(ticks); }
 
         [[nodiscard]] std::uint8_t read_memory(const std::uint16_t address) { return emulator.memory()[address]; }
-        [[nodiscard]] auto framebuffer() { return emulator.framebuffer(); }
+
+        [[nodiscard]] float volume() const { return emulator.volume(); }
+        void set_volume(const float volume) { emulator.set_volume(volume); }
+
+        [[nodiscard]] bool muted() const { return emulator.muted(); }
+        void set_muted(const bool muted) { emulator.set_muted(muted); }
 
     private:
         Emulator& emulator;
@@ -73,7 +78,7 @@ namespace emulator
             emulator_ui_controls ui_controls { ui_adapter };
 
 #ifdef QT_UI_DEBUG_MODE
-            emulator_ui_debug ui_debug { ui_adapter };
+            emulator_ui_sprites_model ui_debug_sprites_model { ui_adapter };
             emulator_ui_sprites_image_provider ui_debug_sprites_provider { ui_adapter };
 
             engine.add_image_provider("sprites", &ui_debug_sprites_provider);
@@ -96,7 +101,7 @@ namespace emulator
                 std::make_pair("framebuffer", &framebuffer_source),
 #ifdef QT_UI_DEBUG_MODE
                 std::make_pair("debugMode", true),
-                std::make_pair("debug", &ui_debug));
+                std::make_pair("sprites", &ui_debug_sprites_model));
 #else
                 std::make_pair("debugMode", false));
 #endif

@@ -22,19 +22,26 @@ namespace emulator
         Backend& backend,
         const std::string_view rom_path,
         const std::uint16_t address,
-        const std::uint32_t ticks)
+        const std::uint32_t ticks,
+        const float volume,
+        const bool muted)
     {
         { backend.has_rom() } -> std::convertible_to<bool>;
         { backend.is_running() } -> std::convertible_to<bool>;
 
         { backend.load_rom(rom_path) } -> std::convertible_to<ui_load_rom_result_t>;
-        { backend.framebuffer() } -> std::convertible_to<ui_framebuffer_view_t>;
         { backend.resume() } -> std::same_as<void>;
         { backend.pause() } -> std::same_as<void>;
         { backend.stop() } -> std::same_as<void>;
         { backend.step(ticks) } -> std::same_as<void>;
 
         { backend.read_memory(address) } -> std::convertible_to<std::uint8_t>;
+
+        { backend.volume() } -> std::convertible_to<float>;
+        { backend.set_volume(volume) } -> std::same_as<void>;
+
+        { backend.muted() } -> std::convertible_to<bool>;
+        { backend.set_muted(muted) } -> std::same_as<void>;
     };
 
     template <typename T>
@@ -69,6 +76,8 @@ namespace emulator
         QML_NAMED_ELEMENT(EmulatorControls)
 
         Q_PROPERTY(emulator_ui_status status READ status BINDABLE bindable_status)
+        Q_PROPERTY(float volume READ volume WRITE setVolume BINDABLE bindable_volume)
+        Q_PROPERTY(bool muted READ muted WRITE setMuted BINDABLE bindable_muted)
 
     public:
         template <EmulatorUIBackendImp Imp>
@@ -79,21 +88,43 @@ namespace emulator
             , resume_fn { [&backend] { return backend.resume(); } }
             , pause_fn { [&backend] { return backend.pause(); } }
             , stop_fn { [&backend] { return backend.stop(); } }
+            , step_fn { [&backend] (const std::uint32_t ticks) { backend.step(ticks); } }
+            , read_mem_fn { [&backend] (const auto address) { return backend.read_memory(address); } }
+            , get_volume_fn { [&backend] { return backend.volume(); } }
+            , set_volume_fn { [&backend] (const float volume) { backend.set_volume(volume); } }
+            , get_muted_fn { [&backend] { return backend.muted(); } }
+            , set_muted_fn { [&backend] (const bool muted) { backend.set_muted(muted); } }
         {
             update_current_status();
+
+            current_volume.setBinding([this] { return get_volume_fn(); });
+            current_muted.setBinding([this] { return get_muted_fn(); });
         }
 
         Q_INVOKABLE QVariantMap load_rom(const QUrl& url);
         Q_INVOKABLE emulator_ui_status status() const;
+
         Q_INVOKABLE void resume();
         Q_INVOKABLE void pause();
         Q_INVOKABLE void stop();
+        Q_INVOKABLE void nextFrame();
 
-        QBindable<emulator_ui_status> bindable_status();
+        Q_INVOKABLE float volume() const;
+        Q_INVOKABLE void setVolume(float volume);
+
+        Q_INVOKABLE bool muted() const;
+        Q_INVOKABLE void setMuted(bool muted);
 
     private:
+        QBindable<emulator_ui_status> bindable_status();
         void update_current_status();
         QProperty<emulator_ui_status> current_status;
+
+        QProperty<float> current_volume;
+        QBindable<float> bindable_volume() { return &current_volume; }
+
+        QProperty<bool> current_muted;
+        QBindable<bool> bindable_muted() { return &current_muted; }
 
         std::function<bool()> has_rom_fn;
         std::function<bool()> is_running_fn;
@@ -101,6 +132,12 @@ namespace emulator
         std::function<void()> resume_fn;
         std::function<void()> pause_fn;
         std::function<void()> stop_fn;
+        std::function<void(std::uint32_t)> step_fn;
+        std::function<std::uint8_t(std::uint16_t)> read_mem_fn;
+        std::function<float()> get_volume_fn;
+        std::function<void(float)> set_volume_fn;
+        std::function<bool()> get_muted_fn;
+        std::function<void(bool)> set_muted_fn;
     };
 
     class emulator_ui_framebuffer : public QObject
@@ -173,6 +210,7 @@ namespace emulator
     {
         Q_OBJECT
         QML_UNCREATABLE("")
+        QML_NAMED_ELEMENT(EmulatorSprites)
 
     public:
         template <EmulatorUIBackendImp Imp>
@@ -211,30 +249,4 @@ namespace emulator
     private:
         std::function<std::uint8_t(std::uint16_t)> read_mem_fn;
     };
-
-    class emulator_ui_debug : public QObject
-    {
-        Q_OBJECT
-        QML_UNCREATABLE("")
-        QML_NAMED_ELEMENT(EmulatorDebug)
-        Q_PROPERTY(const QAbstractItemModel* sprites READ sprites CONSTANT)
-
-    public:
-        template <EmulatorUIBackendImp Imp>
-        explicit emulator_ui_debug(Imp& backend)
-            : sprites_model { backend }
-            , step_fn { [&backend] (const std::uint32_t ticks) { backend.step(ticks); } }
-            , read_mem_fn { [&backend] (const auto address) { return backend.read_memory(address); } }
-        {}
-
-        auto* sprites() const { return &sprites_model; }
-        Q_INVOKABLE void nextFrame() const;
-
-    private:
-        emulator_ui_sprites_model sprites_model;
-
-        std::function<void(std::uint32_t)> step_fn;
-        std::function<std::uint8_t(std::uint16_t)> read_mem_fn;
-    };
-
 }

@@ -52,6 +52,41 @@ namespace emulator
         update_current_status();
     }
 
+    float emulator_ui_controls::volume() const
+    {
+        return current_volume.value();
+    }
+
+    void emulator_ui_controls::setVolume(const float volume)
+    {
+        set_volume_fn(volume);
+        current_volume = get_volume_fn();
+    }
+
+    bool emulator_ui_controls::muted() const
+    {
+        return current_muted.value();
+    }
+
+    void emulator_ui_controls::setMuted(const bool muted)
+    {
+        set_muted_fn(muted);
+        current_muted = get_muted_fn();
+    }
+
+    void emulator_ui_controls::nextFrame()
+    {
+        constexpr std::uint16_t ly_address { 0xFF44 };
+        constexpr std::uint8_t total_scanlines { 153 };
+        constexpr std::uint32_t dots_per_scanline { 456 };
+
+        const std::uint8_t current_scanline = read_mem_fn(ly_address);
+        const std::uint8_t remaining_scanlines = total_scanlines - current_scanline + 1;
+        const std::uint32_t remaining_dots = remaining_scanlines * dots_per_scanline;
+
+        step_fn(remaining_dots);
+    }
+
     ui_framebuffer_t emulator_ui_framebuffer::frame() const
     {
         return get_frame_fn();
@@ -279,18 +314,5 @@ namespace emulator
         size->setWidth(image.height());
 
         return image;
-    }
-
-    void emulator_ui_debug::nextFrame() const
-    {
-        constexpr std::uint16_t ly_address { 0xFF44 };
-        constexpr std::uint8_t total_scanlines { 153 };
-        constexpr std::uint32_t dots_per_scanline { 456 };
-
-        const std::uint8_t current_scanline = read_mem_fn(ly_address);
-        const std::uint8_t remaining_scanlines = total_scanlines - current_scanline + 1;
-        const std::uint32_t remaining_dots = remaining_scanlines * dots_per_scanline;
-
-        step_fn(remaining_dots);
     }
 }

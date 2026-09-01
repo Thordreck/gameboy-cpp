@@ -1,7 +1,7 @@
 import QtCore
 import QtQuick
 import QtQuick.Window
-import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import QtQuick.Layouts
 import Gameboy.UI
@@ -11,13 +11,15 @@ ApplicationWindow {
     required property EmulatorFramebuffer framebuffer
 
     required property bool debugMode
-    property EmulatorDebug debug
+    property EmulatorSprites sprites
 
     id: root
     width: 640
     height: 480
     visible: true
     title: "Gameboy-cpp"
+
+    Material.theme: Material.Dark
 
     EmulatorVideo {
         anchors.centerIn: parent
@@ -37,6 +39,28 @@ ApplicationWindow {
         }
 
         Menu {
+            enabled: controls.status !== EmulatorStatus.Stopped
+            title: "Emulation"
+
+            Action {
+                enabled: controls.status === EmulatorStatus.Paused
+                text: "Resume"
+                onTriggered: controls.resume()
+            }
+
+            Action {
+                enabled: controls.status === EmulatorStatus.Running
+                text: "Pause"
+                onTriggered: controls.pause()
+            }
+
+            Action {
+                text: "Stop"
+                onTriggered: controls.stop()
+            }
+        }
+
+        Menu {
             id: debugMenu
             title: "Debug"
 
@@ -45,9 +69,93 @@ ApplicationWindow {
                 onTriggered: spritesViewerWindow.active = true
                 enabled: controls.status !== EmulatorStatus.Stopped
             }
+
+            Action {
+                text: "Background Viewer"
+                onTriggered: backgroundViewerWindow.active = true
+                enabled: controls.status !== EmulatorStatus.Stopped
+            }
         }
 
         Component.onCompleted: if(!root.debugMode) removeMenu(debugMenu)
+    }
+
+    ToolButton {
+        id: volumeSliderButton
+        enabled: controls.status !== EmulatorStatus.Stopped
+        parent: root.menuBar
+        anchors.right: parent.right
+        anchors.rightMargin: 10
+        height: parent.height
+        icon.name: {
+            if(root.controls.muted)
+                return "audio-volume-muted";
+
+            const volume = root.controls.volume;
+
+            if(volume > 0.65)
+                return "audio-volume-high"
+
+            if(volume > 0.33)
+                return "audio-volume-medium";
+
+            return "audio-volume-low";
+        }
+
+        display: AbstractButton.IconOnly
+        onClicked: root.controls.muted = !root.controls.muted
+
+        onHoveredChanged: {
+            if (hovered && enabled)
+                volumeSliderPopup.open()
+        }
+
+        Popup {
+            id: volumeSliderPopup
+            popupType: Popup.Item
+            width: volumeSliderButton.width
+            closePolicy: Popup.NoAutoClose;
+            margins: 10
+            y: root.menuBar.height + margins
+
+            Slider {
+                id: volumeSlider
+                from: 0
+                to: 1
+                orientation: Qt.Vertical
+                anchors.fill: parent
+                value: root.controls.volume
+                onMoved: root.controls.volume = position
+            }
+
+            HoverHandler {
+                id: volumeSliderPopupBackgroundHoverArea
+                parent: volumeSliderPopup.background
+                enabled: parent.visible
+            }
+
+            Timer {
+                interval: 50
+                running: volumeSliderPopup.visible
+                    && !volumeSliderButton.hovered
+                    && !volumeSlider.hovered
+                    && !volumeSliderPopupBackgroundHoverArea.hovered
+                    && !volumeSliderPopupGapMouseArea.containsMouse
+                onTriggered: volumeSliderPopup.visible = volumeSliderButton.hovered
+                    || volumeSlider.hovered
+                    || volumeSliderPopupBackgroundHoverArea.hovered
+                    || volumeSliderPopupGapMouseArea.containsMouse
+            }
+        }
+
+        MouseArea {
+            id: volumeSliderPopupGapMouseArea
+            enabled: volumeSliderPopup.visible
+            hoverEnabled: true
+            anchors { top: volumeSliderButton.bottom; }
+            width: volumeSliderPopup.width
+            height: volumeSliderPopup.y - volumeSliderButton.y + volumeSliderButton.height
+        }
     }
 
     FileDialog {
@@ -99,7 +207,7 @@ ApplicationWindow {
                         cellWidth: spritesViewer.width / 6
                         cellHeight: spritesViewer.height / 4
 
-                        model: root.debug.sprites
+                        model: root.sprites
                         delegateModelAccess: DelegateModel.ReadOnly
                         highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
                         focus: true
@@ -311,10 +419,11 @@ ApplicationWindow {
                                 ToolTip.visible: hovered
                                 onClicked: {
                                     root.controls.pause()
-                                    root.debug.nextFrame()
+                                    root.controls.nextFrame()
                                 }
                             }
 
+                            /*
                             RoundButton {
                                 width: 100;
                                 text: "Update sprites";
@@ -326,10 +435,25 @@ ApplicationWindow {
                                 onClicked: root.debug.sprites.refreshSpritesCache()
                                 enabled: controls.status !== EmulatorStatus.Running
                             }
+                             */
                         }
                     }
                 }
             }
+        }
+    }
+
+    Loader {
+        id: backgroundViewerWindow;
+        active: false;
+        sourceComponent: ApplicationWindow {
+            id: backgroundViewer
+            visible: true
+            title: "Background Viewer"
+            transientParent: root
+            width: 1000
+            height: 600
+            onClosing: backgroundViewerWindow.active = false
         }
     }
 }

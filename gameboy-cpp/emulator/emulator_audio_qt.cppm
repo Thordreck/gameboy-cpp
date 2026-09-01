@@ -31,6 +31,11 @@ namespace emulator
             sink->start([this] (const QSpan<float> output) { audio_callback(*this->buffer, output); } );
 
             (utils::assert)(sink->error() == QtAudio::Error::NoError, "Could not open output audio device");
+
+            if (is_muted)
+            {
+                sink->setVolume(0.0f);
+            }
         }
 
         void close()
@@ -39,9 +44,86 @@ namespace emulator
             buffer.reset();
         }
 
+        void resume()
+        {
+            if (sink != nullptr && sink->state() == QtAudio::SuspendedState)
+            {
+                sink->resume();
+            }
+        }
+
+        void suspend()
+        {
+            if (sink != nullptr)
+            {
+                sink->suspend();
+            }
+        }
+
         void write(const std::span<const float> samples)
         {
             const std::size_t written = buffer != nullptr ? buffer->write(samples) : 0;
+        }
+
+        [[nodiscard]] volume_t volume() const
+        {
+            const qreal linear_volume = sink == nullptr
+                ? 1.0f
+                : is_muted ? muted_volume : sink->volume();
+
+            const volume_t logarithmic_volume = QtAudio::convertVolume(
+                static_cast<float>(linear_volume),
+                QtAudio::LinearVolumeScale,
+                QtAudio::LogarithmicVolumeScale);
+
+            return logarithmic_volume;
+        }
+
+        void set_volume(const volume_t volume)
+        {
+            if (sink == nullptr)
+            {
+                return;
+            }
+
+            const qreal linear_volume = QtAudio::convertVolume(
+                volume,
+                QtAudio::LogarithmicVolumeScale,
+                QtAudio::LinearVolumeScale);
+
+            if (is_muted)
+            {
+                muted_volume = linear_volume;
+            }
+            else
+            {
+                sink->setVolume(linear_volume);
+            }
+        }
+
+        [[nodiscard]] bool muted() const
+        {
+            return is_muted;
+        }
+
+        void set_muted(const bool updated_muted)
+        {
+            if (sink == nullptr || is_muted == updated_muted)
+            {
+                return;
+            }
+
+            is_muted = updated_muted;
+
+            if (updated_muted)
+            {
+                muted_volume = sink->volume();
+                sink->setVolume(0.0);
+            }
+            else
+            {
+                sink->setVolume(muted_volume);
+            }
         }
 
     private:
@@ -67,6 +149,9 @@ namespace emulator
         QAudioFormat format;
         std::unique_ptr<QAudioSink> sink { nullptr };
         std::unique_ptr<audio::audio_buffer<float>> buffer { nullptr };
+
+        bool is_muted { false };
+        qreal muted_volume {};
     };
 
 }

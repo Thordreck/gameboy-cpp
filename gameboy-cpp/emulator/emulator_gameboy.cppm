@@ -37,8 +37,9 @@ namespace emulator
             if (create)
             {
                 engine = std::move(create.value());
-                resume();
+                audio_output.open();
 
+                resume();
                 return {};
             }
 
@@ -50,13 +51,12 @@ namespace emulator
         [[nodiscard]] memory_view memory() const { return engine->memory(); }
         [[nodiscard]] bool is_running() const { return tick_thread.has_value(); }
         [[nodiscard]] bool has_rom() const { return engine != nullptr; }
-        [[nodiscard]] framebuffer_view_t framebuffer() const { return engine->lcd(); }
 
         void resume()
         {
             if (!is_running() && has_rom())
             {
-                audio_output.open();
+                audio_output.resume();
                 framebuffer_renderer.start_rendering_frames();
 
                 tick_thread = std::jthread { [this] (const auto& ct) { engine_tick_thread(*engine, ct); } };
@@ -68,13 +68,14 @@ namespace emulator
         {
             tick_thread.reset();
             joypad_thread.reset();
-            audio_output.close();
+            audio_output.suspend();
         }
 
         void stop()
         {
             pause();
 
+            audio_output.close();
             framebuffer_renderer.stop_rendering_frames();
             engine.reset();
             rom.reset();
@@ -84,6 +85,12 @@ namespace emulator
         {
             engine->tick(ticks);
         }
+
+        [[nodiscard]] float volume() const { return audio_output.volume(); }
+        void set_volume(const volume_t volume) { audio_output.set_volume(volume); }
+
+        [[nodiscard]] bool muted() const { return audio_output.muted(); }
+        void set_muted(const bool muted) { audio_output.set_muted(muted); }
 
     private:
         std::unique_ptr<base_engine> engine { nullptr };

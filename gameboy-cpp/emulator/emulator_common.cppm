@@ -14,6 +14,7 @@ namespace emulator
     export using framebuffer_t = std::array<std::uint8_t, graphics::lcd_memory_size>;
     export using load_rom_result_t = std::expected<void, std::string>;
     export using lcd_view_t = std::span<const memory::memory_data_t, graphics::lcd_memory_size>;
+    export using volume_t = float;
 
     export template <typename T>
     concept Engine = requires(T& engine, const std::uint32_t num_ticks, const joypad::const_input_state_view_t joypad_state)
@@ -33,10 +34,27 @@ namespace emulator
     {
         { device.open() } -> std::same_as<void>;
         { device.close() } -> std::same_as<void>;
+
+        { device.resume() } -> std::same_as<void>;
+        { device.suspend() } -> std::same_as<void>;
+    };
+
+    export template<typename T>
+    concept Muteable = requires(T& device, const bool muted)
+    {
+        { device.set_muted(muted) } -> std::same_as<void>;
+        { device.muted() } -> std::convertible_to<bool>;
+    };
+
+    export template<typename T>
+    concept WithVolume = requires(T& device, const volume_t volume)
+    {
+        { device.set_volume(volume) } -> std::same_as<void>;
+        { device.muted() } -> std::convertible_to<bool>;
     };
 
     export template<typename T, typename Sample>
-    concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T>;
+    concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T> && Muteable<T> && WithVolume<T>;
 
     export template<typename T>
     concept RendererTarget = requires(T& device)
@@ -64,7 +82,12 @@ namespace emulator
     };
 
     export template <typename T>
-    concept Emulator = requires(T& emulator, const cartridge::rom& rom, const std::uint32_t ticks)
+    concept Emulator = requires(
+        T& emulator,
+        const cartridge::rom& rom,
+        const std::uint32_t ticks,
+        const volume_t volume,
+        const bool muted)
     {
         { emulator.load_rom(rom) } -> std::convertible_to<load_rom_result_t>;
 
@@ -78,7 +101,13 @@ namespace emulator
         { emulator.step(ticks) } -> std::same_as<void>;
 
         { emulator.memory() } -> std::convertible_to<memory_view>;
-        { emulator.framebuffer() } -> std::convertible_to<framebuffer_view_t>;
+
+        { emulator.volume() } -> std::convertible_to<volume_t>;
+        { emulator.set_volume(volume) } -> std::same_as<void>;
+
+        { emulator.muted() } -> std::convertible_to<bool>;
+        { emulator.set_muted(muted) } -> std::same_as<void>;
+
     };
 
 }

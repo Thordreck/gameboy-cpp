@@ -101,6 +101,8 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			FILES ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
 	)
 
+	qt_add_resources(emulator-ui-backend-qml "qtquickcontrols2.conf" FILES qtquickcontrols2.conf)
+
 	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")
 	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_DIRECT_CALLS ON)
 
