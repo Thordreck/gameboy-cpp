@@ -302,11 +302,13 @@ namespace graphics
             const bool objects_enabled = is_obj_enabled(memory);
 
             // TODO: sprite fetch cancelling timing
+            /*
             if (!objects_enabled)
             {
                 sprite_fetcher.reset();
                 sprite_fifo.clear();
             }
+            */
 
             if (objects_enabled && !sprite_fetcher.is_fetching())
             {

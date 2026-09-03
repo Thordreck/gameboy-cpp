@@ -194,7 +194,10 @@ case (audio::wave_ram_start_address + (i)): \
               , serial { serial }
               , apu { apu }
               , wave_ram { wave_ram }
-        {}
+        {
+            // TODO: initial values should be set at the engine level.
+            write(graphics::lcdc_address, 0x91);
+        }
 
         [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const
         {
