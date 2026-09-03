@@ -12,6 +12,7 @@ ApplicationWindow {
 
     required property bool debugMode
     property EmulatorSprites sprites
+    property EmulatorBackground bg
 
     id: root
     width: 640
@@ -22,6 +23,7 @@ ApplicationWindow {
     Material.theme: Material.Dark
 
     EmulatorVideo {
+        visible: root.controls.status !== EmulatorStatus.Stopped
         anchors.centerIn: parent
         source: framebuffer
         width: Math.min(parent.width, parent.height * implicitWidth / implicitHeight)
@@ -39,24 +41,24 @@ ApplicationWindow {
         }
 
         Menu {
-            enabled: controls.status !== EmulatorStatus.Stopped
+            enabled: root.controls.status !== EmulatorStatus.Stopped
             title: "Emulation"
 
             Action {
-                enabled: controls.status === EmulatorStatus.Paused
+                enabled: root.controls.status === EmulatorStatus.Paused
                 text: "Resume"
-                onTriggered: controls.resume()
+                onTriggered: root.controls.resume()
             }
 
             Action {
-                enabled: controls.status === EmulatorStatus.Running
+                enabled: root.controls.status === EmulatorStatus.Running
                 text: "Pause"
-                onTriggered: controls.pause()
+                onTriggered: root.controls.pause()
             }
 
             Action {
                 text: "Stop"
-                onTriggered: controls.stop()
+                onTriggered: root.controls.stop()
             }
         }
 
@@ -67,13 +69,13 @@ ApplicationWindow {
             Action {
                 text: "Sprites Viewer"
                 onTriggered: spritesViewerWindow.active = true
-                enabled: controls.status !== EmulatorStatus.Stopped
+                enabled: root.controls.status !== EmulatorStatus.Stopped
             }
 
             Action {
                 text: "Background Viewer"
                 onTriggered: backgroundViewerWindow.active = true
-                enabled: controls.status !== EmulatorStatus.Stopped
+                enabled: root.controls.status !== EmulatorStatus.Stopped
             }
         }
 
@@ -82,7 +84,7 @@ ApplicationWindow {
 
     ToolButton {
         id: volumeSliderButton
-        enabled: controls.status !== EmulatorStatus.Stopped
+        enabled: root.controls.status !== EmulatorStatus.Stopped
         parent: root.menuBar
         anchors.right: parent.right
         anchors.rightMargin: 10
@@ -423,7 +425,6 @@ ApplicationWindow {
                                 }
                             }
 
-                            /*
                             RoundButton {
                                 width: 100;
                                 text: "Update sprites";
@@ -432,10 +433,9 @@ ApplicationWindow {
                                 display: AbstractButton.IconOnly
                                 ToolTip.text: text
                                 ToolTip.visible: hovered
-                                onClicked: root.debug.sprites.refreshSpritesCache()
+                                onClicked: root.sprites.refreshSpritesCache()
                                 enabled: controls.status !== EmulatorStatus.Running
                             }
-                             */
                         }
                     }
                 }
@@ -454,6 +454,169 @@ ApplicationWindow {
             width: 1000
             height: 600
             onClosing: backgroundViewerWindow.active = false
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 10
+
+                Item {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: parent.width / 2
+
+                    EmulatorVideo {
+                        id: emulatorBackgroundVideo
+                        anchors.centerIn: parent
+                        source: root.bg
+                        width: Math.min(parent.width, parent.height * implicitWidth / implicitHeight)
+                        height: width * implicitHeight / implicitWidth
+
+                        Grid {
+                            id: backgroundInspectorGrid
+                            anchors.fill: parent
+                            columns: 32
+                            rows: 32
+
+                            property int currentIndex: -1
+
+                            Repeater {
+                                model: backgroundInspectorGrid.columns * backgroundInspectorGrid.rows
+                                Rectangle {
+                                    readonly property int tileIndex: index
+
+                                    width: backgroundInspectorGrid.width / backgroundInspectorGrid.columns
+                                    height: backgroundInspectorGrid.height / backgroundInspectorGrid.rows
+                                    color: "transparent"
+                                    border.color: backgroundInspectorGrid.currentIndex === index ? "blue" : "lightsteelblue"
+                                    border.width: 1
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        enabled: parent.enabled
+                                        hoverEnabled: true
+                                        preventStealing: true
+                                        onEntered: backgroundInspectorGrid.currentIndex = parent.tileIndex
+                                        onExited: backgroundInspectorGrid.currentIndex
+                                            = backgroundInspectorGrid.currentIndex === parent.tileIndex
+                                                ? -1
+                                                : backgroundInspectorGrid.currentIndex
+                                    }
+                                }
+                            }
+
+                            Popup {
+                                visible: parent.visible && backgroundInspectorGrid.currentIndex !== -1
+                                enabled: false
+                                popupType: Popup.Item
+                                closePolicy: Popup.NoAutoClose
+                                width: 120
+                                height: 150
+                                x: backgroundInspectorGrid.x
+                                    + (backgroundInspectorGrid.width / backgroundInspectorGrid.columns)
+                                    * (backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns + 2)
+
+                                y: backgroundInspectorGrid.y
+                                    + (backgroundInspectorGrid.height / backgroundInspectorGrid.rows)
+                                    * (backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.rows)
+                                    - height * 0.8
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+
+                                    Item {
+                                        Layout.fillHeight: true
+                                        Layout.fillWidth: true
+
+                                        Image {
+                                            anchors.fill: parent
+                                            fillMode: Image.PreserveAspectFit
+                                            cache: false
+                                            smooth: false
+                                            source: "image://background?tile_index=%1".arg(backgroundInspectorGrid.currentIndex)
+                                        }
+                                    }
+
+                                    Text { text: "Index: %1".arg(backgroundInspectorGrid.currentIndex) }
+                                    Text {
+                                        text: "Position: (%1, %2)"
+                                            .arg(backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns)
+                                            .arg(Math.trunc(backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.columns))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: parent.width / 2
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            EmulatorVideo {
+                                anchors.centerIn: parent
+                                source: root.framebuffer
+                                width: Math.min(parent.width, parent.height * implicitWidth / implicitHeight)
+                                height: width * implicitHeight / implicitWidth
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+
+                            RoundButton {
+                                width: 100;
+                                text: root.controls.status === EmulatorStatus.Running ? "Pause" : "Play";
+                                radius: 3;
+                                icon.name: root.controls.status === EmulatorStatus.Running ? "media-playback-pause" : "media-playback-start";
+                                display: AbstractButton.IconOnly
+                                ToolTip.text: text
+                                ToolTip.visible: hovered
+                                onClicked: {
+                                    if (root.controls.status === EmulatorStatus.Running)
+                                        root.controls.pause()
+                                    else
+                                        root.controls.resume()
+                                }
+                            }
+
+                            RoundButton {
+                                width: 100;
+                                text: "Jump to next frame";
+                                radius: 3;
+                                icon.name: "media-seek-forward";
+                                display: AbstractButton.IconOnly
+                                ToolTip.text: text
+                                ToolTip.visible: hovered
+                                onClicked: {
+                                    root.controls.pause()
+                                    root.controls.nextFrame()
+                                }
+                            }
+
+                            RoundButton {
+                                width: 100;
+                                text: "Update background";
+                                radius: 3;
+                                icon.name: "view-refresh";
+                                display: AbstractButton.IconOnly
+                                ToolTip.text: text
+                                ToolTip.visible: hovered
+                                onClicked: root.bg.refresh()
+                                enabled: controls.status !== EmulatorStatus.Running
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

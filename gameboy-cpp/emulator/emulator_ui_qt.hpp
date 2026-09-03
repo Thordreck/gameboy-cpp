@@ -5,6 +5,7 @@
 #include <QtQuick>
 #include <concepts>
 #include <expected>
+#include <boost/lockfree/spsc_value.hpp>
 
 namespace emulator
 {
@@ -42,12 +43,6 @@ namespace emulator
 
         { backend.muted() } -> std::convertible_to<bool>;
         { backend.set_muted(muted) } -> std::same_as<void>;
-    };
-
-    template <typename T>
-    concept EmulatorUIFramebufferSource = requires(T& source)
-    {
-        { source.read() } -> std::convertible_to<ui_framebuffer_t>;
     };
 
     struct emulator_ui_status_wrapper
@@ -140,55 +135,62 @@ namespace emulator
         std::function<void(bool)> set_muted_fn;
     };
 
-    class emulator_ui_framebuffer : public QObject
+    class emulator_ui_video_source : public QObject
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+
+    public:
+        virtual QImage frame() = 0;
+        virtual QSize size() = 0;
+
+    signals:
+        void frameAvailable();
+    };
+
+    class emulator_ui_framebuffer_source : public emulator_ui_video_source
     {
         Q_OBJECT
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorFramebuffer)
 
+        Q_PROPERTY(QImage frame READ frame NOTIFY frameAvailable)
+        Q_PROPERTY(QSize size READ size CONSTANT)
+
     public:
-        template <EmulatorUIFramebufferSource Imp>
-        explicit emulator_ui_framebuffer(Imp& source)
-            : get_frame_fn { [&source] { return source.read(); } }
-        {}
+        QSize size() override { return { ui_framebuffer_width, ui_framebuffer_height }; }
+        QImage frame() override { return buffer.read(boost::lockfree::uses_optional).value(); }
 
-        ui_framebuffer_t frame() const;
-
-        void start() { emit started(QPrivateSignal {}); }
-        void stop() { emit stopped(QPrivateSignal {}); }
-        void render() { emit frame_acquired(QPrivateSignal {}); }
-
-    signals:
-        void started(QPrivateSignal);
-        void stopped(QPrivateSignal);
-        void frame_acquired(QPrivateSignal);
+        void push_frame(ui_framebuffer_view_t frame);
 
     private:
-        std::function<ui_framebuffer_t()> get_frame_fn;
+        boost::lockfree::spsc_value<
+            QImage,
+            boost::lockfree::allow_multiple_reads<true>
+        > buffer {};
     };
 
     class emulator_ui_video : public QQuickItem
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(EmulatorVideo)
-        Q_PROPERTY(emulator_ui_framebuffer* source WRITE set_source REQUIRED)
+        Q_PROPERTY(emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED)
 
     public:
         emulator_ui_video()
         {
-            setFlag(ItemHasContents, false);
-            setImplicitWidth(ui_framebuffer_width);
-            setImplicitHeight(ui_framebuffer_height);
+            setFlag(ItemHasContents, true);
             setSmooth(false);
         }
 
-        void set_source(emulator_ui_framebuffer* source);
+        emulator_ui_video_source* get_source() const { return source; }
+        void set_source(emulator_ui_video_source* new_source);
 
     protected:
         QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData* updatePaintNodeData) override;
 
     private:
-        emulator_ui_framebuffer* source { nullptr };
+        emulator_ui_video_source* source { nullptr };
         std::unique_ptr<QSGTexture> texture { nullptr };
     };
 
@@ -249,4 +251,59 @@ namespace emulator
     private:
         std::function<std::uint8_t(std::uint16_t)> read_mem_fn;
     };
+
+    class emulator_ui_background : public emulator_ui_video_source
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+        QML_NAMED_ELEMENT(EmulatorBackground)
+
+        Q_PROPERTY(QImage image READ frame BINDABLE bindable_image NOTIFY frameAvailable)
+        Q_PROPERTY(QRect window READ window BINDABLE bindable_window)
+
+    public:
+        template <EmulatorUIBackendImp Imp>
+        explicit emulator_ui_background(Imp& backend)
+            : read_mem_fn { [&backend] (const auto address) { return backend.read_memory(address); } }
+        {}
+
+        QImage frame() override { return current_image.value(); }
+        QSize size() override { return { 256, 256 }; }
+
+        QRect window() const { return current_window.value(); }
+
+        Q_INVOKABLE void refresh();
+
+    private:
+        QProperty<QImage> current_image;
+        QBindable<QImage> bindable_image() { return &current_image; }
+
+        QProperty<QRect> current_window;
+        QBindable<QRect> bindable_window() { return &current_window; }
+
+        std::function<std::uint8_t(std::uint16_t)> read_mem_fn;
+    };
+
+    class emulator_ui_background_image_provider : public QQuickImageProvider
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+
+    public:
+        explicit emulator_ui_background_image_provider(emulator_ui_background& bg, QObject* parent = nullptr)
+            : QQuickImageProvider { Image }
+            , background_source { bg }
+        {
+            setParent(parent);
+        }
+
+        QImage requestImage(const QString& id, QSize* size, const QSize& requestedSize) override;
+
+    private:
+        emulator_ui_background& background_source;
+    };
+
 }
+
+Q_DECLARE_INTERFACE(emulator::emulator_ui_video_source, "emulator.ui.VideoSource")
+

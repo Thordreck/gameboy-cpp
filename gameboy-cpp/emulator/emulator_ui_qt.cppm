@@ -52,21 +52,17 @@ namespace emulator
 
         void start_rendering_frames()
         {
-            framebuffer_source.start();
+            //framebuffer_source.start();
         }
 
         void stop_rendering_frames()
         {
-            framebuffer_source.stop();
+            //framebuffer_source.stop();
         }
 
-        void write_frame(framebuffer_view_t frame)
+        void write_frame(const framebuffer_view_t frame)
         {
-            framebuffer_t copy {};
-            std::ranges::copy(frame, copy.begin());
-
-            framebuffer.write(std::move(copy));
-            framebuffer_source.render();
+            framebuffer_source.push_frame(frame);
         }
 
         template <Emulator Imp>
@@ -80,13 +76,14 @@ namespace emulator
 #ifdef QT_UI_DEBUG_MODE
             emulator_ui_sprites_model ui_debug_sprites_model { ui_adapter };
             emulator_ui_sprites_image_provider ui_debug_sprites_provider { ui_adapter };
+            emulator_ui_background ui_debug_background { ui_adapter };
+            emulator_ui_background_image_provider ui_debug_background_provider { ui_debug_background };
 
             engine.add_image_provider("sprites", &ui_debug_sprites_provider);
+            engine.add_image_provider("background", &ui_debug_background_provider);
 
             qt::register_shortcut(qt::standard_key::refresh, [this]
             {
-                std::println("Hot-reloading qml file from path: {}", QML_HOT_RELOAD_PATH);
-
                 std::ranges::for_each(engine.root_objects(), [] (auto object) { object.delete_later(); });
                 engine.clear_singletons();
                 engine.clear_component_cache();
@@ -101,7 +98,8 @@ namespace emulator
                 std::make_pair("framebuffer", &framebuffer_source),
 #ifdef QT_UI_DEBUG_MODE
                 std::make_pair("debugMode", true),
-                std::make_pair("sprites", &ui_debug_sprites_model));
+                std::make_pair("sprites", &ui_debug_sprites_model),
+                std::make_pair("bg", &ui_debug_background));
 #else
                 std::make_pair("debugMode", false));
 #endif
@@ -114,7 +112,6 @@ namespace emulator
         qt::gui_application app;
         qt::qml_engine engine;
 
-        utils::triple_buffer<framebuffer_t> framebuffer {};
-        emulator_ui_framebuffer framebuffer_source { framebuffer };
+        emulator_ui_framebuffer_source framebuffer_source {};
     };
 }

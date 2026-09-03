@@ -73,6 +73,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	target_compile_features(emulator-ui-backend-qml PUBLIC cxx_std_23)
 	target_sources(emulator-ui-backend-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
 	target_link_libraries(emulator-ui-backend-qml PRIVATE qt)
+	target_link_libraries(emulator-ui-backend-qml PUBLIC Boost::lockfree)
 	set_target_properties(emulator-ui-backend-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
 			QT_RESOURCE_ALIAS emulator_ui_qt

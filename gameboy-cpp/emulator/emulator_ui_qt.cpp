@@ -1,4 +1,3 @@
-
 #include "emulator_ui_qt.hpp"
 
 namespace emulator
@@ -6,8 +5,8 @@ namespace emulator
     static QVariantMap toQtVariantMap(const std::expected<void, std::string>& result)
     {
         return result.has_value()
-            ? QVariantMap{ { "success", true } }
-            : QVariantMap{ {"success", false }, { "error", result.error().data() }};
+                   ? QVariantMap{{"success", true}}
+                   : QVariantMap{{"success", false}, {"error", result.error().data()}};
     }
 
     QVariantMap emulator_ui_controls::load_rom(const QUrl& url)
@@ -26,7 +25,7 @@ namespace emulator
 
     QBindable<emulator_ui_status> emulator_ui_controls::bindable_status()
     {
-        return { &current_status };
+        return {&current_status};
     }
 
     emulator_ui_status emulator_ui_controls::status() const
@@ -76,9 +75,9 @@ namespace emulator
 
     void emulator_ui_controls::nextFrame()
     {
-        constexpr std::uint16_t ly_address { 0xFF44 };
-        constexpr std::uint8_t total_scanlines { 153 };
-        constexpr std::uint32_t dots_per_scanline { 456 };
+        constexpr std::uint16_t ly_address{0xFF44};
+        constexpr std::uint8_t total_scanlines{153};
+        constexpr std::uint32_t dots_per_scanline{456};
 
         const std::uint8_t current_scanline = read_mem_fn(ly_address);
         const std::uint8_t remaining_scanlines = total_scanlines - current_scanline + 1;
@@ -87,30 +86,35 @@ namespace emulator
         step_fn(remaining_dots);
     }
 
-    ui_framebuffer_t emulator_ui_framebuffer::frame() const
+    void emulator_ui_framebuffer_source::push_frame(const ui_framebuffer_view_t frame)
     {
-        return get_frame_fn();
+        QImage new_frame(
+            frame.data(),
+            ui_framebuffer_width,
+            ui_framebuffer_height,
+            ui_framebuffer_width * 3,
+            QImage::Format_RGB888
+        );
+
+        buffer.write(new_frame.copy());
+        emit frameAvailable();
     }
 
-    void emulator_ui_video::set_source(emulator_ui_framebuffer* framebuffer)
+    void emulator_ui_video::set_source(emulator_ui_video_source* new_source)
     {
-        source = framebuffer;
+        this->source = new_source;
+        connect(new_source, &emulator_ui_video_source::frameAvailable, this, &QQuickItem::update, Qt::QueuedConnection);
 
-        connect(framebuffer, &emulator_ui_framebuffer::started, this, [this] { setFlag(ItemHasContents, true); }, Qt::QueuedConnection);
-        connect(framebuffer, &emulator_ui_framebuffer::stopped, this, [this] { setFlag(ItemHasContents, false); }, Qt::QueuedConnection);
-        connect(framebuffer, &emulator_ui_framebuffer::frame_acquired, this, [this] { update(); }, Qt::QueuedConnection);
+        const QSize source_size = source->size();
+        setImplicitSize(source_size.width(), source_size.height());
     }
 
     QSGNode* emulator_ui_video::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData* updatePaintNodeData)
     {
         auto node = static_cast<QSGSimpleTextureNode*>(oldNode);
-        if (node == nullptr ) { node = new QSGSimpleTextureNode(); }
+        if (node == nullptr) { node = new QSGSimpleTextureNode(); }
 
-        const ui_framebuffer_t next_frame = source->frame();
-        const QImage img(next_frame.data(), ui_framebuffer_width, ui_framebuffer_height, ui_framebuffer_width * 3, QImage::Format_RGB888);
-
-        // TODO: remove copy
-        texture.reset(window()->createTextureFromImage(img.copy(), QQuickWindow::TextureIsOpaque));
+        texture.reset(window()->createTextureFromImage(source->frame(), QQuickWindow::TextureIsOpaque));
         texture->setFiltering(QSGTexture::Nearest);
 
         node->setTexture(texture.get());
@@ -135,7 +139,7 @@ namespace emulator
 
     QHash<int, QByteArray> emulator_ui_sprites_model::roleNames() const
     {
-        QHash<int, QByteArray> roles {};
+        QHash<int, QByteArray> roles{};
 
         roles[std::to_underlying(sprites_model_roles::index)] = "spriteIndex";
         roles[std::to_underlying(sprites_model_roles::x)] = "spriteX";
@@ -151,15 +155,15 @@ namespace emulator
         return roles;
     }
 
-    int emulator_ui_sprites_model::rowCount(const QModelIndex &parent) const
+    int emulator_ui_sprites_model::rowCount(const QModelIndex& parent) const
     {
         return sprites.size();
     }
 
-    QVariant emulator_ui_sprites_model::data(const QModelIndex &model_index, const int role) const
+    QVariant emulator_ui_sprites_model::data(const QModelIndex& model_index, const int role) const
     {
         using enum sprites_model_roles;
-        const sprites_model_roles sprite_role { role };
+        const sprites_model_roles sprite_role{role};
 
         const int sprite_index = model_index.row();
         const emulator_ui_sprite& selected_sprite = sprites[sprite_index];
@@ -182,9 +186,9 @@ namespace emulator
             return selected_sprite.y_flip;
         case image_uri:
             return QString("image://sprites?tile_index=%1&double_height=%2&alternate_palette=%3")
-                .arg(selected_sprite.tile_index)
-                .arg(selected_sprite.height > 8)
-                .arg(selected_sprite.alternate_palette);
+                   .arg(selected_sprite.tile_index)
+                   .arg(selected_sprite.height > 8)
+                   .arg(selected_sprite.alternate_palette);
         case width:
             return selected_sprite.width;
         case height:
@@ -201,7 +205,7 @@ namespace emulator
         constexpr std::uint16_t lcdc_address = 0xFF40;
         const bool obj_size_set = read_mem_fn(lcdc_address) >> 2 & 0b1;
 
-        const auto read_sprite_from_memory = [this, obj_size_set] (const int sprite_index)
+        const auto read_sprite_from_memory = [this, obj_size_set](const int sprite_index)
         {
             constexpr std::uint16_t sprites_start_address = 0xFE00;
             constexpr std::uint8_t sprite_memory_byte_size = 4;
@@ -243,7 +247,7 @@ namespace emulator
 
     QImage emulator_ui_sprites_image_provider::requestImage(const QString& id, QSize* size, const QSize& requestedSize)
     {
-        const QUrlQuery image_search_query { id };
+        const QUrlQuery image_search_query{id};
 
         const bool double_height = image_search_query.queryItemValue("double_height").toInt();
         const std::uint8_t alternate_palette = image_search_query.queryItemValue("alternate_palette").toInt();
@@ -259,41 +263,45 @@ namespace emulator
         const auto tile_line_indexes = std::views::iota(0, lines_per_tile * number_of_tiles);
 
         const auto tile_line_addresses = tile_line_indexes
-            | std::views::transform([tile_index, double_height] (const auto index)
+            | std::views::transform([tile_index, double_height](const auto index)
             {
                 constexpr int bytes_per_tile = 16;
                 constexpr int bytes_per_line = 2;
 
                 const bool first_tile = index < lines_per_tile;
-                const auto masked_tile_index = !double_height ? tile_index : first_tile ? tile_index & 0xFE : tile_index | 0x01;
+                const auto masked_tile_index = !double_height
+                                                   ? tile_index
+                                                   : first_tile
+                                                   ? tile_index & 0xFE
+                                                   : tile_index | 0x01;
                 const auto tile_start_address = masked_tile_index * bytes_per_tile;
                 const auto clamped_index = index % lines_per_tile;
 
                 return tile_base_address + tile_start_address + clamped_index * bytes_per_line;
             });
 
-        const auto tile_lines = tile_line_addresses | std::views::transform([this] (const auto address)
+        const auto tile_lines = tile_line_addresses | std::views::transform([this](const auto address)
         {
             return static_cast<std::uint16_t>(this->read_mem_fn(address)) << 8 | this->read_mem_fn(address + 1);
         });
 
-        const static auto extract_tile_line_palette_indexes = [] (const int tile_line)
+        const static auto extract_tile_line_palette_indexes = [](const int tile_line)
         {
             return std::views::iota(0, 8)
                 | std::views::reverse
-                | std::views::transform([tile_line] (const auto pixel_index)
-                    {
-                        const auto lsb = (tile_line >> (8 + pixel_index)) & 0b1;
-                        const auto msb = (tile_line >> pixel_index) & 0b1;
+                | std::views::transform([tile_line](const auto pixel_index)
+                {
+                    const auto lsb = (tile_line >> (8 + pixel_index)) & 0b1;
+                    const auto msb = (tile_line >> pixel_index) & 0b1;
 
-                        return msb << 1 | lsb;
-                    });
+                    return msb << 1 | lsb;
+                });
         };
 
         const auto tile_line_palette_indexes = tile_lines
             | std::views::transform(extract_tile_line_palette_indexes);
 
-        QImage image { sprite_width, sprite_height, QImage::Format_RGBA8888 };
+        QImage image{sprite_width, sprite_height, QImage::Format_RGBA8888};
 
         const std::uint16_t palette_address = alternate_palette ? 0xFF49 : 0xFF48;
         const std::uint8_t palette = read_mem_fn(palette_address);
@@ -302,10 +310,12 @@ namespace emulator
         {
             for (auto&& [pixel_index, palette_index] : line_palette_indexes | std::views::enumerate)
             {
-                constexpr std::array sprite_color_table { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000 };
+                constexpr std::array sprite_color_table{0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000};
 
                 const std::uint8_t color_index = (palette >> (palette_index * 2)) & 0b11;
-                const QColor pixel_color = color_index == 0 ? Qt::transparent : QColor::fromRgba(sprite_color_table[color_index]);
+                const QColor pixel_color = color_index == 0
+                                               ? Qt::transparent
+                                               : QColor::fromRgba(sprite_color_table[color_index]);
                 image.setPixelColor(pixel_index, line_index, pixel_color);
             }
         }
@@ -315,4 +325,78 @@ namespace emulator
 
         return image;
     }
+
+    QImage emulator_ui_background_image_provider::requestImage(const QString& id, QSize* size, const QSize& requestedSize)
+    {
+        const QUrlQuery image_search_query{id};
+        const std::uint16_t tile_index = image_search_query.queryItemValue("tile_index").toUInt();
+
+        const int tile_x = tile_index % 32;
+        const int tile_y = tile_index / 32;
+
+        QImage tile_image = background_source.frame().copy(tile_x * 8, tile_y * 8, 8, 8);
+        *size = tile_image.size();
+
+        return tile_image;
+    }
+
+    void emulator_ui_background::refresh()
+    {
+        constexpr std::uint16_t lcdc_address { 0xFF40 };
+        constexpr std::size_t tilemap_size { 32 * 32 };
+        constexpr std::array bg_color_table{0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000};
+
+        const std::uint8_t lcdc = read_mem_fn(lcdc_address);
+        const bool bg_tile_map_flag = lcdc >> 3 & 0b1;
+        const bool addressing_mode_flag = lcdc >> 4 & 0b1;
+        const std::uint16_t bg_tile_map_address = bg_tile_map_flag ? 0x9C00 : 0x9800;
+        const std::uint16_t bg_tile_data_address = addressing_mode_flag ? 0x8000 : 0x9000;
+
+        constexpr std::uint16_t palette_address { 0xFF47 };
+        const std::uint8_t palette = read_mem_fn(palette_address);
+
+        QImage background(256, 256, QImage::Format_ARGB32);
+        QImage tile(8, 8, QImage::Format_ARGB32);
+
+        QPainter painter(&background);
+
+        for (std::size_t tilemap_index = 0; tilemap_index < tilemap_size; ++tilemap_index)
+        {
+            const std::uint16_t tilemap_address = bg_tile_map_address + tilemap_index;
+            const std::uint8_t tile_index = read_mem_fn(tilemap_address);
+            const std::uint16_t tile_address = bg_tile_data_address + static_cast<std::int8_t>(tile_index) * 16;
+
+            for (std::size_t tile_line = 0; tile_line < 8; ++tile_line)
+            {
+                const std::uint16_t tile_line_address = tile_address + tile_line * 2;
+                const std::uint16_t tile_line_data = static_cast<std::uint16_t>(read_mem_fn(tile_line_address)) << 8 | read_mem_fn(tile_line_address + 1);
+                const auto tile_line_pixel_indexes = std::views::iota(0, 8)
+                    | std::views::reverse
+                    | std::views::transform([tile_line_data] (const auto i)
+                    {
+                        const auto lsb = (tile_line_data >> (8 + i)) & 0b1;
+                        const auto msb = (tile_line_data >> i) & 0b1;
+
+                        return msb << 1 | lsb;
+                    });
+
+                const auto tile_line_pixel_colors
+                    = tile_line_pixel_indexes
+                    | std::views::transform([palette](const auto index) { return palette >> (index * 2) & 0b11; })
+                    | std::views::transform([&bg_color_table] (const auto index) { return QRgb { bg_color_table[index] }; });
+
+                std::span tile_line_view { reinterpret_cast<QRgb*>(tile.scanLine(tile_line)), 8 };
+                std::ranges::copy(tile_line_pixel_colors, tile_line_view.begin());
+            }
+
+            const int tile_x = tilemap_index % 32 * 8;
+            const int tile_y = tilemap_index / 32 * 8;
+
+            painter.drawImage(tile_x, tile_y, tile);
+        }
+
+        current_image.setValue(background);
+        emit frameAvailable();
+    }
+
 }
