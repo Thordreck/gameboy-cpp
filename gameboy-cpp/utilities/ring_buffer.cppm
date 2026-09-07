@@ -6,10 +6,8 @@ import std;
 
 namespace utils
 {
-    constexpr std::size_t dynamic_capacity { 0 };
-
-    export template<typename T, size_t Capacity = dynamic_capacity>
-    class ring_buffer
+    export template<typename T, size_t Capacity>
+    class static_ring_buffer
     {
     public:
         void clear() { imp.reset(); }
@@ -30,7 +28,7 @@ namespace utils
     };
 
     export template<typename T>
-    class ring_buffer<T, dynamic_capacity>
+    class ring_buffer
     {
     public:
         explicit ring_buffer(const std::size_t capacity)

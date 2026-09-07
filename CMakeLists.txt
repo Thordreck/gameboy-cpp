@@ -55,6 +55,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/stb-image)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/plot)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mooneye-test-suite)
@@ -62,4 +63,5 @@ if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/scribbl-test-roms)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gbmicrotest-suite)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mealybug-tearoom-tests)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/not-chciken-test-roms)
 endif()
