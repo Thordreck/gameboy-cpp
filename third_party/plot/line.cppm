@@ -27,6 +27,11 @@ namespace plot
         internal::get_imp(line)->addArray(std::forward<decltype(x)>(x), std::forward<decltype(y)>(y));
     }
 
+    void add_dot(WrapperForLine2D auto& line, const double x, const double y, const double screen_radius)
+    {
+        internal::get_imp(line)->dot(x, y, screen_radius);
+    }
+
     export class line_2d
     {
     public:
@@ -49,6 +54,12 @@ namespace plot
         [[maybe_unused]] line_2d& add(IndexableWithSize<double> auto&& x, IndexableWithSize<double> auto&& y)
         {
             add_array(*this, std::forward<decltype(x)>(x), std::forward<decltype(y)>(y));
+            return *this;
+        }
+
+        [[maybe_unused]] line_2d& dot(const double x, const double y, const double screen_radius)
+        {
+            add_dot(*this, x, y, screen_radius);
             return *this;
         }
 

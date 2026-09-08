@@ -72,6 +72,11 @@ namespace plot
         internal::get_imp(axis)->range(std::forward<decltype(map)>(map), low, high);
     }
 
+    void axis_copy_from(WrapperForAxis auto& axis, WrapperForAxis auto& other)
+    {
+        internal::get_imp(axis)->copyFrom(*internal::get_imp(other));
+    }
+
     export class axis
     {
     public:
@@ -134,6 +139,18 @@ namespace plot
         [[maybe_unused]] axis& range(IsInvocableR<double, double> auto&& map, const double low, const double high)
         {
             axis_set_range(*this, std::forward<decltype(map)>(map), low, high);
+            return *this;
+        }
+
+        [[maybe_unused]] axis& copy_from(axis& other)
+        {
+            axis_copy_from(*this, other);
+            return *this;
+        }
+
+        [[maybe_unused]] axis& copy_from(axis&& other)
+        {
+            axis_copy_from(*this, other);
             return *this;
         }
 

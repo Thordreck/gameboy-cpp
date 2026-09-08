@@ -129,6 +129,32 @@ namespace sdl
         std::string_view revision_;
     };
 
+    class defer
+    {
+    public:
+        explicit defer(std::function<void()>&& functor)
+            : func { std::forward<std::function<void()>>(functor) }
+        {}
+
+        ~defer()
+        {
+            if (func)
+            {
+                func();
+            }
+        }
+
+        defer(const defer&) = delete;
+        defer& operator =(const defer&) = delete;
+
+        defer(defer&& other) noexcept
+            : defer { std::exchange(other.func, nullptr ) }
+        {}
+
+    private:
+        std::function<void()> func;
+    };
+
 }
 
 namespace std

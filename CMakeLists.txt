@@ -56,6 +56,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/stb-image)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/plot)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mooneye-test-suite)

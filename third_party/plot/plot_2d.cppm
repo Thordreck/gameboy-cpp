@@ -1,5 +1,5 @@
 module;
-#include "plot_2d_imp.hpp"
+#include <signalsmith-plot/plot.h>
 
 export module plot:plot_2d;
 
@@ -9,23 +9,34 @@ import :internal;
 
 namespace plot
 {
+    using plot_imp = signalsmith::plot::Plot2D;
+
     export class plot_2d
     {
     public:
-        [[nodiscard]] axis x() { return axis(imp.x()); }
-        [[nodiscard]] axis y() { return axis(imp.y()); }
+        plot_2d()
+            : imp { new plot_imp, std::default_delete<plot_imp>() }
+        {}
 
-        [[nodiscard]] const_axis x() const { return const_axis(imp.x()); }
-        [[nodiscard]] const_axis y() const { return const_axis(imp.y()); }
+        explicit plot_2d(plot_imp* external)
+            : imp { external, [] (plot_imp*) {} }
+        {}
 
-        [[nodiscard]] line_2d line() { return line_2d(imp.line()); }
+        [[nodiscard]] axis x() { return axis(imp->x); }
+        [[nodiscard]] axis y() { return axis(imp->y); }
+
+        [[nodiscard]] const_axis x() const { return const_axis(imp->x); }
+        [[nodiscard]] const_axis y() const { return const_axis(imp->y); }
+
+        [[nodiscard]] line_2d line() { return line_2d(imp->line()); }
+        [[nodiscard]] line_2d line_fill() { return line_2d(imp->lineFill()); }
 
     private:
-        plot_2d_imp imp {};
+        std::unique_ptr<plot_imp, std::function<void(plot_imp*)>> imp;
 
         friend struct internal;
-        auto* get_imp() { return &imp.native(); }
-        auto const* get_imp() const { return &imp.native(); }
+        auto* get_imp() { return imp.get(); }
+        auto const* get_imp() const { return imp.get(); }
     };
 
 }

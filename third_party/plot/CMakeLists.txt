@@ -14,11 +14,10 @@ target_sources(plot PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/plot.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/internal.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/figure.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/plot_2d.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/axis.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/tick.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/line.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/svg.cppm
 )
-
-target_sources(plot PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/plot_2d_imp.cpp)

@@ -121,11 +121,30 @@ namespace sdl
 
     export template<typename T>
     concept AudioSample
-        = std::is_same_v<T, std::uint8_t>
-        || std::is_same_v<T, std::int8_t>
-        || std::is_same_v<T, std::int16_t>
-        || std::is_same_v<T, std::int32_t>
-        || std::is_same_v<T, float>;
+        = std::is_same_v<std::remove_cvref_t<T>, std::uint8_t>
+        || std::is_same_v<std::remove_cvref_t<T>, std::int8_t>
+        || std::is_same_v<std::remove_cvref_t<T>, std::int16_t>
+        || std::is_same_v<std::remove_cvref_t<T>, std::int32_t>
+        || std::is_same_v<std::remove_cvref_t<T>, float>;
+
+    export template<AudioSample T>
+    consteval audio_format associated_audio_format()
+    {
+        using enum audio_format;
+
+        if constexpr (std::is_same_v<T, std::uint8_t>)
+            return u8;
+        else if constexpr (std::is_same_v<T, std::int8_t>)
+            return s8;
+        else if constexpr (std::is_same_v<T, std::int16_t>)
+            return s16;
+        else if constexpr (std::is_same_v<T, std::int32_t>)
+            return s32;
+        else if constexpr (std::is_same_v<T, float>)
+            return f32;
+
+        std::unreachable();
+    }
 
     export template<internal::WrapperFor<SDL_AudioStream> Stream, AudioSample Sample>
     [[nodiscard]] result<void> write_to_output_stream(Stream& stream, std::span<const Sample> samples)
@@ -203,6 +222,95 @@ namespace sdl
                 return spec;
             })
             .and_then([id] (const auto spec) { return open_output_audio_stream<Sample>(id, spec); });
+    }
+
+    export template<AudioSample SampleType>
+    using channel_span = std::mdspan<SampleType, std::dextents<std::size_t, 1>, std::layout_stride>;
+
+    export template<AudioSample SampleType>
+    class audio_data
+    {
+    public:
+        std::span<SampleType> samples() { return { data.get(), length }; }
+        std::span<const SampleType> samples() const { return { data.get(), length }; }
+
+        channel_span<SampleType> channel(const std::size_t n)
+        {
+            std::extents shape { length / spec.channels };
+            std::array stride { spec.channels };
+
+            return { data.get() + n, { shape, stride } };
+        }
+
+        channel_span<const SampleType> channel(const std::size_t n) const
+        {
+            std::extents shape { length / spec.channels };
+            std::array stride { spec.channels };
+
+            return { data.get() + n, { shape, stride } };
+        }
+
+        channel_span<SampleType> left() { return channel(0); }
+        channel_span<const SampleType> left() const { return channel(0); }
+
+        channel_span<SampleType> right() { return channel(1); }
+        channel_span<const SampleType> right() const { return channel(1); }
+
+        audio_spec specs() const { return spec; }
+
+    private:
+        audio_data(SampleType* data, const std::size_t length, const SDL_AudioSpec& spec)
+            : data { data, SDL_free }
+            , length { length }
+            , spec { static_cast<audio_format>(spec.format), static_cast<std::uint8_t>(spec.channels), static_cast<std::uint32_t>(spec.freq) }
+        {}
+
+        std::unique_ptr<SampleType, decltype(&SDL_free)> data;
+        std::size_t length;
+        audio_spec spec;
+
+        friend internal::wrapper;
+    };
+
+    export template<AudioSample SampleType>
+    [[nodiscard]] result<audio_data<SampleType>> load_wav(const std::filesystem::path& path)
+    {
+        SDL_AudioSpec wav_spec {};
+        std::uint8_t* wav_samples { nullptr };
+        std::uint32_t wav_length {};
+
+        if (const bool load = SDL_LoadWAV(path.string().c_str(), &wav_spec, &wav_samples, &wav_length); !load)
+        {
+            return std::unexpected { SDL_GetError() };
+        }
+
+        const defer cleanup { [wav_samples] { SDL_free(wav_samples); }};
+
+        SDL_AudioSpec converted_spec
+        {
+            static_cast<SDL_AudioFormat>(associated_audio_format<SampleType>()),
+            wav_spec.channels,
+            wav_spec.freq
+        };
+
+        std::uint8_t* converted_samples { nullptr };
+        std::uint32_t converted_length {};
+
+        if (const bool convert = SDL_ConvertAudioSamples(
+            &wav_spec,
+            wav_samples,
+            wav_length,
+            &converted_spec,
+            &converted_samples,
+            reinterpret_cast<int*>(&converted_length)); !convert)
+        {
+            return std::unexpected { SDL_GetError() };
+        }
+
+        return internal::wrapper::create<audio_data<SampleType>>(
+            reinterpret_cast<SampleType*>(converted_samples),
+            converted_length / sizeof(SampleType),
+            converted_spec);
     }
 
 }
