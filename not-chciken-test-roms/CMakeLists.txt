@@ -3,7 +3,7 @@ target_compile_features(not_chciken_tests_core PUBLIC cxx_std_23)
 add_library(not_chciken::core ALIAS not_chciken_tests_core)
 
 set_target_properties(not_chciken_tests_core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(not_chciken_tests_core PUBLIC emulator::core emulator::gameboy doctest plot sdl)
+target_link_libraries(not_chciken_tests_core PUBLIC emulator::core emulator::gameboy doctest plot sdl dsp)
 target_sources(not_chciken_tests_core PUBLIC
         FILE_SET
         CXX_MODULES

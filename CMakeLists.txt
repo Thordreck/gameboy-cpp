@@ -1,21 +1,43 @@
 cmake_minimum_required(VERSION 4.1)
 
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RelWithDebInfo ON)
+project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
+
+include(CMakeDependentOption)
+
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+cmake_dependent_option(
+        ENABLE_LTO
+        "Enable Link-time optimization"
+        ON
+        [[CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"]]
+        OFF
+)
+
+if(ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+
+    if(ipo_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
+
+        message(VERBOSE "Enabling LTO support")
+    else()
+        message(WARNING "LTO not supported: ${ipo_error}")
+    endif()
+endif()
 
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
-project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 include(CTest)
 
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/doctest)
 endif()
 
-if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL" OR AUDIO_BACKEND STREQUAL "SDL")
+if(UI_BACKEND STREQUAL "SDL" OR JOYPAD_BACKEND STREQUAL "SDL" OR AUDIO_BACKEND STREQUAL "SDL" OR BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
 endif()
 
@@ -56,7 +78,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/stb-image)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/plot)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/dsp)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mooneye-test-suite)

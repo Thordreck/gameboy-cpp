@@ -22,3 +22,6 @@
 [submodule "third_party/plot/upstream"]
 	path = third_party/plot/upstream
 	url = git@github.com:Signalsmith-Audio/plot.git
+[submodule "third_party/dsp/upstream"]
+	path = third_party/dsp/upstream
+	url = git@github.com:vitalsong/dsplib.git

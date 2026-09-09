@@ -313,4 +313,56 @@ namespace sdl
             converted_spec);
     }
 
+    export template<AudioSample From, AudioSample To>
+    [[nodiscard]] result<audio_data<To>> convert_audio(
+        const audio_data<From>& source,
+        const std::uint8_t channels,
+        const std::uint32_t sample_rate)
+    {
+        const SDL_AudioSpec src_spec
+        {
+            static_cast<SDL_AudioFormat>(associated_audio_format<From>()),
+            source.specs().channels,
+            static_cast<int>(source.specs().sample_rate)
+        };
+
+        const auto src_samples = source.samples();
+        const size_t src_length { src_samples.size_bytes() };
+
+        const SDL_AudioSpec converted_spec
+        {
+            static_cast<SDL_AudioFormat>(associated_audio_format<To>()),
+            channels,
+            static_cast<int>(sample_rate)
+        };
+
+        std::uint8_t* converted_samples { nullptr };
+        std::uint32_t converted_length {};
+
+        if (const bool convert = SDL_ConvertAudioSamples(
+            &src_spec,
+            reinterpret_cast<const std::uint8_t*>(src_samples.data()),
+            static_cast<int>(src_length),
+            &converted_spec,
+            &converted_samples,
+            reinterpret_cast<int*>(&converted_length)); !convert)
+        {
+            return std::unexpected { SDL_GetError() };
+        }
+
+        return internal::wrapper::create<audio_data<To>>(
+            reinterpret_cast<To*>(converted_samples),
+            converted_length / sizeof(To),
+            converted_spec);
+    }
+
+    export template<AudioSample SampleType>
+    [[nodiscard]] result<audio_data<SampleType>> convert_audio(
+        const audio_data<SampleType>& source,
+        const std::uint8_t channels,
+        const std::uint32_t sample_rate)
+    {
+        return convert_audio<SampleType, SampleType>(source, channels, sample_rate);
+    }
+
 }

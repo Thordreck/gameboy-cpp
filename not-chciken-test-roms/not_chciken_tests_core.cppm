@@ -5,6 +5,7 @@ export module not_chciken;
 
 import std;
 import sdl;
+import dsp;
 import plot;
 
 namespace not_chciken
@@ -36,15 +37,20 @@ namespace not_chciken
         using namespace plot;
         using namespace sdl;
 
-		const auto audio_data = required(load_wav<float>(expected_audio));
+		const auto audio_data = required(
+			load_wav<float>(expected_audio)
+			.and_then([] (const auto& wav_audio) { return convert_audio(wav_audio, wav_audio.specs().channels, 8000); })
+			);
+
 		const auto spec = audio_data.specs();
 
+		std::println("Sample rate: {}", spec.sample_rate);
 		figure fig {};
 
+		// Time
 		for (size_t channel = 0; channel < spec.channels; channel++)
 		{
 			const auto channel_samples = audio_data.channel(channel);
-			const double duration = channel_samples.size() / static_cast<double>(spec.sample_rate);
 
 			plot_2d plot = fig.plot(0, channel);
 			//plot.x().linear(0, duration);
@@ -56,6 +62,22 @@ namespace not_chciken
 			{
 				const double t = i / static_cast<double>(spec.sample_rate);
 				waveform.add(t, channel_samples[i]);
+			}
+		}
+
+		// FFT
+		for (size_t channel = 0; channel < spec.channels; channel++)
+		{
+			const auto channel_samples = audio_data.channel(channel);
+			const auto channel_fft = dsp::fft(channel_samples.data_handle(), channel_samples.size(), channel_samples.stride(0));
+
+			plot_2d plot = fig.plot(1, channel);
+			line_2d waveform = plot.line();
+
+			for (size_t i = 0; i < channel_fft.size(); ++i)
+			{
+				const double t = i / static_cast<double>(spec.sample_rate);
+				waveform.add(t, channel_fft[i].re);
 			}
 		}
 
