@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 4.1)
 
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+#set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d")
+set(CMAKE_CXX_STANDARD 23)
+
 project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 
 include(CMakeDependentOption)
@@ -13,6 +16,7 @@ cmake_dependent_option(
         [[CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"]]
         OFF
 )
+cmake_dependent_option(ENABLE_SANITIZERS "Enable sanitizers" OFF [[CMAKE_BUILD_TYPE STREQUAL "Debug"]] OFF)
 
 if(ENABLE_LTO)
     include(CheckIPOSupported)
@@ -28,8 +32,14 @@ if(ENABLE_LTO)
     endif()
 endif()
 
-add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+if(ENABLE_SANITIZERS)
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>")
+    add_link_options("$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>")
+endif()
+
+if(ENABLE_LTO)
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+endif()
 
 include(CTest)
 
@@ -43,6 +53,9 @@ endif()
 
 if(UI_BACKEND STREQUAL "SDL")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/sdl-image)
+endif()
+
+if(UI_BACKEND STREQUAL "SDL")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/imgui)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
 endif()
@@ -78,6 +91,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/stb-image)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/plot)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/svg)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/dsp)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)

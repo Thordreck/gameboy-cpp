@@ -20,4 +20,8 @@ target_sources(dsp PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/dsp.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/fft.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/math.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/window.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/correlation.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils.cppm
 )

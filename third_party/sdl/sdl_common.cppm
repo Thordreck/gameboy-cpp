@@ -9,6 +9,8 @@ namespace sdl
     export template <typename T>
     using result = std::expected<T, std::string>;
 
+    export using outcome = std::expected<void, std::string>;
+
     export struct color
     {
         std::uint8_t r{};

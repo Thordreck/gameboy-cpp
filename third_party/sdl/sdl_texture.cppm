@@ -43,6 +43,21 @@ namespace sdl
             return std::unexpected{ SDL_GetError() };
         }
 
+        static [[nodiscard]] result<texture> create(renderer& renderer, surface& surface)
+        {
+            using namespace internal;
+
+            if (SDL_Texture* imp = SDL_CreateTextureFromSurface(
+                native::get_handle(renderer),
+                native::get_handle(surface));
+                imp != nullptr)
+            {
+                return texture { imp };
+            }
+
+            return std::unexpected{ SDL_GetError() };
+        }
+
         [[nodiscard]] result<std::size_t> height() const
         {
             float height {};
@@ -53,7 +68,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return static_cast<std::size_t>(height);
+            return height;
         }
 
         [[nodiscard]] result<std::size_t> width() const
@@ -66,7 +81,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return static_cast<std::size_t>(width);
+            return width;
         }
 
     private:
@@ -78,6 +93,7 @@ namespace sdl
 
         std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> imp;
         friend internal::native;
+        friend internal::wrapper;
     };
 
     export result<void> render(

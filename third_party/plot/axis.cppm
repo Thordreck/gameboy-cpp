@@ -77,6 +77,16 @@ namespace plot
         internal::get_imp(axis)->copyFrom(*internal::get_imp(other));
     }
 
+    void axis_set_label(WrapperForAxis auto& axis, const std::string_view label)
+    {
+        internal::get_imp(axis)->label(std::string { label });
+    }
+
+    const std::string& axis_get_label(WrapperForConstAxis auto const& axis)
+    {
+        return internal::get_imp(axis)->label();
+    }
+
     export class axis
     {
     public:
@@ -87,6 +97,7 @@ namespace plot
         [[nodiscard]] double draw_min() const { return axis_draw_min(*this); }
         [[nodiscard]] double draw_max() const { return axis_draw_max(*this); }
         [[nodiscard]] double draw_size() const { return axis_draw_size(*this); }
+        [[nodiscard]] const std::string& label() const { return axis_get_label(*this); }
 
         [[maybe_unused]] axis& major(const tick& tick)
         {
@@ -109,6 +120,18 @@ namespace plot
         [[maybe_unused]] axis& minors(std::convertible_to<tick> auto&& ...ticks)
         {
             (minor(std::forward<decltype(ticks)>(ticks)), ...);
+            return *this;
+        }
+
+        template<typename Container>
+        requires std::ranges::input_range<Container> && std::convertible_to<std::ranges::range_value_t<Container>, tick>
+        [[maybe_unused]] axis& minors(Container&& ticks)
+        {
+            for (auto&& tick : ticks)
+            {
+                minor(std::forward<decltype(tick)>(tick));
+            }
+
             return *this;
         }
 
@@ -154,6 +177,12 @@ namespace plot
             return *this;
         }
 
+        [[maybe_unused]] axis& label(const std::string_view label)
+        {
+            axis_set_label(*this, label);
+            return *this;
+        }
+
     private:
         axis_imp& imp;
 
@@ -172,6 +201,7 @@ namespace plot
         [[nodiscard]] double draw_min() const { return axis_draw_min(*this); }
         [[nodiscard]] double draw_max() const { return axis_draw_max(*this); }
         [[nodiscard]] double draw_size() const { return axis_draw_size(*this); }
+        [[nodiscard]] const std::string& label() const { return axis_get_label(*this); }
 
     private:
         const axis_imp& imp;

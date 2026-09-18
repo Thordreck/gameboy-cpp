@@ -13,5 +13,6 @@ export import :events;
 export import :scancode;
 export import :keyboard;
 export import :audio;
+export import :iostream;
 export import :internal;
 

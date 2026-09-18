@@ -21,7 +21,14 @@ namespace utils
 		{
 			if (!condition)
 			{
-				std::cerr << std::format("{}:{} Assertion failed. {}\n", loc.file_name(), loc.line(), message == nullptr ? "" : message);
+				const char* file_name = loc.file_name();
+				const auto line = loc.line();
+				const char* effective_message = message == nullptr ? "" : message;
+
+				std::cerr << std::vformat(
+					"{}:{} Assertion failed. {}\n",
+					std::make_format_args(file_name, line, effective_message));
+
 				std::terminate();
 			}
 		}

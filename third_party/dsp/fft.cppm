@@ -8,18 +8,13 @@ import :common;
 
 namespace dsp
 {
-    export std::vector<complex_t> fft(SpanLike<real_t> auto&& input)
+    export base_array<complex_t> fft(SpanLike<real_t> auto&& input)
     {
         dsplib::span_t span = dsplib::make_span(input);
-        const dsplib::arr_cmplx result = dsplib::fft(span);
-
-        std::vector<complex_t> output(result.size());
-        std::ranges::copy(result.begin(), result.end(), output.begin());
-
-        return output;
+        return dsplib::fft(span);
     }
 
-    export std::vector<complex_t> fft(const real_t* data, size_t size, size_t stride)
+    export base_array<complex_t> fft(const real_t* data, const size_t size, const size_t stride)
     {
         const auto slice = dsplib::slice_t<real_t>::make_slice(data, size, 0, size, stride);
         dsplib::arr_real array { slice };
@@ -27,9 +22,19 @@ namespace dsp
         return fft(array);
     }
 
-    export std::vector<complex_t> fft(SliceLike<real_t> auto&& input)
+    export base_array<complex_t> fft(SliceLike<real_t> auto&& input)
     {
         return fft(input.data(), input.size(), input.stride());
+    }
+
+    export auto fft_shift(SpanLike<complex_t> auto&& input)
+    {
+        return dsplib::fftshift(input);
+    }
+
+    export auto fft_shift(SpanLike<real_t> auto&& input)
+    {
+        return dsplib::fftshift(input);
     }
 
 }

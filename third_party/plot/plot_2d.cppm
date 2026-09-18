@@ -31,6 +31,12 @@ namespace plot
         [[nodiscard]] line_2d line() { return line_2d(imp->line()); }
         [[nodiscard]] line_2d line_fill() { return line_2d(imp->lineFill()); }
 
+        [[maybe_unused]] plot_2d& title(const std::string_view title)
+        {
+            imp->title( std::string{ title });
+            return *this;
+        }
+
     private:
         std::unique_ptr<plot_imp, std::function<void(plot_imp*)>> imp;
 

@@ -25,3 +25,6 @@
 [submodule "third_party/dsp/upstream"]
 	path = third_party/dsp/upstream
 	url = git@github.com:vitalsong/dsplib.git
+[submodule "third_party/svg/upstream"]
+	path = third_party/svg/upstream
+	url = https://github.com/sammycage/lunasvg.git

@@ -32,4 +32,5 @@ target_sources(sdl PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_scancode.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_keyboard.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/sdl_audio.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/sdl_iostream.cppm
 )

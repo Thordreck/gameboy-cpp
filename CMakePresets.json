@@ -100,6 +100,13 @@
       }
     },
     {
+      "name": "with-sanitizers",
+      "hidden": true,
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
       "name": "with-sdl",
       "hidden": true,
       "inherits": ["with-sdl-ui", "with-sdl-joypad", "with-sdl-audio"]
@@ -196,13 +203,13 @@
       "name": "ninja-no-profiling-sdl-debug",
       "displayName": "Ninja Debug (SDL)",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "inherits": ["ninja-no-profiling-sdl", "debug"]
+      "inherits": ["ninja-no-profiling-sdl", "debug", "with-sanitizers"]
     },
     {
       "name": "ninja-no-profiling-qt-debug",
       "displayName": "Ninja Debug (Qt)",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "inherits": ["ninja-no-profiling-qt", "debug"]
+      "inherits": ["ninja-no-profiling-qt", "debug", "with-sanitizers"]
     }
   ],
   "buildPresets": [

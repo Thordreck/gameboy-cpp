@@ -28,4 +28,20 @@ namespace plot
         }
     }
 
+    export template<SvgExportable Plot>
+    outcome_t save_as_svg(Plot& plot, std::ostream& stream)
+    {
+        try
+        {
+            auto* svg_exportable = internal::get_imp(plot);
+            svg_exportable->write(stream);
+
+            return {};
+        }
+        catch (const std::exception& ex)
+        {
+            return std::unexpected{ ex.what() };
+        }
+    }
+
 }
