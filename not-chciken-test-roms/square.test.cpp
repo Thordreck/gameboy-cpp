@@ -3,7 +3,10 @@ import not_chciken;
 
 TEST_CASE("not_chicken.square.preset.3")
 {
-    not_chciken::run_square_preset_test("reference/square_test_preset_3.wav", 3);
+    not_chciken::run_square_preset_test(
+        "roms/square_test.gb",
+        "reference/square_test_preset_3.wav",
+        3);
 }
 
 /*
