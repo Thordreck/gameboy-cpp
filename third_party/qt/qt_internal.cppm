@@ -1,14 +1,13 @@
-module;
-#include <QtCore>
 
 export module qt:internal;
+import std;
 
 namespace qt
 {
     export struct internal
     {
         template<typename T>
-        static QObject* get_qt_object(T& input)
+        static auto* get_qt_object(T& input)
         {
             return input.qt_object();
         }
@@ -28,10 +27,10 @@ namespace qt
     requires { typename internal::qt_type<Wrapper>; }
     && requires(internal::qt_type<Wrapper> arg) { { internal::create<Wrapper>(arg) } -> std::convertible_to<Wrapper>; };
 
-    export template<typename Wrapper>
+    export template<typename Wrapper, typename Object>
     concept QtObject = requires(Wrapper& wrapper)
     {
-        { internal::get_qt_object(wrapper) } -> std::convertible_to<QObject*>;
+        { internal::get_qt_object(wrapper) } -> std::convertible_to<Object*>;
     };
 
 }

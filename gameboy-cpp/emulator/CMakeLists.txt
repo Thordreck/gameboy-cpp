@@ -1,67 +1,32 @@
 
 # Core
-add_library(emulator-core)
-add_library(emulator::core ALIAS emulator-core)
-target_compile_features(emulator-core PUBLIC cxx_std_23)
+add_library(emulator)
+target_compile_features(emulator PUBLIC cxx_std_23)
+set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+target_link_libraries(emulator PUBLIC engine memory joypad graphics cartridge audio)
+target_compile_warnings(emulator)
 
-set_target_properties(emulator-core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-core PUBLIC memory audio joypad graphics cartridge profiling)
-target_sources(emulator-core PUBLIC
-		FILE_SET
-		CXX_MODULES
-		FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_core.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_common.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_tasks.cppm
-)
-
-# Gameboy
-add_library(emulator-gameboy)
-add_library(emulator::gameboy ALIAS emulator-gameboy)
-target_compile_features(emulator-gameboy PUBLIC cxx_std_23)
-
-set_target_properties(emulator-gameboy PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-gameboy PUBLIC
-		emulator::core
-		cpu
-		timer
-		memory
-		opcodes
-		interrupts
-		graphics
-		audio
-		joypad
-		utilities
-		profiling
-		mbc
-		cartridge
-		serial)
-
-target_sources(emulator-gameboy PUBLIC
+target_sources(emulator PUBLIC
 	FILE_SET 
-		CXX_MODULES 
+		CXX_MODULES
 	FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_common.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/emulator_tasks.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/emulator_gameboy.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_engine.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_memory.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_cpu.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_scheduler.cppm
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_factory.cppm
 )
 
 # UI
 set(UI_BACKEND "SDL" CACHE STRING "UI backend")
 set_property(CACHE UI_BACKEND PROPERTY STRINGS SDL Qt)
 
-add_library(emulator-ui-backend STATIC)
-target_compile_features(emulator-ui-backend PUBLIC cxx_std_23)
-set_target_properties(emulator-ui-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-add_library(emulator::ui::backend ALIAS emulator-ui-backend)
-
 if(UI_BACKEND STREQUAL "SDL")
-	target_compile_definitions(emulator-ui-backend PUBLIC UI_SDL)
-	target_link_libraries(emulator-ui-backend PUBLIC emulator::core imgui sdl sdl-image pfd profiling utilities)
-	target_sources(emulator-ui-backend PUBLIC
+	target_compile_definitions(emulator PUBLIC UI_SDL)
+	target_link_libraries(emulator-ui PRIVATE imgui sdl sdl-image pfd)
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
@@ -69,102 +34,77 @@ if(UI_BACKEND STREQUAL "SDL")
 	)
 
 elseif(UI_BACKEND STREQUAL "Qt")
-	add_library(emulator-ui-backend-qml STATIC)
-	target_compile_features(emulator-ui-backend-qml PUBLIC cxx_std_23)
-	target_sources(emulator-ui-backend-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
-	target_link_libraries(emulator-ui-backend-qml PRIVATE qt)
-	target_link_libraries(emulator-ui-backend-qml PUBLIC Boost::lockfree)
-	set_target_properties(emulator-ui-backend-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
+	add_library(emulator-qml STATIC)
+	target_compile_warnings(emulator-qml)
+	target_compile_features(emulator-qml PUBLIC cxx_std_23)
+	target_sources(emulator-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
+	target_link_libraries(emulator-qml PRIVATE Qt6::Core Qt6::Qml Qt6::Quick Boost::lockfree)
+	set_target_properties(emulator-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
 			QT_RESOURCE_ALIAS emulator_ui_qt
 			QT_QML_SOURCE_TYPENAME EmulatorUI
 	)
 	set_source_files_properties(${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png PROPERTIES  QT_RESOURCE_ALIAS gameboy-icon.png)
 
-	qt_add_qml_module(emulator-ui-backend-qml
+	qt_add_qml_module(emulator-qml
 			URI Gameboy.UI
 			VERSION ${PROJECT_VERSION}
 			QML_FILES emulator_ui_qt.qml
 			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Gameboy/UI
-			PLUGIN_TARGET emulator-ui-backend-qml-plugin
+			PLUGIN_TARGET emulator-qml-plugin
 			DEPENDENCIES QtCore QtQuick
 			IMPORTS ${QT_QUICK_CONTROLS}
 	)
 
 	if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
 		set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES QT_QML_SKIP_CACHEGEN TRUE)
-		target_compile_definitions(emulator-ui-backend-qml PUBLIC QML_HOT_RELOAD_PATH="${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml")
-		target_compile_definitions(emulator-ui-backend-qml PUBLIC QT_UI_DEBUG_MODE)
+		target_compile_definitions(emulator-qml PUBLIC QML_HOT_RELOAD_PATH="${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml")
+		target_compile_definitions(emulator-qml PUBLIC QT_UI_DEBUG_MODE)
 	endif()
 
-	qt_add_resources(emulator-ui-backend-qml "icons"
+	qt_add_resources(emulator-qml "icons"
 			PREFIX "/icons"
 			FILES ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
 	)
 
-	qt_add_resources(emulator-ui-backend-qml "qtquickcontrols2.conf" FILES qtquickcontrols2.conf)
+	qt_add_resources(emulator-qml "qtquickcontrols2.conf" FILES qtquickcontrols2.conf)
+	set_target_properties(emulator-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")
+	set_target_properties(emulator-qml PROPERTIES QT_QMLCACHEGEN_DIRECT_CALLS ON)
+	target_link_libraries(emulator-qml PRIVATE emulator-qml-plugin)
+	target_compile_definitions(emulator-qml PRIVATE "$<$<CONFIG:Debug>:QT_QML_DEBUG>")
+	target_compile_definitions(emulator-qml PRIVATE "$<$<CONFIG:RelWithDebInfo>:QT_QML_DEBUG>")
 
-	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")
-	set_target_properties(emulator-ui-backend-qml PROPERTIES QT_QMLCACHEGEN_DIRECT_CALLS ON)
-
-	target_link_libraries(emulator-ui-backend-qml PUBLIC emulator-ui-backend-qml-plugin)
-
-	target_compile_definitions(emulator-ui-backend PUBLIC UI_QT)
-	target_compile_definitions(emulator-ui-backend PUBLIC "$<$<CONFIG:Debug>:QT_QML_DEBUG>")
-	target_compile_definitions(emulator-ui-backend PUBLIC "$<$<CONFIG:RelWithDebInfo>:QT_QML_DEBUG>")
-
-	target_link_libraries(emulator-ui-backend PRIVATE emulator::core profiling utilities qt emulator-ui-backend-qml)
-
-	target_sources(emulator-ui-backend PUBLIC
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cppm
 	)
 
+	target_link_libraries(emulator PRIVATE emulator-qml)
+	target_compile_definitions(emulator PUBLIC UI_QT)
 endif()
-
-add_library(emulator-ui)
-add_library(emulator::ui ALIAS emulator-ui)
-target_compile_features(emulator-ui PUBLIC cxx_std_23)
-set_target_properties(emulator-ui PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-ui PUBLIC emulator::core emulator::ui::backend)
-target_sources(emulator-ui PUBLIC
-		FILE_SET
-		CXX_MODULES
-		FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui.cppm
-)
 
 #Joypad
 set(JOYPAD_BACKEND "SDL" CACHE STRING "Joypad backend")
 set_property(CACHE JOYPAD_BACKEND PROPERTY STRINGS SDL Qt)
 
-add_library(emulator-joypad-backend STATIC)
-target_compile_features(emulator-joypad-backend PUBLIC cxx_std_23)
-set_target_properties(emulator-joypad-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-add_library(emulator::joypad::backend ALIAS emulator-joypad-backend)
-
 if(JOYPAD_BACKEND STREQUAL "SDL")
-	target_compile_definitions(emulator-joypad-backend PUBLIC JOYPAD_SDL)
-	target_link_libraries(emulator-joypad-backend PUBLIC emulator::core sdl)
-	target_sources(emulator-joypad-backend PUBLIC
+	target_compile_definitions(emulator PUBLIC JOYPAD_SDL)
+	target_link_libraries(emulator PRIVATE sdl)
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad_sdl.cppm
 	)
+
 elseif(JOYPAD_BACKEND STREQUAL "Qt" AND UI_BACKEND STREQUAL "Qt")
-	add_library(emulator-joypad-backend-qt STATIC)
-	target_compile_features(emulator-joypad-backend-qt PUBLIC cxx_std_23)
-	target_sources(emulator-joypad-backend-qt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad_qt.cpp)
-	target_link_libraries(emulator-joypad-backend-qt PRIVATE qt)
-	set_target_properties(emulator-joypad-backend-qt PROPERTIES AUTOMOC ON)
+	target_compile_definitions(emulator PUBLIC JOYPAD_QT)
+	target_link_libraries(emulator PRIVATE qt)
+	set_target_properties(emulator PROPERTIES AUTOMOC ON)
 
-	target_link_libraries(emulator-joypad-backend PUBLIC emulator::core profiling utilities qt emulator-joypad-backend-qt)
-	target_compile_definitions(emulator-joypad-backend PUBLIC JOYPAD_QT)
-
-	target_sources(emulator-joypad-backend PUBLIC
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
@@ -172,101 +112,26 @@ elseif(JOYPAD_BACKEND STREQUAL "Qt" AND UI_BACKEND STREQUAL "Qt")
 	)
 endif()
 
-add_library(emulator-joypad)
-add_library(emulator::joypad ALIAS emulator-joypad)
-target_compile_features(emulator-joypad PUBLIC cxx_std_23)
-set_target_properties(emulator-joypad PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-joypad PUBLIC emulator::core emulator::joypad::backend)
-target_sources(emulator-joypad PUBLIC
-		FILE_SET
-		CXX_MODULES
-		FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_joypad.cppm
-)
-
 #Audio
 set(AUDIO_BACKEND "SDL" CACHE STRING "Audio backend")
 set_property(CACHE AUDIO_BACKEND PROPERTY STRINGS SDL Qt)
 
-add_library(emulator-audio-backend STATIC)
-target_compile_features(emulator-audio-backend PUBLIC cxx_std_23)
-set_target_properties(emulator-audio-backend PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-add_library(emulator::audio::backend ALIAS emulator-audio-backend)
-
 if(AUDIO_BACKEND STREQUAL "SDL")
-	target_compile_definitions(emulator-audio-backend PUBLIC AUDIO_SDL)
-	target_link_libraries(emulator-audio-backend PUBLIC emulator::core sdl)
-	target_sources(emulator-audio-backend PUBLIC
+	target_compile_definitions(emulator PUBLIC AUDIO_SDL)
+	target_link_libraries(emulator PRIVATE sdl)
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio_sdl.cppm
 	)
 elseif(AUDIO_BACKEND STREQUAL "Qt")
-	target_compile_definitions(emulator-audio-backend PUBLIC AUDIO_QT)
-	target_link_libraries(emulator-audio-backend PUBLIC emulator::core qt utilities)
-	target_sources(emulator-audio-backend PUBLIC
+	target_compile_definitions(emulator PUBLIC AUDIO_QT)
+	target_link_libraries(emulator PRIVATE Qt6::Multimedia audio utilities)
+	target_sources(emulator PUBLIC
 			FILE_SET
 			CXX_MODULES
 			FILES
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio_qt.cppm
-	)
-endif()
-
-add_library(emulator-audio)
-add_library(emulator::audio ALIAS emulator-audio)
-target_compile_features(emulator-audio PUBLIC cxx_std_23)
-set_target_properties(emulator-audio PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator-audio PUBLIC emulator::core emulator::audio::backend)
-target_sources(emulator-audio PUBLIC
-		FILE_SET
-		CXX_MODULES
-		FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_audio.cppm
-)
-
-# Aggregator
-add_library(emulator)
-target_compile_features(emulator PUBLIC cxx_std_23)
-set_target_properties(emulator PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(emulator PUBLIC emulator::core emulator::gameboy emulator::ui emulator::joypad emulator::audio)
-target_sources(emulator PUBLIC
-		FILE_SET
-		CXX_MODULES
-		FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator.cppm
-)
-
-add_executable(gameboy-cpp)
-target_compile_features(gameboy-cpp PUBLIC cxx_std_23)
-target_link_libraries(gameboy-cpp PUBLIC emulator profiling)
-
-target_sources(gameboy-cpp
-	PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/emulator_main.cpp
-)
-
-# Deployment
-add_custom_command(TARGET gameboy-cpp POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy -t
-		$<TARGET_FILE_DIR:gameboy-cpp>
-		$<TARGET_RUNTIME_DLLS:gameboy-cpp>
-		COMMAND_EXPAND_LISTS
-)
-
-if(UI_BACKEND STREQUAL "SDL")
-	add_custom_command(TARGET gameboy-cpp POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${CMAKE_SOURCE_DIR}/resources
-			$<TARGET_FILE_DIR:gameboy-cpp>/assets
-	)
-endif()
-
-if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt"))
-	add_custom_command(TARGET gameboy-cpp POST_BUILD
-			COMMAND ${Qt6_DIR}/../../../bin/windeployqt.exe
-			--qmldir ${CMAKE_CURRENT_SOURCE_DIR}
-			--no-translations
-			$<TARGET_FILE:gameboy-cpp>
 	)
 endif()

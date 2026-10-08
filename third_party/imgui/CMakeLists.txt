@@ -14,6 +14,7 @@ add_library(imgui-core STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/upstream/imgui_widgets.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/upstream/imgui_demo.cpp)
 
+target_compile_warnings(imgui-core)
 target_include_directories(imgui-core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/upstream)
 target_compile_definitions(imgui-core PUBLIC
 		IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/imgui_config.h"
@@ -24,6 +25,7 @@ add_library(imgui::core ALIAS imgui-core)
 
 # Renderer backend
 add_library(imgui-renderer STATIC)
+target_compile_warnings(imgui-renderer)
 target_include_directories(imgui-renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/upstream/backends)
 target_link_libraries(imgui-renderer PUBLIC imgui-core)
 add_library(imgui::renderer ALIAS imgui-renderer)
@@ -35,6 +37,7 @@ endif()
 
 # Platform backend
 add_library(imgui-platform STATIC)
+target_compile_warnings(imgui-platform)
 target_include_directories(imgui-platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/upstream/backends)
 target_link_libraries(imgui-platform PUBLIC imgui-core)
 add_library(imgui::platform ALIAS imgui-platform)
@@ -45,6 +48,7 @@ if(IMGUI_PLATFORM_BACKEND STREQUAL "SDL3")
 endif()
 
 add_library(imgui)
+target_compile_warnings(imgui)
 target_compile_features(imgui PUBLIC cxx_std_23)
 set_target_properties(imgui PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(imgui PRIVATE imgui::core imgui::platform imgui::renderer)

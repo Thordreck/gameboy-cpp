@@ -7,6 +7,7 @@ set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(upstream EXCLUDE_FROM_ALL)
 
 add_library(svg)
+target_compile_warnings(svg)
 target_compile_features(svg PUBLIC cxx_std_23)
 set_target_properties(svg PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(svg PRIVATE lunasvg::lunasvg)

@@ -1,6 +1,7 @@
 add_subdirectory(upstream EXCLUDE_FROM_ALL)
 
 add_library(plot)
+target_compile_warnings(plot)
 target_compile_features(plot PUBLIC cxx_std_23)
 set_target_properties(plot PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(plot PRIVATE signalsmith-plot)

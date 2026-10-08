@@ -1,4 +1,5 @@
 add_library(stb_image)
+target_compile_warnings(stb_image)
 target_compile_features(stb_image PUBLIC cxx_std_23)
 target_include_directories(stb_image PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(stb_image PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)

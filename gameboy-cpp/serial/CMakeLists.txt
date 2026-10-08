@@ -1,5 +1,6 @@
 add_library(serial)
 target_compile_features(serial PUBLIC cxx_std_23)
+target_compile_warnings(serial)
 
 set_target_properties(serial PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(serial memory interrupts)

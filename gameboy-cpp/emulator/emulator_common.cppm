@@ -1,8 +1,9 @@
 
-export module emulator.core:common;
+export module emulator:common;
 
 import std;
 import audio;
+import engine;
 import memory;
 import joypad;
 import graphics;
@@ -12,16 +13,7 @@ namespace emulator
 {
     export using framebuffer_view_t = std::span<const std::uint8_t, graphics::lcd_memory_size>;
     export using framebuffer_t = std::array<std::uint8_t, graphics::lcd_memory_size>;
-    export using load_rom_result_t = std::expected<void, std::string>;
-    export using lcd_view_t = std::span<const memory::memory_data_t, graphics::lcd_memory_size>;
     export using volume_t = float;
-
-    export template <typename T>
-    concept Engine = requires(T& engine, const std::uint32_t num_ticks, const joypad::const_input_state_view_t joypad_state)
-    {
-        { engine.tick(num_ticks) } -> std::same_as<void>;
-        { engine.update_joypad_state(joypad_state) } -> std::same_as<void>;
-    };
 
     export template<typename T>
     concept JoypadSource = requires(T& source)
@@ -66,20 +58,7 @@ namespace emulator
     export template<typename T>
     concept FramebufferRenderer = graphics::FramebufferSink<T> && RendererTarget<T>;
 
-    export class memory_view
-    {
-    public:
-        template<memory::ReadOnlyMemory Memory>
-        explicit memory_view(const Memory& memory)
-            : read_fn([&memory] (const auto address) { return memory.read(address); })
-        {}
-
-        [[nodiscard]] memory::memory_data_t read(const memory::memory_address_t address) const { return read_fn(address); }
-        [[nodiscard]] memory::memory_data_t operator[](const memory::memory_address_t address) const { return read(address); }
-
-    private:
-        std::function<memory::memory_data_t(memory::memory_address_t address)> read_fn;
-    };
+    export using load_rom_result_t = std::expected<void, std::string>;
 
     export template <typename T>
     concept Emulator = requires(
@@ -100,14 +79,13 @@ namespace emulator
         { emulator.stop() } -> std::same_as<void>;
         { emulator.step(ticks) } -> std::same_as<void>;
 
-        { emulator.memory() } -> std::convertible_to<memory_view>;
+        { emulator.memory() } -> std::convertible_to<engine::memory_view>;
 
         { emulator.volume() } -> std::convertible_to<volume_t>;
         { emulator.set_volume(volume) } -> std::same_as<void>;
 
         { emulator.muted() } -> std::convertible_to<bool>;
         { emulator.set_muted(muted) } -> std::same_as<void>;
-
     };
 
 }

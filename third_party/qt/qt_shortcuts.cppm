@@ -28,4 +28,5 @@ namespace qt
 
         std::ignore = new QShortcut(qt_key, qt_parent, functor, qt_context);
     }
+
 }

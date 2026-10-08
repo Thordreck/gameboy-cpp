@@ -1,6 +1,7 @@
 
 add_library(graphics)
 target_compile_features(graphics PUBLIC cxx_std_23)
+target_compile_warnings(graphics)
 
 set_target_properties(graphics PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(graphics memory interrupts utilities)

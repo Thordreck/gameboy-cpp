@@ -15,3 +15,4 @@ export import :concepts;
 export import :constrained;
 export import :ring_buffer;
 export import :triple_buffer;
+export import :uuid;

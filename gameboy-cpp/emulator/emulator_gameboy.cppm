@@ -1,12 +1,15 @@
 
-export module emulator.gameboy;
-export import :factory;
+export module emulator:gameboy;
 
 import std;
 import mbc;
+import engine;
+import joypad;
+import serial;
 import cartridge;
-import emulator.core;
-import emulator.engine;
+
+import :tasks;
+import :common;
 
 namespace emulator
 {
@@ -32,7 +35,7 @@ namespace emulator
             stop();
 
             rom = std::move(rom_cartridge);
-            auto create = create_engine(rom.value(), framebuffer_renderer, audio_output, serial);
+            auto create = engine::create_engine(rom.value(), framebuffer_renderer, audio_output, serial);
 
             if (create)
             {
@@ -48,7 +51,7 @@ namespace emulator
         }
 
         [[nodiscard]] cartridge::header cartridge() const { return rom.value().header; }
-        [[nodiscard]] memory_view memory() const { return engine->memory(); }
+        [[nodiscard]] engine::memory_view memory() const { return engine->memory(); }
         [[nodiscard]] bool is_running() const { return tick_thread.has_value(); }
         [[nodiscard]] bool has_rom() const { return engine != nullptr; }
 
@@ -93,7 +96,7 @@ namespace emulator
         void set_muted(const bool muted) { audio_output.set_muted(muted); }
 
     private:
-        std::unique_ptr<base_engine> engine { nullptr };
+        std::unique_ptr<engine::base_engine> engine { nullptr };
         std::optional<cartridge::rom> rom {};
 
         Joypad& joypad_source;

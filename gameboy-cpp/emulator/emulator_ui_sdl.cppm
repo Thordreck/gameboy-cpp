@@ -2,7 +2,7 @@
 module;
 #include "profiling.hpp"
 
-export module emulator.ui:sdl;
+export module emulator:ui.sdl;
 
 import std;
 import sdl;
@@ -11,7 +11,7 @@ import pfd;
 import imgui;
 import cartridge;
 import utilities;
-import emulator.core;
+import :common;
 
 namespace emulator
 {

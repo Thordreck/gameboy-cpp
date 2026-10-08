@@ -1,9 +1,9 @@
-export module emulator.joypad;
+export module emulator:joypad;
 
 #if defined(JOYPAD_SDL)
-export import :sdl;
+export import :joypad.sdl;
 #elif defined(JOYPAD_QT)
-export import :qt;
+export import :joypad.qt;
 #else
 #error "No joypad backend configured"
 #endif

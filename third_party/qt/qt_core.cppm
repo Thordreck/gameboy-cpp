@@ -1,9 +1,7 @@
 module;
-#include <QtCore>
+#include <QObject>
 
 export module qt:core;
-
-import std;
 import :internal;
 
 namespace qt

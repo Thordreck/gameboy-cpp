@@ -1,5 +1,5 @@
 
-export module emulator.audio:sdl;
+export module emulator:audio.sdl;
 
 import sdl;
 import std;

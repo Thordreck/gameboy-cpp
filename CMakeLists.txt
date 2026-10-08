@@ -6,9 +6,19 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 
+include(cmake/compiler_warnings.cmake)
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")
+add_link_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")
+
+if(MSVC)
+    set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /nologo")
+endif()
+
 include(CMakeDependentOption)
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+option(HEADLESS_BUILD "Build with no graphical interface" OFF)
+
 cmake_dependent_option(
         ENABLE_LTO
         "Enable Link-time optimization"
@@ -86,7 +96,12 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cartridge)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/mbc)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/profiling)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/serial)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/engine)
+
+if(NOT HEADLESS_BUILD)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/gameboy)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/stb-image)
@@ -94,11 +109,12 @@ if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/svg)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/dsp)
 
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/blargg-test-roms)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mooneye-test-suite)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/dmg-acid2-test-rom)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/scribbl-test-roms)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gbmicrotest-suite)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/mealybug-tearoom-tests)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/not-chciken-test-roms)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/core)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/blargg-test-roms)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/mooneye-test-suite)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/dmg-acid2-test-rom)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/scribbl-test-roms)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/gbmicrotest-suite)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/mealybug-tearoom-tests)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/not-chciken-test-roms)
 endif()

@@ -1,10 +1,9 @@
 
-export module emulator.joypad:sdl;
+export module emulator:joypad.sdl;
 
 import sdl;
 import std;
 import joypad;
-import emulator.core;
 
 namespace emulator
 {

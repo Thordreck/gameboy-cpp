@@ -1,9 +1,9 @@
-export module emulator.ui;
+export module emulator:ui;
 
 #if defined(UI_SDL)
-export import :sdl;
+export import :ui.sdl;
 #elif defined(UI_QT)
-export import :qt;
+export import :ui.qt;
 #else
 #error "No UI backend configured"
 #endif

@@ -1,6 +1,7 @@
 
 add_library(cpu)
 target_compile_features(cpu PUBLIC cxx_std_23)
+target_compile_warnings(cpu)
 
 set_target_properties(cpu PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(cpu memory)
@@ -23,6 +24,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 	target_compile_features(cpu_tests PUBLIC cxx_std_23)
 	target_link_libraries(cpu_tests PRIVATE cpu doctest::doctest_with_main)
 	set_target_properties(cpu_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
+	target_compile_warnings(cpu_tests)
 	doctest_discover_tests(cpu_tests)
 
 	target_sources(cpu_tests 

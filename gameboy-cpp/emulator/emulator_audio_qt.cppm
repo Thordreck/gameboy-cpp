@@ -4,12 +4,12 @@ module;
 #include <QAudioFormat>
 #include <QMediaDevices>
 
-export module emulator.audio:qt;
+export module emulator:audio.qt;
 
 import std;
 import audio;
 import utilities;
-import emulator.core;
+import :common;
 
 namespace emulator
 {

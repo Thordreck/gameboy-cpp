@@ -1,5 +1,6 @@
 add_library(cartridge)
 target_compile_features(cartridge PUBLIC cxx_std_23)
+target_compile_warnings(cartridge)
 
 set_target_properties(cartridge PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(cartridge utilities)

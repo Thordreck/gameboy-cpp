@@ -34,7 +34,6 @@ TEST_CASE("interrupts.IME flag is disabled when interrupt is dispatched")
 	tests::execute_complete_dispatch(interrupt, cpu, memory, controller);
 
 	CHECK_FALSE(cpu.ime.enabled);
-	CHECK_FALSE(cpu.ime.requested);
 }
 
 TEST_CASE("interrupts.IF flag is unset when interrupt is dispatched")

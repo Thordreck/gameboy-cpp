@@ -3,7 +3,8 @@ module;
 #include <QIcon>
 
 export module qt:gui;
-import std;
+
+import :core;
 import :internal;
 
 namespace qt
@@ -18,6 +19,11 @@ namespace qt
         [[nodiscard]] int execute() const
         {
             return app.exec();
+        }
+
+        static object instance()
+        {
+            return internal::create<object>(QGuiApplication::instance());
         }
 
         std::expected<void, std::string> set_window_icon(const std::string_view path)
