@@ -24,6 +24,8 @@ jobs:
 
       - name: Configure & Build
         uses: lukka/run-cmake@v10
+        env:
+          VCPKG_ROOT:
         with:
           configurePreset: 'ninja-no-profiling-headless-debug'
           buildPreset: 'ninja-no-profiling-headless-debug'
