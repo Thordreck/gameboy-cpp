@@ -235,6 +235,10 @@
       "name": "gameboy-cpp-dsl-release",
       "configurePreset": "ninja-no-profiling-sdl-release",
       "targets": ["gameboy-cpp"]
+    },
+    {
+      "name": "ninja-no-profiling-headless-debug",
+      "configurePreset": "ninja-no-profiling-headless-debug"
     }
   ],
   "testPresets": [

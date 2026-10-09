@@ -1,0 +1,32 @@
+name: Run Headless Tests (Windows)
+on:
+  push:
+jobs:
+  run-ctest-window:
+    name: Run Ctest
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: win64
+          toolset: 14.51
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '4.4.3'
+
+      - name: Configure & Build
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: 'ninja-no-profiling-headless-debug'
+          buildPreset: 'ninja-no-profiling-headless-debug'
+          buildPresetAdditionalArgs: "[`--parallel`]"
+          testPreset: 'test-all-headless'
+          testPresetCmdString: "[`--parallel`, `--preset`, `$[env.TEST_PRESET_NAME]`]"
