@@ -31,4 +31,23 @@ jobs:
           buildPreset: 'ninja-no-profiling-headless-debug'
           buildPresetAdditionalArgs: "[`--parallel`]"
           testPreset: 'test-all-headless'
-          testPresetCmdString: "[`--parallel`, `--preset`, `$[env.TEST_PRESET_NAME]`]"
+          testPresetCmdString: "[`--output-junit`, String.raw`${{runner.temp}}/test-results.xml`, `--parallel`, `--preset`, `$[env.TEST_PRESET_NAME]`]"
+
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: '${{runner.temp}}/*.xml'
+          github-report: true
+          integrations-config: |
+            {
+              "junit-to-ctrf": {
+                "enabled": true,
+                "action": "convert",
+                "options": {
+                  "output": "./test-report.json",
+                  "toolname": "junit-to-ctrf",
+                  "useSuiteName": true
+                }
+              }
+            }
+        if: always()
