@@ -9,7 +9,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
+          fetch-depth: 1
           submodules: recursive
+          show-progress: false
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -38,6 +40,7 @@ jobs:
         with:
           report-path: '${{runner.temp}}/*.xml'
           github-report: true
+          file-report: true
           integrations-config: |
             {
               "junit-to-ctrf": {
