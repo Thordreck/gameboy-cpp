@@ -1,4 +1,5 @@
 add_library(stb_image)
+add_third_party_module(STB https://github.com/nothings/stb ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
 target_compile_warnings(stb_image)
 target_compile_features(stb_image PUBLIC cxx_std_23)
 target_include_directories(stb_image PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

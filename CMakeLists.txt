@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 23)
 project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
 
 include(cmake/compiler_warnings.cmake)
+include(cmake/third_party.cmake)
+
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")
 add_link_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")
 
@@ -70,8 +72,14 @@ if(UI_BACKEND STREQUAL "SDL")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pfd)
 endif()
 
-if(UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt")
+if(UI_BACKEND STREQUAL "Qt"
+    OR JOYPAD_BACKEND STREQUAL "Qt"
+    OR AUDIO_BACKEND STREQUAL "Qt"
+    OR JSON_PROVIDER STREQUAL "Qt"
+)
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/qt_setup.cmake NO_POLICY_SCOPE)
+    include(cmake/qt_deploy.cmake)
+
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/qt)
 endif()
 
@@ -79,6 +87,10 @@ if(PROFILING_BACKEND STREQUAL "Tracy")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/tracy)
 elseif(PROFILING_BACKEND STREQUAL "CTrack")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/ctrack)
+endif()
+
+if(JSON_PROVIDER STREQUAL "nlohmann")
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/nlohmann)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/boost)
@@ -97,6 +109,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/mbc)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/profiling)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/serial)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/engine)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/json)
 
 if(NOT HEADLESS_BUILD)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)

@@ -1,6 +1,7 @@
 add_subdirectory(upstream EXCLUDE_FROM_ALL)
 
 add_library(plot)
+add_third_party_module("Basic C++ Plots" https://github.com/Signalsmith-Audio/plot ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE.txt)
 target_compile_warnings(plot)
 target_compile_features(plot PUBLIC cxx_std_23)
 set_target_properties(plot PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)

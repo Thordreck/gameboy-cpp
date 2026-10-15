@@ -100,6 +100,20 @@
       }
     },
     {
+      "name": "with-qt-json",
+      "hidden": true,
+      "cacheVariables": {
+        "JSON_PROVIDER": "Qt"
+      }
+    },
+    {
+      "name": "with-nlohmann-json",
+      "hidden": true,
+      "cacheVariables": {
+        "JSON_PROVIDER": "nlohmann"
+      }
+    },
+    {
       "name": "with-sanitizers",
       "hidden": true,
       "cacheVariables": {
@@ -111,7 +125,8 @@
       "hidden": true,
       "cacheVariables": {
         "HEADLESS_BUILD": "ON"
-      }
+      },
+      "inherits": ["with-nlohmann-json"]
     },
     {
       "name": "with-sdl",
@@ -121,7 +136,7 @@
     {
       "name": "with-qt",
       "hidden": true,
-      "inherits": ["with-qt-ui", "with-qt-joypad", "with-qt-audio"]
+      "inherits": ["with-qt-ui", "with-qt-joypad", "with-qt-audio", "with-qt-json"]
     },
 
     {

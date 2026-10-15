@@ -25,6 +25,7 @@ set(SDLIMAGE_PNG_LIBPNG  OFF CACHE BOOL "" FORCE)
 add_subdirectory(upstream EXCLUDE_FROM_ALL)
 
 add_library(sdl-image)
+add_third_party_module("SDL Image" https://github.com/libsdl-org/SDL_image ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE.txt)
 target_compile_warnings(sdl-image)
 target_compile_features(sdl-image PUBLIC cxx_std_23)
 set_target_properties(sdl-image PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)

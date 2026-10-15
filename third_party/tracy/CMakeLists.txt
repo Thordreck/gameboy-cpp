@@ -9,3 +9,4 @@ set(TRACY_NO_EXIT ON CACHE BOOL "" FORCE)
 set(TRACY_FIBERS ON CACHE BOOL "" FORCE)
 
 add_subdirectory(upstream EXCLUDE_FROM_ALL)
+add_third_party_module(Tracy https://github.com/wolfpld/tracy ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE)

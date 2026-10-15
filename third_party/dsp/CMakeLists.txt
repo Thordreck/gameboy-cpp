@@ -11,6 +11,7 @@ target_compile_warnings(dsp)
 target_compile_features(dsp PUBLIC cxx_std_23)
 set_target_properties(dsp PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(dsp PRIVATE dsplib)
+add_third_party_module(dsplib https://github.com/vitalsong/dsplib ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE)
 
 target_sources(dsp PUBLIC
         FILE_SET

@@ -9,6 +9,8 @@ namespace utils
     export template <typename T>
     using read_file_result = std::expected<T, std::string>;
 
+    export using write_file_result = std::expected<void, std::string>;
+
     export [[nodiscard]] read_file_result<binary_data_t> read_binary_file(const std::filesystem::path& filepath)
     {
         if (!std::filesystem::exists(filepath))
@@ -36,5 +38,28 @@ namespace utils
         }
 
         return file_contents;
+    }
+
+    export [[nodiscard]] write_file_result write_binary_file(
+        const std::span<const std::uint8_t> data,
+        const std::filesystem::path& filepath)
+    {
+        std::ofstream file {};
+        file.exceptions(std::ifstream::goodbit);
+        file.open(filepath, std::ios::out | std::ios::binary);
+
+        if (!file)
+        {
+            return std::unexpected{ "Could not open file" };
+        }
+
+        file.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+
+        if (file.bad())
+        {
+            return std::unexpected{ "I/O error" };
+        }
+
+        return {};
     }
 }
