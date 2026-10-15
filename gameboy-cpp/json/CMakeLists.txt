@@ -12,6 +12,7 @@ target_sources(json PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/types.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/serialization.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/utilities.cppm
 )
 
 set(JSON_PROVIDER "Qt" CACHE STRING "Json backend provider")

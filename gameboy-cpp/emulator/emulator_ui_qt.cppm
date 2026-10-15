@@ -5,6 +5,8 @@ export module emulator:ui.qt;
 
 import utilities;
 import cartridge;
+import metadata;
+
 import :common;
 
 namespace emulator
@@ -56,6 +58,11 @@ namespace emulator
                 [&emulator] { return emulator.muted(); },
                 [&emulator] (const bool muted) { return emulator.set_muted(muted); },
             };
+
+            using namespace utils;
+
+            const auto third_party_modules = value_or_panic(meta::get_third_party_metadata());
+            std::println("Num modules in metadata {}", third_party_modules.size());
 
             return imp.render(backend);
             //utils::panic_on_error(app.set_window_icon(":/icons/gameboy-icon.png"));

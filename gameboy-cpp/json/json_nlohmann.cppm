@@ -73,6 +73,7 @@ namespace json
     size_t object::size() const { return impl->data.size(); }
     value object::get(const std::string_view key) const { return internal::to_json_value(impl->data[std::string(key)]); }
     void object::set(const std::string_view key, const value& value) { impl->data[std::string(key)] = internal::to_nlohmann_value(value); }
+    bool object::has(const std::string_view key) const { return impl->data.contains(std::string(key)); }
 
     // Serialization
     [[nodiscard]] result<document> deserialize(const std::span<const std::uint8_t> data)

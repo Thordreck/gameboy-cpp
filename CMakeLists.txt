@@ -110,6 +110,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/profiling)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/serial)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/engine)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/json)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/metadata)
 
 if(NOT HEADLESS_BUILD)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)
@@ -131,3 +132,5 @@ if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/mealybug-tearoom-tests)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests/not-chciken-test-roms)
 endif()
+
+generate_third_party_module()

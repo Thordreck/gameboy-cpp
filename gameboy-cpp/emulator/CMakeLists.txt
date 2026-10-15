@@ -81,7 +81,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cppm
 	)
 
-	target_link_libraries(emulator PRIVATE emulator-qml)
+	target_link_libraries(emulator PRIVATE emulator-qml metadata)
 	target_compile_definitions(emulator PUBLIC UI_QT)
 endif()
 

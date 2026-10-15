@@ -26,8 +26,8 @@ namespace json
         array(array&&) noexcept;
         array& operator=(array&&) noexcept;
 
-        size_t size() const;
-        value get(size_t idx) const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] value get(size_t idx) const;
         void set(size_t idx, const value& value);
 
         void push_back(const value& value);
@@ -51,8 +51,9 @@ namespace json
         object(object&&) noexcept;
         object& operator=(object&&) noexcept;
 
-        size_t size() const;
-        value get(std::string_view key) const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] bool has(std::string_view key) const;
+        [[nodiscard]] value get(std::string_view key) const;
         void set(std::string_view key, const value& value);
 
     private:

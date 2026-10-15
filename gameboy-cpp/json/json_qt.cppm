@@ -72,6 +72,12 @@ namespace json
         return internal::to_json_value(impl->data[qt_key]);
     }
 
+    bool object::has(const std::string_view key) const
+    {
+        const QString qt_key = QString::fromStdString(std::string(key));
+        return impl->data.contains(qt_key);
+    }
+
     void object::set(const std::string_view key, const value& value)
     {
         const QString qt_key = QString::fromStdString(std::string(key));

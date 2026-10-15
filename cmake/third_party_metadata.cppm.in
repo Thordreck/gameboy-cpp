@@ -1,0 +1,7 @@
+
+export module metadata:third_party_metadata;
+
+namespace meta
+{
+    export constexpr char third_party_metadata[] = R"(${THIRD_PARTY_MODULES_METADATA})";
+}
