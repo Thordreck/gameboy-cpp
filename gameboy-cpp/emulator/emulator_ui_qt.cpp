@@ -648,6 +648,35 @@ namespace emulator
         emulator_ui_background& background_source;
     };
 
+    class project_metadata : public QObject
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+        QML_NAMED_ELEMENT(ProjectMetadata)
+
+        Q_PROPERTY(QString name READ name CONSTANT)
+        Q_PROPERTY(QString version READ version CONSTANT)
+        Q_PROPERTY(QString description READ description CONSTANT)
+        Q_PROPERTY(QUrl url READ url CONSTANT)
+        Q_PROPERTY(QString license READ license CONSTANT)
+        Q_PROPERTY(QString hash READ hash CONSTANT)
+
+    public:
+        explicit project_metadata(const backend_functions& _backend)
+            : backend { _backend }
+        {}
+
+        Q_INVOKABLE QString name() const { return QString::fromStdString(backend.project_name()); }
+        Q_INVOKABLE QString version() const { return QString::fromStdString(backend.project_version()); }
+        Q_INVOKABLE QString description() const { return QString::fromStdString(backend.project_description()); }
+        Q_INVOKABLE QUrl url() const { return QString::fromStdString(backend.project_url()); }
+        Q_INVOKABLE QString license() const { return QString::fromStdString(backend.project_license()); }
+        Q_INVOKABLE QString hash() const { return QString::fromStdString(backend.project_hash()); }
+
+    private:
+        backend_functions backend;
+    };
+
     struct qt_graphical_interface::pimpl
     {
         QGuiApplication app;
@@ -689,6 +718,7 @@ namespace emulator
             .transform([this] (const auto& icon) { imp->app.setWindowIcon(icon); }));
 
         emulator_ui_controls ui_controls { backend };
+        project_metadata project_metadata { backend };
 
 #ifdef QT_UI_DEBUG_MODE
         emulator_ui_sprites_model ui_debug_sprites_model { backend };
@@ -713,6 +743,7 @@ namespace emulator
         imp->engine.setInitialProperties(make_variant_map(
             std::make_pair("controls", &ui_controls),
             std::make_pair("framebuffer", &imp->framebuffer_source),
+            std::make_pair("projectMetadata", &project_metadata),
 #ifdef QT_UI_DEBUG_MODE
             std::make_pair("debugMode", true),
             std::make_pair("sprites", &ui_debug_sprites_model),

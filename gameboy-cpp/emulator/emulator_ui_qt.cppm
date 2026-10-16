@@ -36,6 +36,11 @@ namespace emulator
         template <Emulator Imp>
         int render(Imp& emulator)
         {
+            using namespace utils;
+
+            const auto third_party_modules = value_or_panic(meta::get_third_party_metadata());
+            const auto project_metadata = meta::get_project_metadata();
+
             const backend_functions backend
             {
                 [&emulator] { return emulator.has_rom(); },
@@ -57,55 +62,16 @@ namespace emulator
 
                 [&emulator] { return emulator.muted(); },
                 [&emulator] (const bool muted) { return emulator.set_muted(muted); },
+
+                [&project_metadata] { return project_metadata.name; },
+                [&project_metadata] { return project_metadata.version; },
+                [&project_metadata] { return project_metadata.description; },
+                [&project_metadata] { return project_metadata.url; },
+                [&project_metadata] { return project_metadata.license; },
+                [&project_metadata] { return project_metadata.hash; },
             };
 
-            using namespace utils;
-
-            const auto third_party_modules = value_or_panic(meta::get_third_party_metadata());
-            std::println("Num modules in metadata {}", third_party_modules.size());
-
             return imp.render(backend);
-            //utils::panic_on_error(app.set_window_icon(":/icons/gameboy-icon.png"));
-
-            //emulator_ui_controls ui_controls { ui_adapter };
-
-#ifdef QT_UI_DEBUG_MODE
-            //emulator_ui_sprites_model ui_debug_sprites_model { ui_adapter };
-            //emulator_ui_sprites_image_provider ui_debug_sprites_provider { ui_adapter };
-            //emulator_ui_background ui_debug_background { ui_adapter };
-            //emulator_ui_background_image_provider ui_debug_background_provider { ui_debug_background };
-
-            //engine.add_image_provider("sprites", &ui_debug_sprites_provider);
-            //engine.add_image_provider("background", &ui_debug_background_provider);
-
-            /*
-            qt::register_shortcut(qt::standard_key::refresh, [this]
-            {
-                std::ranges::for_each(engine.root_objects(), [] (auto object) { object.delete_later(); });
-                engine.clear_singletons();
-                engine.clear_component_cache();
-
-                engine.load(QML_HOT_RELOAD_PATH);
-
-            }, qt::shortcut_context::application, app);
-            */
-#endif
-
-            /*
-            engine.set_initial_properties(
-                ////std::make_pair("controls", &ui_controls),
-                //std::make_pair("framebuffer", &framebuffer_source),
-#ifdef QT_UI_DEBUG_MODE
-                std::make_pair("debugMode", true));
-                //std::make_pair("sprites", &ui_debug_sprites_model),
-                //std::make_pair("bg", &ui_debug_background));
-#else
-                std::make_pair("debugMode", false));
-#endif
-
-            engine.load_from_module("Gameboy.UI", "EmulatorUI");
-            return app.execute();
-            */
         }
 
     private:

@@ -9,6 +9,7 @@ import Gameboy.UI
 ApplicationWindow {
     required property EmulatorControls controls
     required property EmulatorFramebuffer framebuffer
+    required property ProjectMetadata projectMetadata
 
     required property bool debugMode
     property EmulatorSprites sprites
@@ -76,6 +77,15 @@ ApplicationWindow {
                 text: "Background Viewer"
                 onTriggered: backgroundViewerWindow.active = true
                 enabled: root.controls.status !== EmulatorStatus.Stopped
+            }
+        }
+
+        Menu {
+            title: "About"
+
+            Action {
+                text: "About"
+                onTriggered: aboutProjectWindowLoader.active = true
             }
         }
 
@@ -273,7 +283,7 @@ ApplicationWindow {
                                         Column {
                                             anchors.fill: parent
 
-                                            Text {
+                                            Label {
                                                 text: "Index: %1".arg(spriteDelegate.spriteIndex);
                                                 fontSizeMode: Text.Fit;
                                                 width: parent.width
@@ -284,7 +294,7 @@ ApplicationWindow {
                                                 Layout.preferredWidth: width
                                             }
 
-                                            Text {
+                                            Label {
                                                 text: "Pos: (%1, %2)".arg(spriteDelegate.spriteX).arg(spriteDelegate.spriteY);
                                                 fontSizeMode: Text.Fit
                                                 width: parent.width
@@ -295,7 +305,7 @@ ApplicationWindow {
                                                 Layout.preferredWidth: width
                                             }
 
-                                            Text {
+                                            Label {
                                                 text: "Tile: %1".arg(spriteDelegate.tileIndex);
                                                 fontSizeMode: Text.Fit
                                                 width: parent.width
@@ -306,7 +316,7 @@ ApplicationWindow {
                                                 Layout.preferredWidth: width
                                             }
 
-                                            Text {
+                                            Label {
                                                 text: "X flip: %1".arg(spriteDelegate.xFlip);
                                                 fontSizeMode: Text.Fit
                                                 width: parent.width
@@ -317,7 +327,7 @@ ApplicationWindow {
                                                 Layout.preferredWidth: width
                                             }
 
-                                            Text {
+                                            Label {
                                                 text: "Y flip: %1".arg(spriteDelegate.yFlip);
                                                 fontSizeMode: Text.Fit
                                                 width: parent.width
@@ -328,7 +338,7 @@ ApplicationWindow {
                                                 Layout.preferredWidth: width
                                             }
 
-                                            Text {
+                                            Label {
                                                 text: "Priority: %1".arg(spriteDelegate.priority);
                                                 fontSizeMode: Text.Fit
                                                 width: parent.width
@@ -536,8 +546,8 @@ ApplicationWindow {
                                         }
                                     }
 
-                                    Text { text: "Index: %1".arg(backgroundInspectorGrid.currentIndex) }
-                                    Text {
+                                    Label { text: "Index: %1".arg(backgroundInspectorGrid.currentIndex) }
+                                    Label {
                                         text: "Position: (%1, %2)"
                                             .arg(backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns)
                                             .arg(Math.trunc(backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.columns))
@@ -617,6 +627,55 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    Loader {
+        id: aboutProjectWindowLoader;
+        active: false;
+        sourceComponent: ApplicationWindow {
+
+            id: aboutProjectWindow
+            visible: true
+            title: "About"
+            transientParent: root
+            width: 600
+            height: 300
+            onClosing: aboutProjectWindowLoader.active = false
+
+            ColumnLayout {
+                spacing: 7
+                anchors.margins: 20
+
+                Label {
+                    text: "%1".arg(root.projectMetadata.name)
+                    font.pointSize: 20
+                }
+                Label {
+                    text: "%1".arg(root.projectMetadata.description)
+                    font.pointSize: 10
+                }
+                Label {
+                    text: "v%1 (%2)".arg(root.projectMetadata.version).arg(root.projectMetadata.hash)
+                    font.pointSize: 10
+                }
+                Label
+                {
+                    text: '<html><style type="text/css"></style><a href="%1">Homepage</a></html>'
+                        .arg(root.projectMetadata.url)
+                    onLinkActivated: Qt.openUrlExternally(link)
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.NoButton
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+                Label {
+                    text: "Licensed under %1".arg(root.projectMetadata.license)
+                }
+            }
+
         }
     }
 }
