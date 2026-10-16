@@ -4,10 +4,16 @@ cmake_minimum_required(VERSION 4.1)
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d")
 set(CMAKE_CXX_STANDARD 23)
 
-project(gameboy-cpp VERSION 1.0 LANGUAGES CXX)
+project(gameboy-cpp
+        VERSION 1.0
+        HOMEPAGE_URL https://github.com/Thordreck/gameboy-cpp
+        DESCRIPTION "An original gameboy emulator written in C++"
+        SPDX_LICENSE MIT
+        LANGUAGES CXX)
 
 include(cmake/compiler_warnings.cmake)
 include(cmake/third_party.cmake)
+include(cmake/git.cmake)
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")
 add_link_options("$<$<CXX_COMPILER_ID:MSVC>:/nologo>")

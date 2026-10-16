@@ -53,7 +53,6 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Gameboy/UI
 			PLUGIN_TARGET emulator-qml-plugin
 			DEPENDENCIES QtCore QtQuick
-			IMPORTS ${QT_QUICK_CONTROLS}
 	)
 
 	if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")

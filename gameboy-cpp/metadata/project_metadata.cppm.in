@@ -1,0 +1,12 @@
+export module metadata:project.metadata;
+
+namespace meta
+{
+    export constexpr char project_name[] = R"(${PROJECT_NAME})";
+    export constexpr char project_version[] = R"(${PROJECT_VERSION})";
+    export constexpr char project_description[] = R"(${PROJECT_DESCRIPTION})";
+    export constexpr char project_url[] = R"(${PROJECT_HOMEPAGE_URL})";
+    export constexpr char project_license[] = R"(${PROJECT_SPDX_LICENSE})";
+
+    export constexpr char git_hash[] = R"(${GIT_HASH})";
+}
