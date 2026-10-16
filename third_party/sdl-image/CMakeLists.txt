@@ -22,7 +22,7 @@ set(SDLIMAGE_PNG_SAVE OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_BACKEND_STB OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_PNG_LIBPNG  OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
+add_third_party_subdirectory(upstream)
 
 add_library(sdl-image)
 add_third_party_module("SDL Image" https://github.com/libsdl-org/SDL_image ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE.txt)

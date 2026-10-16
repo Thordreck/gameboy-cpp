@@ -1,4 +1,4 @@
-add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
+add_third_party_subdirectory(upstream)
 
 add_library(plot)
 add_third_party_module("Basic C++ Plots" https://github.com/Signalsmith-Audio/plot ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE.txt)

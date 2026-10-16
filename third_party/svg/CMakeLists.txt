@@ -4,7 +4,7 @@ set(LUNASVG_DISABLE_LOAD_SYSTEM_FONTS OFF CACHE BOOL "" FORCE)
 set(LUNASVG_DISABLE_EXTERNAL_RESOURCES OFF CACHE BOOL "" FORCE)
 set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
+add_third_party_subdirectory(upstream)
 
 add_library(svg)
 add_third_party_module(LunaSVG https://github.com/sammycage/lunasvg ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE)

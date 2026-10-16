@@ -44,3 +44,12 @@ function(link_third_party_module target)
             ${CMAKE_BINARY_DIR}/generated/third_party_metadata.cppm
     )
 endfunction()
+
+function(add_third_party_subdirectory directory)
+    cmake_diagnostic(PUSH)
+    cmake_diagnostic(SET CMD_UNINITIALIZED IGNORE)
+
+    add_subdirectory(${directory} EXCLUDE_FROM_ALL SYSTEM)
+
+    cmake_diagnostic(POP)
+endfunction()
