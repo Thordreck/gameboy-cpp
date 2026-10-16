@@ -16,5 +16,5 @@ set(JSON_StrictNulHandling                  ON CACHE BOOL   "Build with strict N
 set(JSON_StrictBinaryUTF8                   ON CACHE BOOL   "Build with UTF-8 checks in the CBOR, UBJSON, BJData, and BSON writers enabled." FORCE)
 set(JSON_DeleteDeprecatedFunctions          ON CACHE BOOL   "Delete the deprecated functions instead of only deprecating them." FORCE)
 
-add_subdirectory(upstream EXCLUDE_FROM_ALL)
+add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
 add_third_party_module("JSON for Modern C++" https://github.com/nlohmann/json ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE.MIT)

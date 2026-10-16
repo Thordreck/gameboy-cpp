@@ -4,7 +4,7 @@ set(DSPLIB_FFT_BACKEND ON CACHE STRING "fftw" FORCE)
 set(DSPLIB_ENABLE_LTO OFF CACHE BOOL "" FORCE)
 set(DSPLIB_USE_FLOAT32 ON CACHE BOOL "" FORCE)
 
-add_subdirectory(upstream EXCLUDE_FROM_ALL)
+add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
 
 add_library(dsp)
 target_compile_warnings(dsp)

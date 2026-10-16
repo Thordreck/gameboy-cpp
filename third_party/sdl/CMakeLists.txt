@@ -4,7 +4,7 @@ option(SYSTEM_SDL "Use an sdl3 distribution installed in the system" OFF)
 if(SYSTEM_SDL)
     find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
 else()
-    add_subdirectory(upstream EXCLUDE_FROM_ALL)
+    add_subdirectory(upstream EXCLUDE_FROM_ALL SYSTEM)
 endif()
 
 add_library(sdl)
