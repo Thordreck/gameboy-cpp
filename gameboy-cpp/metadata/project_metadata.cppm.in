@@ -2,6 +2,7 @@ export module metadata:project.metadata;
 
 namespace meta
 {
+    export constexpr char project_author[] = R"(${PROJECT_AUTHOR})";
     export constexpr char project_name[] = R"(${PROJECT_NAME})";
     export constexpr char project_version[] = R"(${PROJECT_VERSION})";
     export constexpr char project_description[] = R"(${PROJECT_DESCRIPTION})";

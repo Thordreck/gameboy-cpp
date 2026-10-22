@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 4.1)
 #set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d")
 set(CMAKE_CXX_STANDARD 23)
+set(PROJECT_AUTHOR "Alvaro Paez (Thordreck)")
 
 project(gameboy-cpp
         VERSION 1.0
@@ -85,6 +86,7 @@ if(UI_BACKEND STREQUAL "Qt"
 )
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/qt_setup.cmake NO_POLICY_SCOPE)
     include(cmake/qt_deploy.cmake)
+    include(cmake/qt_resources.cmake)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/qt)
 endif()

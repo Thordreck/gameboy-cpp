@@ -9,6 +9,7 @@ namespace meta
 {
     export struct project_metadata
     {
+        std::string author;
         std::string name;
         std::string version;
         std::string description;
@@ -19,6 +20,15 @@ namespace meta
 
     export [[nodiscard]] project_metadata get_project_metadata()
     {
-        return{ project_name, project_version, project_description, project_url, project_license, git_hash };
+        return
+        {
+            project_author,
+            project_name,
+            project_version,
+            project_description,
+            project_url,
+            project_license,
+            git_hash
+        };
     }
 }

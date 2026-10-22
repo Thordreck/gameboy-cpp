@@ -1,4 +1,8 @@
 function(add_third_party_module name url license)
+    if(NOT IS_READABLE ${license})
+        message(FATAL_ERROR "Third party module {name}'s license file is not readable (path: ${license})")
+    endif()
+
     get_property(THIRD_PARTY_MODULES_METADATA GLOBAL PROPERTY third_party_modules_metadata_prop)
 
     if(NOT DEFINED THIRD_PARTY_MODULES_METADATA)
@@ -22,11 +26,27 @@ function(add_third_party_module name url license)
     set_property(GLOBAL PROPERTY third_party_modules_metadata_prop "${THIRD_PARTY_MODULES_METADATA}")
 endfunction()
 
+function(register_third_party_module_license_processor PROCESSOR)
+    set_property(GLOBAL PROPERTY third_party_modules_license_processor_prop ${PROCESSOR})
+endfunction()
+
 function(generate_third_party_module)
     get_property(THIRD_PARTY_MODULES_METADATA GLOBAL PROPERTY third_party_modules_metadata_prop)
+    get_property(THIRD_PARTY_MODULES_LICENSE_PROCESSOR GLOBAL PROPERTY third_party_modules_license_processor_prop)
 
     if(NOT DEFINED THIRD_PARTY_MODULES_METADATA)
         set(THIRD_PARTY_MODULES_METADATA "{ \"modules\": []}")
+    endif()
+
+    if(DEFINED THIRD_PARTY_MODULES_LICENSE_PROCESSOR)
+        string(JSON num_modules LENGTH "${THIRD_PARTY_MODULES_METADATA}" modules)
+        math(EXPR num_modules "${num_modules} - 1")
+
+        foreach(module_index RANGE ${num_modules})
+            string(JSON license_file GET "${THIRD_PARTY_MODULES_METADATA}" modules ${module_index} license)
+            cmake_language(CALL ${THIRD_PARTY_MODULES_LICENSE_PROCESSOR} ${license_file} converted_license_file)
+            string(JSON THIRD_PARTY_MODULES_METADATA SET "${THIRD_PARTY_MODULES_METADATA}" modules ${module_index} license \"${converted_license_file}\")
+        endforeach()
     endif()
 
     configure_file(

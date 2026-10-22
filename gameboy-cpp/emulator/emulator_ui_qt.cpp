@@ -3,9 +3,12 @@
 #include <QtQuick>
 #include <QString>
 #include <QVariant>
+#include <QtAssert>
+#include <QMetaType>
 #include <QtLogging>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+
 #include <boost/lockfree/spsc_value.hpp>
 
 namespace emulator
@@ -58,6 +61,59 @@ namespace emulator
 
         return icon;
     }
+
+    template<typename T>
+    concept QMLCompatible
+        = std::convertible_to<T, int>
+        || std::convertible_to<T, bool>
+        || std::convertible_to<T, double>
+        || std::convertible_to<T, QString>
+        || QMetaType::fromType<T>.isValid();
+
+    // Adapted from: https://gist.github.com/oKcerG/fa03827ebbd1c7aa6471c4ce560946ad
+    class q_expected
+    {
+        Q_GADGET
+        QML_ELEMENT
+        QML_UNCREATABLE("")
+
+    public:
+        // Note: required by QML. It's not possible to make it private and befriend Qt's internal methods
+        // since they use std::is_default_constructible
+        explicit q_expected() = default;
+
+        q_expected(QMLCompatible auto&& value, QJSEngine* engine)
+            : is_error { false }
+            , value { QVariant::fromValue(std::forward<decltype(value)>(value)) }
+            , engine { engine }
+        {}
+
+        template<QMLCompatible Error>
+        q_expected(std::unexpected<Error>&& unexpected, QJSEngine* engine)
+            : is_error { true }
+            , value { QVariant::fromValue(std::forward<decltype(unexpected)>(unexpected).error()) }
+            , engine { engine }
+        {}
+
+        Q_INVOKABLE void visit(const QJSValue& on_expected, const QJSValue& on_error) const
+        {
+            Q_CHECK_PTR(engine);
+            Q_ASSERT(on_expected.isCallable());
+            Q_ASSERT(on_error.isCallable());
+
+            const QJSValue arg = engine->toScriptValue(value);
+            [[maybe_unused]] const QJSValue result = is_error
+                ? on_error.call({ arg })
+                : on_expected.call({ arg });
+
+            Q_ASSERT_X(!result.isError(), "q_expected::visit", result.toString().toUtf8().constData());
+        }
+
+    private:
+        bool is_error;
+        QVariant value;
+        QJSEngine* engine;
+    };
 
     struct emulator_ui_status
     {
@@ -648,12 +704,13 @@ namespace emulator
         emulator_ui_background& background_source;
     };
 
-    class project_metadata : public QObject
+    class project_metadata_provider : public QObject
     {
         Q_OBJECT
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(ProjectMetadata)
 
+        Q_PROPERTY(QString author READ author CONSTANT)
         Q_PROPERTY(QString name READ name CONSTANT)
         Q_PROPERTY(QString version READ version CONSTANT)
         Q_PROPERTY(QString description READ description CONSTANT)
@@ -662,19 +719,105 @@ namespace emulator
         Q_PROPERTY(QString hash READ hash CONSTANT)
 
     public:
-        explicit project_metadata(const backend_functions& _backend)
-            : backend { _backend }
+        explicit project_metadata_provider(const backend_functions& backend)
+            : metadata { backend.project_metadata() }
         {}
 
-        Q_INVOKABLE QString name() const { return QString::fromStdString(backend.project_name()); }
-        Q_INVOKABLE QString version() const { return QString::fromStdString(backend.project_version()); }
-        Q_INVOKABLE QString description() const { return QString::fromStdString(backend.project_description()); }
-        Q_INVOKABLE QUrl url() const { return QString::fromStdString(backend.project_url()); }
-        Q_INVOKABLE QString license() const { return QString::fromStdString(backend.project_license()); }
-        Q_INVOKABLE QString hash() const { return QString::fromStdString(backend.project_hash()); }
+        Q_INVOKABLE QString author() const { return QString::fromStdString(metadata.author); }
+        Q_INVOKABLE QString name() const { return QString::fromStdString(metadata.name); }
+        Q_INVOKABLE QString version() const { return QString::fromStdString(metadata.version); }
+        Q_INVOKABLE QString description() const { return QString::fromStdString(metadata.description); }
+        Q_INVOKABLE QUrl url() const { return QString::fromStdString(metadata.url); }
+        Q_INVOKABLE QString license() const { return QString::fromStdString(metadata.license); }
+        Q_INVOKABLE QString hash() const { return QString::fromStdString(metadata.hash); }
 
     private:
-        backend_functions backend;
+        project_metadata metadata;
+    };
+
+    enum class third_party_metadata_roles : int
+    {
+        name = Qt::UserRole + 1,
+        url,
+        license,
+    };
+
+    class third_party_metadata_provider : public QAbstractListModel
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+        QML_NAMED_ELEMENT(ThirdPartyMetadata)
+
+    public:
+        explicit third_party_metadata_provider(const backend_functions& backend, QObject* parent = nullptr)
+            : QAbstractListModel { parent }
+            , metadata { backend.third_party_metadata() }
+        {}
+
+        int rowCount(const QModelIndex &parent) const override { return metadata.size(); }
+
+        QVariant data(const QModelIndex &model_index, const int role) const override
+        {
+            using enum third_party_metadata_roles;
+            const third_party_metadata_roles metadata_role{role};
+
+            const int metadata_index = model_index.row();
+            const third_party_metadata& selected_module = metadata[metadata_index];
+
+            switch (metadata_role)
+            {
+            case name:
+                return QString::fromStdString(selected_module.name);
+            case url:
+                return QString::fromStdString(selected_module.url);
+            case license:
+                return QString::fromStdString(selected_module.license);
+            default:
+                std::unreachable();
+            }
+        }
+
+        QHash<int, QByteArray> roleNames() const override
+        {
+            QHash<int, QByteArray> roles{};
+
+            roles[std::to_underlying(third_party_metadata_roles::name)] = "name";
+            roles[std::to_underlying(third_party_metadata_roles::url)] = "url";
+            roles[std::to_underlying(third_party_metadata_roles::license)] = "license";
+
+            return roles;
+        }
+
+    private:
+        std::vector<third_party_metadata> metadata;
+    };
+
+    class file_utils : public QObject
+    {
+        Q_OBJECT
+        QML_UNCREATABLE("")
+        QML_NAMED_ELEMENT(FileUtils)
+
+    public:
+        explicit file_utils(QJSEngine& engine, QObject* parent = nullptr)
+            : QObject { parent }
+            , engine { engine }
+        {}
+
+        Q_INVOKABLE q_expected read_file(const QString& path) const
+        {
+            QFile file { path };
+
+            if (!file.open(QIODevice::ReadOnly))
+            {
+                return { std::unexpected { QString("Could not read file at path %1").arg(path) }, &engine };
+            }
+
+            return { QString { file.readAll() }, &engine };
+        }
+
+    private:
+        QJSEngine& engine;
     };
 
     struct qt_graphical_interface::pimpl
@@ -718,7 +861,9 @@ namespace emulator
             .transform([this] (const auto& icon) { imp->app.setWindowIcon(icon); }));
 
         emulator_ui_controls ui_controls { backend };
-        project_metadata project_metadata { backend };
+        project_metadata_provider project_metadata { backend };
+        third_party_metadata_provider third_party_metadata { backend };
+        file_utils file_utils { imp->engine };
 
 #ifdef QT_UI_DEBUG_MODE
         emulator_ui_sprites_model ui_debug_sprites_model { backend };
@@ -744,6 +889,8 @@ namespace emulator
             std::make_pair("controls", &ui_controls),
             std::make_pair("framebuffer", &imp->framebuffer_source),
             std::make_pair("projectMetadata", &project_metadata),
+            std::make_pair("thirdPartyMetadata", &third_party_metadata),
+            std::make_pair("fileUtils", &file_utils),
 #ifdef QT_UI_DEBUG_MODE
             std::make_pair("debugMode", true),
             std::make_pair("sprites", &ui_debug_sprites_model),

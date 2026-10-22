@@ -1,0 +1,25 @@
+function(add_qt_resource target name file)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "BIG_RESOURCE" "ALIAS;PREFIX" "")
+
+    if(NOT IS_READABLE ${file})
+        message(FATAL_ERROR "Cannot add qt resource: file is not readable (path: ${file})")
+    endif()
+
+    IF(NOT TARGET ${target})
+        message(FATAL_ERROR "Cannot add qt resource: target does not exist (target: ${target})")
+    endif()
+
+    if(DEFINED arg_ALIAS)
+        set_source_files_properties(${file} PROPERTIES QT_RESOURCE_ALIAS ${arg_ALIAS})
+    endif()
+
+    if(DEFINED arg_PREFIX AND arg_BIG_RESOURCE)
+        qt_add_resources(${target} ${name} PREFIX ${arg_PREFIX} BIG_RESOURCES FILES "${file}")
+    elseif(DEFINED arg_PREFIX)
+        qt_add_resources(${target} ${name} PREFIX ${arg_PREFIX} FILES "${file}")
+    elseif(DEFINED arg_BIG_RESOURCE)
+        qt_add_resources(${target} ${name} BIG_RESOURCES FILES "${file}")
+    else()
+        qt_add_resources(${target} ${name} FILES "${file}")
+    endif()
+endfunction()

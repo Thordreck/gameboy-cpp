@@ -44,7 +44,6 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			QT_RESOURCE_ALIAS emulator_ui_qt
 			QT_QML_SOURCE_TYPENAME EmulatorUI
 	)
-	set_source_files_properties(${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png PROPERTIES  QT_RESOURCE_ALIAS gameboy-icon.png)
 
 	qt_add_qml_module(emulator-qml
 			URI Gameboy.UI
@@ -61,10 +60,20 @@ elseif(UI_BACKEND STREQUAL "Qt")
 		target_compile_definitions(emulator-qml PUBLIC QT_UI_DEBUG_MODE)
 	endif()
 
-	qt_add_resources(emulator-qml "icons"
-			PREFIX "/icons"
-			FILES ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
-	)
+	add_qt_resource(emulator-qml "icons" ${CMAKE_SOURCE_DIR}/resources/icons/gameboy-icon.png
+			ALIAS "gameboy-icon.png"
+			PREFIX "/icons")
+
+	function(add_third_party_license_resources license converted_license_file)
+		string(UUID license_uuid NAME ${license} NAMESPACE "48f9eb67-7a4e-4176-802b-199ec0f17769")
+
+		add_qt_resource(emulator-qml "license-${license_uuid}" "${license}"
+				ALIAS "${license_uuid}"
+				PREFIX "/licenses")
+		set(converted_license_file ":/licenses/${license_uuid}" PARENT_SCOPE)
+	endfunction()
+
+	register_third_party_module_license_processor(add_third_party_license_resources)
 
 	qt_add_resources(emulator-qml "qtquickcontrols2.conf" FILES qtquickcontrols2.conf)
 	set_target_properties(emulator-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")

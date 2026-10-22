@@ -18,6 +18,24 @@ namespace emulator
     using ui_framebuffer_view_t = std::span<const std::uint8_t, ui_framebuffer_size>;
     using ui_framebuffer_t = std::array<std::uint8_t, ui_framebuffer_size>;
 
+    struct third_party_metadata
+    {
+        std::string name;
+        std::string url;
+        std::string license;
+    };
+
+    struct project_metadata
+    {
+        std::string author;
+        std::string name;
+        std::string version;
+        std::string description;
+        std::string url;
+        std::string license;
+        std::string hash;
+    };
+
     struct backend_functions
     {
         std::function<bool()> has_rom;
@@ -37,12 +55,8 @@ namespace emulator
         std::function<bool()> muted;
         std::function<void(bool)> set_muted;
 
-        std::function<std::string()> project_name;
-        std::function<std::string()> project_version;
-        std::function<std::string()> project_description;
-        std::function<std::string()> project_url;
-        std::function<std::string()> project_license;
-        std::function<std::string()> project_hash;
+        std::function<project_metadata()> project_metadata;
+        std::function<std::vector<third_party_metadata>()> third_party_metadata;
     };
 
     class qt_graphical_interface

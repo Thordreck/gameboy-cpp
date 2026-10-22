@@ -10,6 +10,8 @@ ApplicationWindow {
     required property EmulatorControls controls
     required property EmulatorFramebuffer framebuffer
     required property ProjectMetadata projectMetadata
+    required property ThirdPartyMetadata thirdPartyMetadata
+    required property FileUtils fileUtils
 
     required property bool debugMode
     property EmulatorSprites sprites
@@ -631,6 +633,43 @@ ApplicationWindow {
     }
 
     Loader {
+        id: textFileViewerLoader;
+        active: false;
+
+        property string contents: "";
+        property string title: "";
+
+        function show(title: string, contents: string) {
+            this.contents = contents;
+            this.title = title;
+            this.active = true;
+        }
+
+        sourceComponent: ApplicationWindow {
+            visible: true
+            title: textFileViewerLoader.title
+            transientParent: root
+            width: 600
+            height: 300
+            onClosing: {
+                parent.text = ""
+                parent.title = ""
+                textFileViewerLoader.active = false
+            }
+
+            ScrollView {
+                anchors { fill: parent; margins: 8 }
+
+                TextArea {
+                    horizontalAlignment: TextEdit.AlignJustify
+                    readOnly: true
+                    text: textFileViewerLoader.contents
+                }
+            }
+        }
+    }
+
+    Loader {
         id: aboutProjectWindowLoader;
         active: false;
         sourceComponent: ApplicationWindow {
@@ -645,37 +684,118 @@ ApplicationWindow {
 
             ColumnLayout {
                 spacing: 7
-                anchors.margins: 20
+                anchors { fill: parent; margins: 8 }
 
                 Label {
                     text: "%1".arg(root.projectMetadata.name)
                     font.pointSize: 20
+                    Layout.alignment: Qt.AlignCenter
                 }
+
                 Label {
                     text: "%1".arg(root.projectMetadata.description)
                     font.pointSize: 10
+                    Layout.alignment: Qt.AlignCenter
                 }
-                Label {
-                    text: "v%1 (%2)".arg(root.projectMetadata.version).arg(root.projectMetadata.hash)
-                    font.pointSize: 10
-                }
-                Label
-                {
-                    text: '<html><style type="text/css"></style><a href="%1">Homepage</a></html>'
-                        .arg(root.projectMetadata.url)
-                    onLinkActivated: Qt.openUrlExternally(link)
 
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.NoButton
-                        cursorShape: Qt.PointingHandCursor
+                Label {
+                    text: "Developed by %1".arg(root.projectMetadata.author)
+                    font.pointSize: 10
+                    Layout.alignment: Qt.AlignCenter
+                }
+
+                RowLayout {
+                    Layout.alignment: Qt.AlignCenter
+
+                    Label {
+                        text: "v%1 (%2)".arg(root.projectMetadata.version).arg(root.projectMetadata.hash)
+                        font.pointSize: 10
+                    }
+                    Label
+                    {
+                        text: '<html><style type="text/css"></style><a href="%1">Homepage</a></html>'
+                            .arg(root.projectMetadata.url)
+                        onLinkActivated: link => Qt.openUrlExternally(link)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: Qt.PointingHandCursor
+                        }
                     }
                 }
+
                 Label {
                     text: "Licensed under %1".arg(root.projectMetadata.license)
+                    Layout.alignment: Qt.AlignCenter
+                }
+
+                Item { height: 20 }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    spacing: 5
+                    model: root.thirdPartyMetadata
+                    delegateModelAccess: DelegateModel.ReadOnly
+
+                    header: Label {
+                        width: ListView.view.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "Third Party Modules"
+                    }
+
+                    delegate: Item {
+                        required property string name
+                        required property string url
+                        required property string license
+
+                        id: thirdPartyMetadataItem
+                        width: ListView.view.width
+                        height: 25
+
+                        Item {
+                            anchors { fill: parent; }
+
+                            RowLayout {
+                                anchors { centerIn: parent; }
+
+                                Label {
+                                    text: '<html><style type="text/css"></style><a href="%1">%2</a></html>'
+                                        .arg(thirdPartyMetadataItem.url)
+                                        .arg(thirdPartyMetadataItem.name)
+
+                                    onLinkActivated: link => Qt.openUrlExternally(link)
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.NoButton
+                                        cursorShape: Qt.PointingHandCursor
+                                    }
+                                }
+
+                                Label {
+                                    text: '<html><style type="text/css"></style><a href="%1">(license)</a></html>'
+                                        .arg(thirdPartyMetadataItem.license)
+
+                                    onLinkActivated: link =>
+                                        root.fileUtils.read_file(link).visit(
+                                            contents => textFileViewerLoader
+                                                    .show("%1 license".arg(thirdPartyMetadataItem.name), contents),
+                                            error => print("Error reading file: %1".arg(error)))
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.NoButton
+                                        cursorShape: Qt.PointingHandCursor
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-
         }
     }
 }

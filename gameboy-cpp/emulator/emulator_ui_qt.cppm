@@ -39,7 +39,7 @@ namespace emulator
             using namespace utils;
 
             const auto third_party_modules = value_or_panic(meta::get_third_party_metadata());
-            const auto project_metadata = meta::get_project_metadata();
+            const auto project_meta = meta::get_project_metadata();
 
             const backend_functions backend
             {
@@ -63,12 +63,26 @@ namespace emulator
                 [&emulator] { return emulator.muted(); },
                 [&emulator] (const bool muted) { return emulator.set_muted(muted); },
 
-                [&project_metadata] { return project_metadata.name; },
-                [&project_metadata] { return project_metadata.version; },
-                [&project_metadata] { return project_metadata.description; },
-                [&project_metadata] { return project_metadata.url; },
-                [&project_metadata] { return project_metadata.license; },
-                [&project_metadata] { return project_metadata.hash; },
+                [&project_meta]
+                {
+                    return project_metadata
+                    {
+                        project_meta.author,
+                        project_meta.name,
+                        project_meta.version,
+                        project_meta.description,
+                        project_meta.url,
+                        project_meta.license,
+                        project_meta.hash,
+                    };
+                },
+
+                [&third_party_modules]
+                {
+                    return third_party_modules
+                        | std::views::transform([] (auto&& entry) { return third_party_metadata { entry.name, entry.url, entry.license }; })
+                        | std::ranges::to<std::vector>();
+                }
             };
 
             return imp.render(backend);
