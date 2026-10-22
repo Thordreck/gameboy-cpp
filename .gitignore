@@ -46,3 +46,6 @@
 *.hint
 
 *.idea/
+
+# Qt language server setting files
+**/.qmlls.ini

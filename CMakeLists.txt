@@ -84,9 +84,13 @@ if(UI_BACKEND STREQUAL "Qt"
     OR AUDIO_BACKEND STREQUAL "Qt"
     OR JSON_PROVIDER STREQUAL "Qt"
 )
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/")
     include(${CMAKE_CURRENT_LIST_DIR}/third_party/qt/cmake/qt_setup.cmake NO_POLICY_SCOPE)
+    set(QT_INSTALL_PATH ${Qt6_DIR})
+
     include(cmake/qt_deploy.cmake)
     include(cmake/qt_resources.cmake)
+    include(cmake/qt_lls.cmake)
 
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/qt)
 endif()

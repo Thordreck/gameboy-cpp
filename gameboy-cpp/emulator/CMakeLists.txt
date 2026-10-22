@@ -54,6 +54,12 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			DEPENDENCIES QtCore QtQuick
 	)
 
+	list(APPEND QMLLS_IMPORT_PATHS
+			"${QT_INSTALL_PATH}/../../../qml"
+			"${CMAKE_BINARY_DIR}/gameboy-cpp/")
+
+	generate_qmlls_configuration_file()
+
 	if(CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
 		set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES QT_QML_SKIP_CACHEGEN TRUE)
 		target_compile_definitions(emulator-qml PUBLIC QML_HOT_RELOAD_PATH="${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml")

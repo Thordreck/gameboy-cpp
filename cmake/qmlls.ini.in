@@ -1,0 +1,5 @@
+[General]
+buildDir="${CMAKE_BINARY_DIR}"
+no-cmake-calls=false
+docDir=${QT_INSTALL_DOCS}
+importPaths="${QMLLS_IMPORT_PATHS}"
