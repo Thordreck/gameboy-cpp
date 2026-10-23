@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 pragma ComponentBehavior: Bound
 
 import QtCore
@@ -93,7 +95,7 @@ ApplicationWindow {
     EmulatorVideo {
         anchors.centerIn: parent
         height: width * implicitHeight / implicitWidth
-        source: framebuffer
+        source: root.framebuffer
         visible: root.controls.status !== EmulatorStatus.Stopped
         width: Math.min(parent.width, parent.height * implicitWidth / implicitHeight)
     }
@@ -194,6 +196,7 @@ ApplicationWindow {
 
         buttons: MessageDialog.Ok
     }
+
     Loader {
         id: spritesViewerWindow
 
@@ -222,15 +225,7 @@ ApplicationWindow {
                     GridView {
                         id: spritesViewerGridView
 
-                        anchors.fill: parent
-                        cellHeight: spritesViewer.height / 4
-                        cellWidth: spritesViewer.width / 6
-                        delegateModelAccess: DelegateModel.ReadOnly
-                        focus: true
-                        keyNavigationEnabled: false
-                        model: root.sprites
-
-                        delegate: Item {
+                        component SpriteViewerDelegateItem: Item {
                             id: spriteDelegate
 
                             required property string imageURI
@@ -267,7 +262,7 @@ ApplicationWindow {
                                             anchors.fill: parent
                                             fillMode: Image.PreserveAspectFit
                                             smooth: false
-                                            source: imageURI
+                                            source: spriteDelegate.imageURI
                                         }
                                     }
                                     Item {
@@ -338,8 +333,21 @@ ApplicationWindow {
                             MouseArea {
                                 anchors.fill: parent
 
-                                onClicked: spritesViewerGridView.currentIndex = index
+                                onClicked: spritesViewerGridView.currentIndex = spriteDelegate.index
                             }
+                        }
+
+                        property SpriteViewerDelegateItem currentSprite: currentItem ? currentItem as SpriteViewerDelegateItem : null
+
+                        anchors.fill: parent
+                        cellHeight: spritesViewer.height / 4
+                        cellWidth: spritesViewer.width / 6
+                        delegateModelAccess: DelegateModel.ReadOnly
+                        focus: true
+                        keyNavigationEnabled: false
+                        model: root.sprites
+
+                        delegate: SpriteViewerDelegateItem {
                         }
                         highlight: Rectangle {
                             color: "lightsteelblue"
@@ -350,11 +358,11 @@ ApplicationWindow {
                         onCurrentIndexChanged: {
                             spriteScreenHighlight.visible = currentIndex !== -1;
 
-                            if (currentItem != null) {
-                                spriteScreenHighlight.spriteWidth = currentItem.spriteWidth;
-                                spriteScreenHighlight.spriteHeight = currentItem.spriteHeight;
-                                spriteScreenHighlight.spriteX = currentItem.spriteX;
-                                spriteScreenHighlight.spriteY = currentItem.spriteY;
+                            if (currentSprite != null) {
+                                spriteScreenHighlight.spriteWidth = currentSprite.spriteWidth;
+                                spriteScreenHighlight.spriteHeight = currentSprite.spriteHeight;
+                                spriteScreenHighlight.spriteX = currentSprite.spriteX;
+                                spriteScreenHighlight.spriteY = currentSprite.spriteY;
                             }
                         }
                     }
@@ -376,7 +384,7 @@ ApplicationWindow {
 
                                 anchors.centerIn: parent
                                 height: width * implicitHeight / implicitWidth
-                                source: framebuffer
+                                source: root.framebuffer
                                 width: Math.min(parent.width, parent.height * implicitWidth / implicitHeight)
 
                                 Rectangle {
@@ -407,9 +415,9 @@ ApplicationWindow {
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
                                 icon.name: root.controls.status === EmulatorStatus.Running ? "media-playback-pause" : "media-playback-start"
+                                implicitWidth: 100
                                 radius: 3
                                 text: root.controls.status === EmulatorStatus.Running ? "Pause" : "Play"
-                                width: 100
 
                                 onClicked: {
                                     if (root.controls.status === EmulatorStatus.Running)
@@ -423,9 +431,9 @@ ApplicationWindow {
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
                                 icon.name: "media-seek-forward"
+                                implicitWidth: 100
                                 radius: 3
                                 text: "Jump to next frame"
-                                width: 100
 
                                 onClicked: {
                                     root.controls.pause();
@@ -436,11 +444,11 @@ ApplicationWindow {
                                 ToolTip.text: text
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
-                                enabled: controls.status !== EmulatorStatus.Running
+                                enabled: root.controls.status !== EmulatorStatus.Running
                                 icon.name: "view-refresh"
+                                implicitWidth: 100
                                 radius: 3
                                 text: "Update sprites"
-                                width: 100
 
                                 onClicked: root.sprites.refreshSpritesCache()
                             }
@@ -496,6 +504,7 @@ ApplicationWindow {
                                 model: backgroundInspectorGrid.columns * backgroundInspectorGrid.rows
 
                                 Rectangle {
+                                    required property int index
                                     readonly property int tileIndex: index
 
                                     border.color: backgroundInspectorGrid.currentIndex === index ? "blue" : "lightsteelblue"
@@ -515,37 +524,38 @@ ApplicationWindow {
                                     }
                                 }
                             }
-                            Popup {
-                                closePolicy: Popup.NoAutoClose
-                                enabled: false
-                                height: 150
-                                popupType: Popup.Item
-                                visible: parent.visible && backgroundInspectorGrid.currentIndex !== -1
-                                width: 120
-                                x: backgroundInspectorGrid.x + (backgroundInspectorGrid.width / backgroundInspectorGrid.columns) * (backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns + 2)
-                                y: backgroundInspectorGrid.y + (backgroundInspectorGrid.height / backgroundInspectorGrid.rows) * (backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.rows) - height * 0.8
+                        }
 
-                                ColumnLayout {
-                                    anchors.fill: parent
+                        Popup {
+                            closePolicy: Popup.NoAutoClose
+                            enabled: false
+                            height: 150
+                            popupType: Popup.Item
+                            visible: parent.visible && backgroundInspectorGrid.currentIndex !== -1
+                            width: 120
+                            x: backgroundInspectorGrid.x + (backgroundInspectorGrid.width / backgroundInspectorGrid.columns) * (backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns + 2)
+                            y: backgroundInspectorGrid.y + (backgroundInspectorGrid.height / backgroundInspectorGrid.rows) * (backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.rows) - height * 0.8
 
-                                    Item {
-                                        Layout.fillHeight: true
-                                        Layout.fillWidth: true
+                            ColumnLayout {
+                                anchors.fill: parent
 
-                                        Image {
-                                            anchors.fill: parent
-                                            cache: false
-                                            fillMode: Image.PreserveAspectFit
-                                            smooth: false
-                                            source: "image://background?tile_index=%1".arg(backgroundInspectorGrid.currentIndex)
-                                        }
+                                Item {
+                                    Layout.fillHeight: true
+                                    Layout.fillWidth: true
+
+                                    Image {
+                                        anchors.fill: parent
+                                        cache: false
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: false
+                                        source: "image://background?tile_index=%1".arg(backgroundInspectorGrid.currentIndex)
                                     }
-                                    Label {
-                                        text: "Index: %1".arg(backgroundInspectorGrid.currentIndex)
-                                    }
-                                    Label {
-                                        text: "Position: (%1, %2)".arg(backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns).arg(Math.trunc(backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.columns))
-                                    }
+                                }
+                                Label {
+                                    text: "Index: %1".arg(backgroundInspectorGrid.currentIndex)
+                                }
+                                Label {
+                                    text: "Position: (%1, %2)".arg(backgroundInspectorGrid.currentIndex % backgroundInspectorGrid.columns).arg(Math.trunc(backgroundInspectorGrid.currentIndex / backgroundInspectorGrid.columns))
                                 }
                             }
                         }
@@ -579,9 +589,9 @@ ApplicationWindow {
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
                                 icon.name: root.controls.status === EmulatorStatus.Running ? "media-playback-pause" : "media-playback-start"
+                                implicitWidth: 100
                                 radius: 3
                                 text: root.controls.status === EmulatorStatus.Running ? "Pause" : "Play"
-                                width: 100
 
                                 onClicked: {
                                     if (root.controls.status === EmulatorStatus.Running)
@@ -595,9 +605,9 @@ ApplicationWindow {
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
                                 icon.name: "media-seek-forward"
+                                implicitWidth: 100
                                 radius: 3
                                 text: "Jump to next frame"
-                                width: 100
 
                                 onClicked: {
                                     root.controls.pause();
@@ -608,11 +618,11 @@ ApplicationWindow {
                                 ToolTip.text: text
                                 ToolTip.visible: hovered
                                 display: AbstractButton.IconOnly
-                                enabled: controls.status !== EmulatorStatus.Running
+                                enabled: root.controls.status !== EmulatorStatus.Running
                                 icon.name: "view-refresh"
+                                implicitWidth: 100
                                 radius: 3
                                 text: "Update background"
-                                width: 100
 
                                 onClicked: root.bg.refresh()
                             }
@@ -644,8 +654,8 @@ ApplicationWindow {
             width: 600
 
             onClosing: {
-                parent.text = "";
-                parent.title = "";
+                textFileViewerLoader.contents = "";
+                textFileViewerLoader.title = "";
                 textFileViewerLoader.active = false;
             }
 
@@ -724,7 +734,7 @@ ApplicationWindow {
                     text: "Licensed under %1".arg(root.projectMetadata.license)
                 }
                 Item {
-                    height: 20
+                    Layout.preferredHeight: 20
                 }
                 ListView {
                     Layout.fillHeight: true
@@ -765,7 +775,7 @@ ApplicationWindow {
                                 Label {
                                     text: '<html><style type="text/css"></style><a href="%1">(license)</a></html>'.arg(thirdPartyMetadataItem.license)
 
-                                    onLinkActivated: link => root.fileUtils.read_file(link).visit(contents => textFileViewerLoader.show("%1 license".arg(thirdPartyMetadataItem.name), contents), error => print("Error reading file: %1".arg(error)))
+                                    onLinkActivated: link => root.fileUtils.read_file(link).visit(contents => textFileViewerLoader.show("%1 license".arg(thirdPartyMetadataItem.name), contents), error => console.log("Error reading file: %1".arg(error)))
 
                                     MouseArea {
                                         acceptedButtons: Qt.NoButton
@@ -785,4 +795,5 @@ ApplicationWindow {
             }
         }
     }
+
 }

@@ -118,18 +118,16 @@ namespace emulator
     struct emulator_ui_status
     {
         Q_GADGET
-        QML_UNCREATABLE("")
-        QML_NAMED_ELEMENT(EmulatorStatus)
+        QML_VALUE_TYPE(emulatorStatus)
 
     public:
-        enum class Value : std::uint8_t
-        {
-            Stopped,
-            Running,
-            Paused
-        };
-
+        enum Value { Stopped, Running, Paused };
         Q_ENUM(Value)
+    };
+
+    class emulator_ui_status_enum : public emulator_ui_status
+    {
+        Q_GADGET
     };
 
     class emulator_ui_controls : public QObject
@@ -138,7 +136,7 @@ namespace emulator
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorControls)
 
-        Q_PROPERTY(emulator_ui_status::Value status READ status BINDABLE bindable_status)
+        Q_PROPERTY(emulator::emulator_ui_status::Value status READ status BINDABLE bindable_status)
         Q_PROPERTY(float volume READ volume WRITE setVolume BINDABLE bindable_volume)
         Q_PROPERTY(bool muted READ muted WRITE setMuted BINDABLE bindable_muted)
 
@@ -244,6 +242,7 @@ namespace emulator
     class emulator_ui_video_source : public QObject
     {
         Q_OBJECT
+        QML_NAMED_ELEMENT(EmulatorVideoSource)
         QML_UNCREATABLE("")
 
     public:
@@ -292,7 +291,7 @@ namespace emulator
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(EmulatorVideo)
-        Q_PROPERTY(emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED)
+        Q_PROPERTY(emulator::emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED)
 
     public:
         emulator_ui_video()
@@ -902,8 +901,14 @@ namespace emulator
         imp->engine.loadFromModule("Gameboy.UI", "EmulatorUI");
         return imp->app.exec();
     }
-
 }
 
+namespace emulator_status_enum_foreign
+{
+    Q_NAMESPACE
+    QML_NAMED_ELEMENT(EmulatorStatus)
+    QML_FOREIGN_NAMESPACE(::emulator::emulator_ui_status_enum)
+}
+
+
 #include "emulator_ui_qt.moc"
-Q_DECLARE_INTERFACE(emulator::emulator_ui_video_source, "emulator.ui.VideoSource")

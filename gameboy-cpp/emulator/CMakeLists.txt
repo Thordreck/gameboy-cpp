@@ -40,6 +40,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	target_sources(emulator-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
 	target_link_libraries(emulator-qml PRIVATE Qt6::Core Qt6::Qml Qt6::Quick Boost::lockfree)
 	set_target_properties(emulator-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
+
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
 			QT_RESOURCE_ALIAS emulator_ui_qt
 			QT_QML_SOURCE_TYPENAME EmulatorUI
@@ -49,14 +50,14 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			URI Gameboy.UI
 			VERSION ${PROJECT_VERSION}
 			QML_FILES emulator_ui_qt.qml
-			OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gameboy-cpp/Gameboy/UI
+			OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Gameboy/UI
 			PLUGIN_TARGET emulator-qml-plugin
 			DEPENDENCIES QtCore QtQuick
 	)
 
 	list(APPEND QMLLS_IMPORT_PATHS
 			"${QT_INSTALL_PATH}/../../../qml"
-			"${CMAKE_BINARY_DIR}/gameboy-cpp/")
+			"${CMAKE_CURRENT_BINARY_DIR}")
 
 	generate_qmlls_configuration_file()
 
