@@ -1,10 +1,11 @@
 export module opcodes:load;
 
-export import cpu;
-export import std;
-export import utilities;
-export import :common;
+import cpu;
+import std;
 import memory;
+import utilities;
+
+import :common;
 
 namespace opcodes
 {
@@ -496,7 +497,7 @@ namespace opcodes
             {
             case 0:
                 {
-                    using namespace literals;
+                    using namespace utils::numeric_literals;
                     cpu.cache.r16 = 0xFF00_u16 + cpu.reg.c();
                 }
                 break;
@@ -523,7 +524,7 @@ namespace opcodes
             {
             case 0:
                 {
-                    using namespace literals;
+                    using namespace utils::numeric_literals;
                     cpu.cache.r16 = 0xFF00_u16 + cpu.reg.c();
                 }
                 break;

@@ -16,3 +16,4 @@ export import :constrained;
 export import :ring_buffer;
 export import :triple_buffer;
 export import :uuid;
+export import :numeric_literals;

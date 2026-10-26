@@ -375,7 +375,7 @@ namespace cartridge
             return std::unexpected{"Unexpected rom header end"};
         }
 
-        const bool cgb_cartridge = rom[cgb_flag_address] & 0x80 != 0;
+        const bool cgb_cartridge = (rom[cgb_flag_address] & 0x80) != 0;
 
         return header
         {

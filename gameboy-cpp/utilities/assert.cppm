@@ -34,7 +34,7 @@ namespace utils
 		}
 	}
 #else
-	export constexpr void assert(const bool, const char* message = nullptr) {}
+	export constexpr void assert(const bool, const char* = nullptr) {}
 
 #endif
 

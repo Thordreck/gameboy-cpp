@@ -573,7 +573,7 @@ namespace qt
     {
         static constexpr key_event<Type> create(const QEvent* event)
         {
-            const auto* key_event = static_cast<const QKeyEvent*>(event);
+            const auto* key_event = dynamic_cast<const QKeyEvent*>(event);
             return { static_cast<key>(key_event->key()) };
         }
     };

@@ -1,10 +1,11 @@
 export module opcodes:bit;
 
-export import std;
-export import cpu;
-export import utilities;
-export import :common;
+import std;
+import cpu;
 import memory;
+import utilities;
+
+import :common;
 
 namespace opcodes
 {
@@ -654,7 +655,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             const std::uint8_t a = cpu.reg.a();
             const std::uint8_t c = cpu.reg.c_flag() ? 1_u8 : 0_u8;
@@ -674,7 +675,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             const std::uint8_t a = cpu.reg.a();
             const std::uint8_t shifted_bit = a & 0x01;
@@ -756,7 +757,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             const std::uint8_t r8 = reg_provider::get(cpu);
             const std::uint8_t shifted_bit = r8 & 0x01;
@@ -818,7 +819,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             const std::uint8_t r8 = reg_provider::get(cpu);
             const std::uint8_t c = cpu.reg.c_flag() ? 1_u8 : 0_u8;
@@ -854,7 +855,7 @@ namespace opcodes
                 break;
             case 1:
                 {
-                    using namespace literals;
+                    using namespace utils::numeric_literals;
 
                     const std::uint8_t n8 = memory.read(cpu.cache.r16);
                     const std::uint8_t c = cpu.reg.c_flag() ? 1_u8 : 0_u8;
@@ -882,7 +883,7 @@ namespace opcodes
     {
         static constexpr step_t num_steps(const cpu::cpu_state&) { return 1; }
 
-        static void execute(cpu::cpu_state& cpu, const step_t step)
+        static void execute(cpu::cpu_state& cpu, const step_t)
         {
             const std::uint8_t r8 = reg_provider::get(cpu);
             const std::uint8_t shifted_bit = (r8 >> 7) & 0x01;

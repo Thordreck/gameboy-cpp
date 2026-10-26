@@ -34,26 +34,29 @@ if(UI_BACKEND STREQUAL "SDL")
 	)
 
 elseif(UI_BACKEND STREQUAL "Qt")
-	add_library(emulator-qml STATIC)
+	qt_add_qml_module(emulator-qml
+			URI Gameboy.UI
+			VERSION ${PROJECT_VERSION}
+			STATIC
+			SOURCES
+				${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp
+				${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt_types.hpp
+			QML_FILES emulator_ui_qt.qml
+			OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Gameboy/UI
+			PLUGIN_TARGET emulator-qml-plugin
+			DEPENDENCIES QtCore QtQuick
+	)
 	target_compile_warnings(emulator-qml)
 	target_compile_features(emulator-qml PUBLIC cxx_std_23)
-	target_sources(emulator-qml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp)
 	target_link_libraries(emulator-qml PRIVATE Qt6::Core Qt6::Qml Qt6::Quick Boost::lockfree)
 	set_target_properties(emulator-qml PROPERTIES AUTOMOC ON AUTORCC ON AUTOUIC ON)
+	target_compile_options(emulator-qml PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4702>)
 
 	set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.qml PROPERTIES
 			QT_RESOURCE_ALIAS emulator_ui_qt
 			QT_QML_SOURCE_TYPENAME EmulatorUI
 	)
 
-	qt_add_qml_module(emulator-qml
-			URI Gameboy.UI
-			VERSION ${PROJECT_VERSION}
-			QML_FILES emulator_ui_qt.qml
-			OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Gameboy/UI
-			PLUGIN_TARGET emulator-qml-plugin
-			DEPENDENCIES QtCore QtQuick
-	)
 
 	list(APPEND QMLLS_IMPORT_PATHS
 			"${QT_INSTALL_PATH}/../../../qml"
@@ -98,6 +101,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 
 	target_link_libraries(emulator PRIVATE emulator-qml metadata)
 	target_compile_definitions(emulator PUBLIC UI_QT)
+	target_compile_options(emulator PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4251>)
 endif()
 
 #Joypad
@@ -117,7 +121,6 @@ if(JOYPAD_BACKEND STREQUAL "SDL")
 elseif(JOYPAD_BACKEND STREQUAL "Qt" AND UI_BACKEND STREQUAL "Qt")
 	target_compile_definitions(emulator PUBLIC JOYPAD_QT)
 	target_link_libraries(emulator PRIVATE qt)
-	set_target_properties(emulator PROPERTIES AUTOMOC ON)
 
 	target_sources(emulator PUBLIC
 			FILE_SET

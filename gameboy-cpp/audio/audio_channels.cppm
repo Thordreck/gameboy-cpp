@@ -43,7 +43,7 @@ namespace audio
         {
             const bool should_negate = config.direction == sweep_direction::substraction;
             sweep_calculation_done_in_sub_mode = should_negate;
-            const auto shifted_period = period_shadow >> config.step;
+            const std::uint16_t shifted_period = period_shadow >> config.step;
 
             return should_negate
                 ? period_shadow - shifted_period
@@ -142,8 +142,9 @@ namespace audio
 
                 if ((current_volume < 0xF && config.direction == increase) || (current_volume > 0x0 && config.direction == decrease))
                 {
-                    const auto gain = config.direction == increase ? 1 : -1;
-                    current_volume += gain;
+                    const int gain = config.direction == increase ? 1 : -1;
+                    const int new_volume = current_volume + gain;
+                    current_volume = static_cast<std::uint8_t>(new_volume);
                 }
 
                 timer = config.pace;

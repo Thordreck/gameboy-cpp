@@ -212,7 +212,7 @@ case (audio::wave_ram_start_address + (i)): \
             case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
-            case graphics::oam_dma_transfer_address: return oam_dma.start_address() / static_cast<memory::memory_address_t>(0x100);
+            case graphics::oam_dma_transfer_address: return static_cast<memory::memory_data_t>(oam_dma.start_address() / 0x100);
             case interrupts::if_address: return interrupts::read_if_register(interrupts);
             case interrupts::ie_address: return interrupts::read_ie_register(interrupts) | (ie_unused_bits & 0xE0);
             case joypad::joypad_memory_address: return joypad::read_joypad_register(joypad);

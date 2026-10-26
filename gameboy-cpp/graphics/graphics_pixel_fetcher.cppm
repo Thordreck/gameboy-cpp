@@ -1,10 +1,10 @@
 export module graphics:pixel_fetcher;
 
-export import :fifo;
-export import memory;
-export import :oam;
-
+import :fifo;
+import :oam;
 import :registers;
+
+import memory;
 import utilities;
 
 namespace graphics
@@ -387,11 +387,13 @@ namespace graphics
             last_obj_x = new_target.x;
             last_obj_tile = current_tile;
 
+            using namespace utils::numeric_literals;
+
             extra_delay = tile_already_claimed
-                ? 0
+                ? 0_u8
                 : new_target.x == 0
-                    ? 5
-                    : std::max(0, 7 - (new_target.x % 8) - 2);
+                    ? 5_u8
+                    : std::max<std::uint8_t>(0, 7 - (new_target.x % 8) - 2);
         }
 
         void reset()

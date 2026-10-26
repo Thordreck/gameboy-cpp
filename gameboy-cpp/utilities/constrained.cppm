@@ -120,7 +120,7 @@ namespace utils
         requires std::is_copy_assignable_v<T> && std::convertible_to<Other, T>
         constexpr auto& operator=(const Other& other)
         {
-            value = other;
+            value = static_cast<T>(other);
             check_boundaries();
 
             return *this;

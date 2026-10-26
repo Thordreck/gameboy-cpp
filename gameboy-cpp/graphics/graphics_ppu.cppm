@@ -241,7 +241,7 @@ namespace graphics
             {
                 if (scanline_cycle++ % 2 != 0) { continue; }
 
-                const std::uint8_t object_index = scanline_cycle / 2;
+                const std::uint8_t object_index = static_cast<std::uint8_t>(scanline_cycle / 2);
                 const object candidate = get_object(object_index, memory);
                 const std::uint8_t objects_height = get_objects_height(memory);
                 const bool is_visible = is_in_scanline(candidate, objects_height, current_scanline);
@@ -379,7 +379,7 @@ namespace graphics
         std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Screen& screen, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
-            scanline_cycle += ticks_consumed;
+            scanline_cycle += static_cast<std::uint16_t>(ticks_consumed);
 
             // End of scanline
             if (scanline_cycle >= 456)
@@ -418,7 +418,7 @@ namespace graphics
         std::uint32_t handle_v_blank(const std::uint32_t num_ticks, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
-            scanline_cycle += ticks_consumed;
+            scanline_cycle += static_cast<std::uint16_t>(ticks_consumed);
 
             if (scanline_cycle >= 456)
             {

@@ -9,6 +9,7 @@ export module emulator:audio.qt;
 import std;
 import audio;
 import utilities;
+
 import :common;
 
 namespace emulator
@@ -62,7 +63,8 @@ namespace emulator
 
         void write(const std::span<const float> samples)
         {
-            const std::size_t written = buffer != nullptr ? buffer->write(samples) : 0;
+            [[maybe_unused]] const std::size_t written = buffer != nullptr ? buffer->write(samples) : 0;
+            Q_ASSERT(samples.size() == written);
         }
 
         [[nodiscard]] volume_t volume() const

@@ -173,12 +173,12 @@ namespace timer
         template<interrupts::InterruptRequestController InterruptController>
         void advance(const std::uint32_t tick_batch, InterruptController& interrupts)
         {
-            remaining_ticks_in_tma_overwrite_cycle -= std::min(static_cast<std::uint32_t>(remaining_ticks_in_tma_overwrite_cycle), tick_batch);
+            remaining_ticks_in_tma_overwrite_cycle -= static_cast<std::uint8_t>(std::min<std::uint32_t>(remaining_ticks_in_tma_overwrite_cycle, tick_batch));
             tma_overwrite_performed_this_cycle = remaining_ticks_in_tma_overwrite_cycle > 0;
 
             if (overflow_detected)
             {
-                ticks_until_interrupt -= std::min(tick_batch, static_cast<std::uint32_t>(ticks_until_interrupt));
+                ticks_until_interrupt -= static_cast<std::uint8_t>(std::min<std::uint32_t>(tick_batch, ticks_until_interrupt));
 
                 if (ticks_until_interrupt == 0)
                 {
@@ -191,13 +191,13 @@ namespace timer
                     interrupts.request(interrupts::timer_interrupt);
                 }
 
-                divider_register = divider_register + tick_batch;
+                divider_register = static_cast<std::uint16_t>(divider_register + tick_batch);
                 return;
             }
 
             if (!timer_control.enabled)
             {
-                divider_register = divider_register + tick_batch;
+                divider_register = static_cast<std::uint16_t>(divider_register + tick_batch);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace timer
             const std::uint16_t lower = prev_div & mask;
             const bool falling_edge = (lower + tick_batch) > mask;
 
-            divider_register = divider_register + tick_batch;
+            divider_register = static_cast<std::uint16_t>(divider_register + tick_batch);
 
             // Tima
             if (falling_edge)

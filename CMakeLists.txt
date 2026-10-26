@@ -12,6 +12,10 @@ project(gameboy-cpp
         SPDX_LICENSE MIT
         LANGUAGES CXX)
 
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+option(HEADLESS_BUILD "Build with no graphical interface" OFF)
+option(WARNINGS_AS_ERRORS "Treat all warnings as errors" ON)
+
 include(cmake/compiler_warnings.cmake)
 include(cmake/third_party.cmake)
 include(cmake/git.cmake)
@@ -24,9 +28,6 @@ if(MSVC)
 endif()
 
 include(CMakeDependentOption)
-
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
-option(HEADLESS_BUILD "Build with no graphical interface" OFF)
 
 cmake_dependent_option(
         ENABLE_LTO

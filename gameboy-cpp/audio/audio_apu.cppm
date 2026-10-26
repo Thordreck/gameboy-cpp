@@ -73,14 +73,14 @@ namespace audio
         void set_channel_1_duty_cycle(const duty_cycle duty) { channel_1.set_duty_cycle(duty); }
 
         [[nodiscard]] bool is_channel_1_length_timer_enabled() const { return channel_1.is_length_timer_enabled(); }
-        void enable_channel_1_length_timer(const bool enabled)
+        void enable_channel_1_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_1.is_length_timer_enabled();
             const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
 
-            channel_1.set_length_timer_enabled(enabled);
+            channel_1.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
             {
                 channel_1.tick_length_timer();
             }
@@ -134,14 +134,14 @@ namespace audio
         void set_channel_2_duty_cycle(const duty_cycle duty) { channel_2.set_duty_cycle(duty); }
 
         [[nodiscard]] bool is_channel_2_length_timer_enabled() const { return channel_2.is_length_timer_enabled(); }
-        void enable_channel_2_length_timer(const bool enabled)
+        void enable_channel_2_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_2.is_length_timer_enabled();
             const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
 
-            channel_2.set_length_timer_enabled(enabled);
+            channel_2.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
             {
                 channel_2.tick_length_timer();
             }
@@ -192,25 +192,25 @@ namespace audio
         void set_channel_3_panning(const stereo_panning panning) { channels_panning[2].set_config(panning); }
 
         [[nodiscard]] bool is_channel_3_dac_enabled() const { return channels_dac[2].is_enabled(); }
-        void enable_channel_3_dac(const bool enabled)
+        void enable_channel_3_dac(const bool new_enabled)
         {
-            channels_dac[2].set_enabled(enabled);
+            channels_dac[2].set_enabled(new_enabled);
 
-            if (!enabled)
+            if (!new_enabled)
             {
                 channel_3.set_active(false);
             }
         }
 
         [[nodiscard]] bool is_channel_3_length_timer_enabled() const { return channel_3.is_length_timer_enabled(); }
-        void enable_channel_3_length_timer(const bool enabled)
+        void enable_channel_3_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_3.is_length_timer_enabled();
             const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
 
-            channel_3.set_length_timer_enabled(enabled);
+            channel_3.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
             {
                 channel_3.tick_length_timer();
             }
@@ -253,14 +253,14 @@ namespace audio
         void set_channel_4_panning(const stereo_panning panning) { channels_panning[3].set_config(panning); }
 
         [[nodiscard]] bool is_channel_4_length_timer_enabled() const { return channel_4.is_length_timer_enabled(); }
-        void enable_channel_4_length_timer(const bool enabled)
+        void enable_channel_4_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_4.is_length_timer_enabled();
             const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
 
-            channel_4.set_length_timer_enabled(enabled);
+            channel_4.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
             {
                 channel_4.tick_length_timer();
             }
@@ -429,7 +429,7 @@ namespace audio
         }
 
         bool enabled { true };
-        std::uint64_t tick_accumulator {};
+        std::uint32_t tick_accumulator {};
 
         div_apu div_apu {};
         stereo_volume master_volume {};

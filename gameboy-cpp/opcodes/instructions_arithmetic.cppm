@@ -1,10 +1,11 @@
 export module opcodes:arithmetic;
 
-export import std;
-export import cpu;
-export import utilities;
-export import :common;
+import std;
+import cpu;
 import memory;
+import utilities;
+
+import :common;
 
 namespace opcodes
 {
@@ -78,7 +79,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             cpu::register_8 r8 = reg_provider::get(cpu);
             const bool half_carry = utils::check_half_add_overflow(r8.value(), 1_u8);
@@ -105,7 +106,7 @@ namespace opcodes
 
         static void execute(cpu::cpu_state& cpu, const step_t)
         {
-            using namespace literals;
+            using namespace utils::numeric_literals;
 
             cpu::register_8 r8 = reg_provider::get(cpu);
             const bool half_underflow = utils::check_half_substract_underflow(r8.value(), 1_u8);
@@ -141,7 +142,7 @@ namespace opcodes
                 break;
             case 2:
                 {
-                    using namespace literals;
+                    using namespace utils::numeric_literals;
 
                     const std::uint8_t n8 = cpu.cache.r8;
                     const std::uint8_t result = n8 - 1;
@@ -662,7 +663,7 @@ namespace opcodes
                 break;
             case 2:
                 {
-                    using namespace literals;
+                    using namespace utils::numeric_literals;
 
                     const std::uint8_t n8 = cpu.cache.r8;
                     const std::uint8_t result = n8 + 1;

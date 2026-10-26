@@ -23,7 +23,7 @@ namespace audio
     {
     public:
         [[nodiscard]] bool is_enabled() const { return enabled; }
-        void set_enabled(const bool enabled) { this->enabled = enabled; }
+        void set_enabled(const bool new_enabled) { enabled = new_enabled; }
 
         analog_sample convert(const digital_sample input)
         {

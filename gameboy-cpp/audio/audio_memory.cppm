@@ -43,7 +43,7 @@ namespace audio
             | (apu.channel_4_on() << 3)
             | (apu.channel_3_on() << 2)
             | (apu.channel_2_on() << 1)
-            | apu.channel_1_on()
+            | static_cast<int>(apu.channel_1_on())
             | 0x70;
     }
 
@@ -86,7 +86,7 @@ namespace audio
         return ((volume & 0b1111) << 4) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
     }
 
-    export [[nodiscard]] memory::memory_data_t read_channel_1_period_low_address(const audio_processing_unit& apu)
+    export [[nodiscard]] memory::memory_data_t read_channel_1_period_low_address(const audio_processing_unit&)
     {
         // Write-only
         return 0xFF;
@@ -109,7 +109,7 @@ namespace audio
         return ((volume & 0b1111) << 4) | ((std::to_underlying(direction) & 0b1) << 3) | (pace & 0b111);
     }
 
-    export [[nodiscard]] memory::memory_data_t read_channel_2_period_low_address(const audio_processing_unit& apu)
+    export [[nodiscard]] memory::memory_data_t read_channel_2_period_low_address(const audio_processing_unit&)
     {
         // Write-only
         return 0xFF;
@@ -126,7 +126,7 @@ namespace audio
         return (apu.is_channel_3_dac_enabled() << 7) | 0x7F;
     }
 
-    export [[nodiscard]] memory::memory_data_t read_channel_3_length_timer_address(const audio_processing_unit& apu)
+    export [[nodiscard]] memory::memory_data_t read_channel_3_length_timer_address(const audio_processing_unit&)
     {
         return 0xFF;
     }
@@ -136,7 +136,7 @@ namespace audio
         return ((std::to_underlying(apu.get_channel_3_output_level()) & 0b11) << 5) | 0x9F;
     }
 
-    export [[nodiscard]] memory::memory_data_t read_channel_3_period_low_address(const audio_processing_unit& apu)
+    export [[nodiscard]] memory::memory_data_t read_channel_3_period_low_address(const audio_processing_unit&)
     {
         // Write-only
         return 0xFF;
@@ -148,7 +148,7 @@ namespace audio
     }
 
     // Channel 4 - Read
-    export [[nodiscard]] memory::memory_data_t read_channel_4_length_timer_address(const audio_processing_unit& apu)
+    export [[nodiscard]] memory::memory_data_t read_channel_4_length_timer_address(const audio_processing_unit&)
     {
         return 0xFF;
     }

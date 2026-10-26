@@ -11,7 +11,7 @@ namespace audio
         using sample_t = Sample::underlying_type;
 
         const Sample filtered = sample - capacitor;
-        capacitor = static_cast<sample_t>(sample) - static_cast<sample_t>(filtered) * 0.999958;
+        capacitor = static_cast<sample_t>(sample) - static_cast<sample_t>(filtered) * 0.999958f;
 
         return filtered;
     }

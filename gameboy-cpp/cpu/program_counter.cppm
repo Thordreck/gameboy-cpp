@@ -53,7 +53,7 @@ namespace cpu
 		program_counter operator+(const int rhs) const
 		{
 			program_counter temp = *this;
-			temp += rhs;
+			temp += static_cast<type_t>(rhs);
 			return temp;
 		}
 

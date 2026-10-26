@@ -26,6 +26,7 @@ target_sources(utilities PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/triple_buffer.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/uuid.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/numeric_literals.cppm
 )
 
 if(BUILD_TESTING)

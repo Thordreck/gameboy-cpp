@@ -134,7 +134,7 @@ namespace engine
                 const std::uint32_t ticks_to_boundary = next_boundary - current_execution_cycle;
                 const std::uint32_t chunk = std::min(ticks_left, ticks_to_boundary);
 
-                current_execution_cycle += chunk;
+                current_execution_cycle += static_cast<std::uint8_t>(chunk);
                 ticks_left -= chunk;
 
                 if (current_execution_cycle % 4 == 0)
@@ -178,7 +178,7 @@ namespace engine
                 const std::uint32_t ticks_to_boundary = next_boundary - current_execution_cycle;
                 const std::uint32_t chunk = std::min(ticks_left, ticks_to_boundary);
 
-                current_execution_cycle += chunk;
+                current_execution_cycle += static_cast<std::uint8_t>(chunk);
                 ticks_left -= chunk;
 
                 if (current_execution_cycle % 4 == 0)

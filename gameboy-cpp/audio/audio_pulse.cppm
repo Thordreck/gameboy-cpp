@@ -34,7 +34,7 @@ namespace audio
         void set_duty_cycle(const duty_cycle duty) { duty_cycle = duty; }
 
         [[nodiscard]] bool is_length_timer_enabled() const { return length.enabled(); }
-        void set_length_timer_enabled(const bool enabled) { length.set_enabled(enabled); }
+        void set_length_timer_enabled(const bool new_enabled) { length.set_enabled(new_enabled); }
 
         [[nodiscard]] std::uint8_t get_length_timer() const { return length.get_initial_value(); }
         void set_length_timer(const std::uint8_t value) { length.set_initial_value(value); }

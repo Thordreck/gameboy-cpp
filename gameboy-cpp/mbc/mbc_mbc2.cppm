@@ -1,6 +1,8 @@
 export module mbc:mbc2;
 
 import std;
+import utilities;
+
 import :common;
 
 namespace mbc
@@ -52,7 +54,10 @@ namespace mbc
             }
             else
             {
-                rom_bank_index = std::max(1, value & 0xF);
+                using namespace utils::numeric_literals;
+
+                const std::uint8_t masked = value & 0xF;
+                rom_bank_index = std::max(1_u8, masked);
             }
         }
 

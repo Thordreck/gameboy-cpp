@@ -18,7 +18,7 @@ namespace audio
     {
     public:
         [[nodiscard]] stereo_panning get_config() const { return config; }
-        void set_config(const stereo_panning config) { this->config = config; }
+        void set_config(const stereo_panning new_config) { config = new_config; }
 
         template <typename T>
         [[nodiscard]] stereo<T> apply(const T mono)
