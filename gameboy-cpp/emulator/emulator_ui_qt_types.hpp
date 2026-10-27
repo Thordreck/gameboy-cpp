@@ -23,8 +23,7 @@ namespace emulator
     class q_expected
     {
         Q_GADGET
-        QML_ELEMENT
-        QML_UNCREATABLE("")
+        QML_VALUE_TYPE(q_expected)
 
     public:
         // Note: required by QML. It's not possible to make it private and befriend Qt's internal methods
@@ -33,18 +32,38 @@ namespace emulator
 
         q_expected(QMLCompatible auto&& value, QJSEngine* engine)
             : is_error { false }
-        , value { QVariant::fromValue(std::forward<decltype(value)>(value)) }
-        , engine { engine }
+            , value { QVariant::fromValue(std::forward<decltype(value)>(value)) }
+            , engine { engine }
         {}
 
         template<QMLCompatible Error>
         q_expected(std::unexpected<Error>&& unexpected, QJSEngine* engine)
             : is_error { true }
-        , value { QVariant::fromValue(std::forward<decltype(unexpected)>(unexpected).error()) }
-        , engine { engine }
+            , value { QVariant::fromValue(std::forward<decltype(unexpected)>(unexpected).error()) }
+            , engine { engine }
+        {}
+
+        template<QMLCompatible Result, QMLCompatible Error>
+        q_expected(std::expected<Result, Error>&& expected, QJSEngine* engine)
+            : is_error { !expected.has_value() }
+            , value { QVariant::fromValue(expected.has_value()
+                    ? std::forward<decltype(expected)>(expected).value()
+                    : std::forward<decltype(expected)>(expected).error()) }
+            , engine { engine }
+        {}
+
+        template<QMLCompatible Error>
+        q_expected(std::expected<void, Error>&& expected, QJSEngine* engine)
+            : is_error { !expected.has_value() }
+            , value { expected.has_value()
+                    ? QVariant{}
+                    : QVariant::fromValue(std::forward<decltype(expected)>(expected).error()) }
+            , engine { engine }
         {}
 
         Q_INVOKABLE void visit(const QJSValue& on_expected, const QJSValue& on_error) const;
+        Q_INVOKABLE void on_error(const QJSValue& functor) const;
+        Q_INVOKABLE void on_success(const QJSValue& functor) const;
 
     private:
         bool is_error;
@@ -73,14 +92,15 @@ namespace emulator
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorControls)
 
-        Q_PROPERTY(emulator::emulator_ui_status::Value status READ status BINDABLE bindable_status)
-        Q_PROPERTY(float volume READ volume WRITE setVolume BINDABLE bindable_volume)
-        Q_PROPERTY(bool muted READ muted WRITE setMuted BINDABLE bindable_muted)
+        Q_PROPERTY(emulator::emulator_ui_status::Value status READ getStatus BINDABLE bindable_status FINAL)
+        Q_PROPERTY(float volume READ volume WRITE setVolume BINDABLE bindable_volume FINAL)
+        Q_PROPERTY(bool muted READ muted WRITE setMuted BINDABLE bindable_muted FINAL)
 
     public:
-        explicit emulator_ui_controls(const backend_functions& _backend);
-        Q_INVOKABLE QVariantMap load_rom(const QUrl& url);
-        Q_INVOKABLE emulator_ui_status::Value status() const;
+        emulator_ui_controls(QJSEngine& engine, const backend_functions& _backend);
+
+        Q_INVOKABLE emulator::q_expected load_rom(const QUrl& url);
+        Q_INVOKABLE emulator_ui_status::Value getStatus() const;
         Q_INVOKABLE void resume();
         Q_INVOKABLE void pause();
         Q_INVOKABLE void stop();
@@ -99,6 +119,7 @@ namespace emulator
         QProperty<bool> current_muted;
         QBindable<bool> bindable_muted();
 
+        QJSEngine& engine;
         backend_functions backend;
     };
 
@@ -122,8 +143,8 @@ namespace emulator
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorFramebuffer)
 
-        Q_PROPERTY(QImage frame READ frame NOTIFY frameAvailable)
-        Q_PROPERTY(QSize size READ size CONSTANT)
+        Q_PROPERTY(QImage frame READ frame NOTIFY frameAvailable FINAL)
+        Q_PROPERTY(QSize size READ size CONSTANT FINAL)
 
     public:
         QSize size() override;
@@ -142,7 +163,7 @@ namespace emulator
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(EmulatorVideo)
-        Q_PROPERTY(emulator::emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED)
+        Q_PROPERTY(emulator::emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED FINAL)
 
     public:
         emulator_ui_video();
@@ -224,8 +245,8 @@ namespace emulator
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorBackground)
 
-        Q_PROPERTY(QImage image READ frame BINDABLE bindable_image NOTIFY frameAvailable)
-        Q_PROPERTY(QRect window READ window BINDABLE bindable_window)
+        Q_PROPERTY(QImage image READ frame BINDABLE bindable_image NOTIFY frameAvailable FINAL)
+        Q_PROPERTY(QRect window READ window BINDABLE bindable_window FINAL)
 
     public:
         explicit emulator_ui_background(const backend_functions& backend);
@@ -267,13 +288,13 @@ namespace emulator
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(ProjectMetadata)
 
-        Q_PROPERTY(QString author READ author CONSTANT)
-        Q_PROPERTY(QString name READ name CONSTANT)
-        Q_PROPERTY(QString version READ version CONSTANT)
-        Q_PROPERTY(QString description READ description CONSTANT)
-        Q_PROPERTY(QUrl url READ url CONSTANT)
-        Q_PROPERTY(QString license READ license CONSTANT)
-        Q_PROPERTY(QString hash READ hash CONSTANT)
+        Q_PROPERTY(QString author READ author CONSTANT FINAL)
+        Q_PROPERTY(QString name READ name CONSTANT FINAL)
+        Q_PROPERTY(QString version READ version CONSTANT FINAL)
+        Q_PROPERTY(QString description READ description CONSTANT FINAL)
+        Q_PROPERTY(QUrl url READ url CONSTANT FINAL)
+        Q_PROPERTY(QString license READ license CONSTANT FINAL)
+        Q_PROPERTY(QString hash READ hash CONSTANT FINAL)
 
     public:
         explicit project_metadata_provider(const backend_functions& backend);
@@ -323,7 +344,7 @@ namespace emulator
     public:
         explicit file_utils(QJSEngine& engine, QObject* parent = nullptr);
 
-        Q_INVOKABLE q_expected read_file(const QString& path) const;
+        Q_INVOKABLE emulator::q_expected read_file(const QString& path) const;
 
     private:
         QJSEngine& engine;

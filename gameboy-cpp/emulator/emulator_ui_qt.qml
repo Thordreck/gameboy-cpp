@@ -13,14 +13,15 @@ import Gameboy.UI
 ApplicationWindow {
     id: root
 
-    property EmulatorBackground bg
-    required property EmulatorControls controls
-    required property bool debugMode
-    required property FileUtils fileUtils
-    required property EmulatorFramebuffer framebuffer
-    required property ProjectMetadata projectMetadata
-    property EmulatorSprites sprites
-    required property ThirdPartyMetadata thirdPartyMetadata
+    required final property EmulatorControls controls
+    required final property FileUtils fileUtils
+    required final property EmulatorFramebuffer framebuffer
+    required final property ProjectMetadata projectMetadata
+    required final property ThirdPartyMetadata thirdPartyMetadata
+
+    required final property bool debugMode
+    final property EmulatorBackground bg
+    final property EmulatorSprites sprites
 
     Material.theme: Material.Dark
     height: 480
@@ -181,16 +182,15 @@ ApplicationWindow {
         fileMode: FileDialog.OpenFile
         nameFilters: ["Rom Files (*.gb)"]
 
-        onAccepted: {
-            const result = root.controls.load_rom(selectedFile);
-
-            if (!result.success) {
+        onAccepted: root.controls
+            .load_rom(selectedFile)
+            .on_error(error => {
                 errorDialog.text = "Error loading rom file";
-                errorDialog.informativeText = result.error;
+                errorDialog.informativeText = error;
                 errorDialog.open();
-            }
-        }
+            })
     }
+
     MessageDialog {
         id: errorDialog
 
@@ -228,20 +228,20 @@ ApplicationWindow {
                         component SpriteViewerDelegateItem: Item {
                             id: spriteDelegate
 
-                            required property string imageURI
-                            required property int index
-                            required property bool priority
-                            required property int spriteHeight
-                            required property int spriteIndex
-                            required property int spriteWidth
-                            required property int spriteX
-                            required property int spriteY
-                            required property int tileIndex
-                            required property bool xFlip
-                            required property bool yFlip
+                            required final property string imageURI
+                            required final property int index
+                            required final property bool priority
+                            required final property int spriteHeight
+                            required final property int spriteIndex
+                            required final property int spriteWidth
+                            required final property int spriteX
+                            required final property int spriteY
+                            required final property int tileIndex
+                            required final property bool xFlip
+                            required final property bool yFlip
 
-                            height: GridView.view.cellHeight
-                            width: GridView.view.cellWidth
+                            height: spritesViewerGridView.cellHeight
+                            width: spritesViewerGridView.cellWidth
 
                             Item {
                                 anchors {
@@ -504,8 +504,8 @@ ApplicationWindow {
                                 model: backgroundInspectorGrid.columns * backgroundInspectorGrid.rows
 
                                 Rectangle {
-                                    required property int index
-                                    readonly property int tileIndex: index
+                                    required final property int index
+                                    readonly final property int tileIndex: index
 
                                     border.color: backgroundInspectorGrid.currentIndex === index ? "blue" : "lightsteelblue"
                                     border.width: 1
@@ -635,8 +635,8 @@ ApplicationWindow {
     Loader {
         id: textFileViewerLoader
 
-        property string contents: ""
-        property string title: ""
+        final property string contents: ""
+        final property string title: ""
 
         function show(title: string, contents: string) {
             this.contents = contents;
@@ -746,9 +746,9 @@ ApplicationWindow {
                     delegate: Item {
                         id: thirdPartyMetadataItem
 
-                        required property string license
-                        required property string name
-                        required property string url
+                        required final property string license
+                        required final property string name
+                        required final property string url
 
                         height: 25
                         width: ListView.view.width

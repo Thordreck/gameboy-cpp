@@ -3,13 +3,6 @@
 
 namespace emulator
 {
-    [[nodiscard]] static QVariantMap toQtVariantMap(const std::expected<void, std::string>& result)
-    {
-        return result.has_value()
-                   ? QVariantMap{{"success", true}}
-                   : QVariantMap{{"success", false}, {"error", result.error().data()}};
-    }
-
     template<typename TExpected, typename TError>
     [[nodiscard]] static TExpected required(std::expected<TExpected, TError>&& result)
     {
@@ -56,20 +49,51 @@ namespace emulator
     void q_expected::visit(const QJSValue& on_expected, const QJSValue& on_error) const
     {
         Q_CHECK_PTR(engine);
+        Q_ASSERT(value.isValid());
         Q_ASSERT(on_expected.isCallable());
         Q_ASSERT(on_error.isCallable());
 
-        const QJSValue arg = engine->toScriptValue(value);
         [[maybe_unused]] const QJSValue result = is_error
-            ? on_error.call({ arg })
-            : on_expected.call({ arg });
+            ? on_error.call({ engine->toScriptValue(value) })
+            : value.isNull()
+                ? on_expected.call({})
+                : on_expected.call({ engine->toScriptValue(value) });
 
         Q_ASSERT_X(!result.isError(), "q_expected::visit", result.toString().toUtf8().constData());
     }
 
+    void q_expected::on_success(const QJSValue& functor) const
+    {
+        Q_CHECK_PTR(engine);
+        Q_ASSERT(value.isValid());
+        Q_ASSERT(functor.isCallable());
+
+        if (!is_error)
+        {
+            [[maybe_unused]] const QJSValue result = functor.call({ engine->toScriptValue(value) });
+            Q_ASSERT_X(!result.isError(), "q_expected::visit", result.toString().toUtf8().constData());
+        }
+    }
+
+    void q_expected::on_error(const QJSValue& functor) const
+    {
+        Q_CHECK_PTR(engine);
+        Q_ASSERT(value.isValid());
+        Q_ASSERT(functor.isCallable());
+
+        if (is_error)
+        {
+            [[maybe_unused]] const QJSValue result = value.isNull()
+                    ? functor.call({})
+                    : functor.call({ engine->toScriptValue(value) });
+            Q_ASSERT_X(!result.isError(), "q_expected::visit", result.toString().toUtf8().constData());
+        }
+    }
+
     // emulator_ui_controls
-    emulator_ui_controls::emulator_ui_controls(const backend_functions& _backend)
-        : backend { _backend }
+    emulator_ui_controls::emulator_ui_controls(QJSEngine& engine, const backend_functions& _backend)
+        : engine { engine }
+        , backend { _backend }
     {
         update_current_status();
 
@@ -77,15 +101,19 @@ namespace emulator
         current_muted.setBinding([this] { return backend.muted(); });
     }
 
-    QVariantMap emulator_ui_controls::load_rom(const QUrl& url)
+    q_expected emulator_ui_controls::load_rom(const QUrl& url)
     {
-        const QVariantMap result = toQtVariantMap(backend.load_rom(url.toLocalFile().toStdString()));
+        const auto result = backend.load_rom(url.toLocalFile().toStdString());
         update_current_status();
 
-        return result;
+        return q_expected
+        {
+            result.transform_error([] (auto&& error) { return QString::fromStdString(error); }),
+            &engine
+        };
     }
 
-    emulator_ui_status::Value emulator_ui_controls::status() const
+    emulator_ui_status::Value emulator_ui_controls::getStatus() const
     {
         return current_status;
     }
@@ -616,7 +644,7 @@ namespace emulator
             load_icon(":/icons/gameboy-icon.png")
             .transform([this] (const auto& icon) { imp->app.setWindowIcon(icon); }));
 
-        emulator_ui_controls ui_controls { backend };
+        emulator_ui_controls ui_controls { imp->engine, backend };
         project_metadata_provider project_metadata { backend };
         third_party_metadata_provider third_party_metadata { backend };
         file_utils file_utils { imp->engine };

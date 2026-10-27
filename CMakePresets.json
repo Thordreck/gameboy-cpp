@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 6,
   "configurePresets": [
     {
       "name": "ninja",
@@ -244,16 +244,25 @@
     {
       "name": "gameboy-cpp-qt-release",
       "configurePreset": "ninja-no-profiling-qt-release",
+      "displayName": "Gameboy-cpp Release (Qt)",
       "targets": ["gameboy-cpp"]
     },
     {
       "name": "gameboy-cpp-dsl-release",
       "configurePreset": "ninja-no-profiling-sdl-release",
+      "displayName": "Gameboy-cpp Release (SDL)",
       "targets": ["gameboy-cpp"]
     },
     {
       "name": "ninja-no-profiling-headless-debug",
+      "displayName": "Gameboy-cpp Debug (Headless)",
       "configurePreset": "ninja-no-profiling-headless-debug"
+    },
+    {
+      "name": "gameboy-cpp-qml-validation",
+      "displayName": "Gameboy-cpp Release (Qt QML Validation)",
+      "configurePreset": "ninja-no-profiling-qt-release",
+      "targets": ["dump_qml_context_properties ", "all_aotstats", "all_qmllint"]
     }
   ],
   "testPresets": [
@@ -267,6 +276,25 @@
       "execution": {
         "stopOnFailure": false
       }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "gameboy-cpp-qt-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "ninja-no-profiling-qt-release"
+        },
+        {
+          "type": "build",
+          "name": "gameboy-cpp-qml-validation"
+        },
+        {
+          "type": "build",
+          "name": "gameboy-cpp-qt-release"
+        }
+      ]
     }
   ]
 }
