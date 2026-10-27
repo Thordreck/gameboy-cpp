@@ -47,5 +47,6 @@
 
 *.idea/
 
-# Qt language server setting files
+# Qt config files
 **/.qmlls.ini
+**/.qmllint.ini
