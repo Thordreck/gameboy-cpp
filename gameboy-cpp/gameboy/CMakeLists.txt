@@ -24,11 +24,6 @@ if(UI_BACKEND STREQUAL "SDL")
     )
 endif()
 
-if (WIN32 AND (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt"))
-    add_custom_command(TARGET gameboy-cpp POST_BUILD
-            COMMAND ${Qt6_DIR}/../../../bin/windeployqt.exe
-            --qmldir ${CMAKE_SOURCE_DIR}/gameboy-cpp/emulator
-            --no-translations
-            $<TARGET_FILE:gameboy-cpp>
-    )
+if (UI_BACKEND STREQUAL "Qt" OR JOYPAD_BACKEND STREQUAL "Qt" OR AUDIO_BACKEND STREQUAL "Qt")
+    deploy_qt_libraries(gameboy-cpp QML_DIR ${CMAKE_SOURCE_DIR}/gameboy-cpp/emulator)
 endif()
