@@ -14,7 +14,7 @@ namespace blargg
 	export void run_serial_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
-		const size_t num_t_cycles)
+		const std::uint32_t num_t_cycles)
 	{
 		using namespace tests;
 		using namespace engine;
@@ -44,7 +44,7 @@ namespace blargg
 	export void run_memory_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output,
-		const size_t num_t_cycles)
+		const std::uint32_t num_t_cycles)
 	{
 		using namespace tests;
 		using namespace engine;
@@ -106,7 +106,7 @@ namespace blargg
 	export void run_lcd_test(
 		const std::string_view rom_file_path,
 		const std::string_view expected_output_path,
-		const size_t num_t_cycles)
+		const std::uint32_t num_t_cycles)
 	{
 		using namespace tests;
 		using namespace engine;

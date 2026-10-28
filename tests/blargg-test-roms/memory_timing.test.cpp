@@ -1,18 +1,29 @@
 
+import std;
 import blargg;
+
 #include "doctest.h"
 
 TEST_CASE("blargg.mem_timing.01-read_timing")
 {
-	blargg::run_serial_test("roms/memory-timing/01-read_timing.gb", "01-read_timing\n\n\nPassed\n", 30e5);
+	blargg::run_serial_test(
+		"roms/memory-timing/01-read_timing.gb",
+		"01-read_timing\n\n\nPassed\n",
+		static_cast<std::uint32_t>(30e5));
 }
 
 TEST_CASE("blargg.mem_timing.02-write_timing")
 {
-	blargg::run_serial_test("roms/memory-timing/02-write_timing.gb", "02-write_timing\n\n\nPassed\n", 30e5);
+	blargg::run_serial_test(
+		"roms/memory-timing/02-write_timing.gb",
+		"02-write_timing\n\n\nPassed\n",
+		static_cast<std::uint32_t>(30e5));
 }
 
 TEST_CASE("blargg.mem_timing.03-modify_timing")
 {
-	blargg::run_serial_test("roms/memory-timing/03-modify_timing.gb", "03-modify_timing\n\n\nPassed\n", 30e5);
+	blargg::run_serial_test(
+		"roms/memory-timing/03-modify_timing.gb",
+		"03-modify_timing\n\n\nPassed\n",
+		static_cast<std::uint32_t>(30e5));
 }
