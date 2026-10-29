@@ -384,7 +384,7 @@ namespace audio
             }
         }
 
-        stereo<analog_sample> generate_sample()
+        [[nodiscard]] stereo<analog_sample> generate_sample()
         {
             // Channels
             const digital_sample digital_ch1 = channel_1.output();

@@ -37,8 +37,8 @@ namespace audio
             length.trigger();
             period.reset();
             volume.reset();
-            wave_ram_index = 0;
-            wave_timer = (2048 - period.current_value) * 2 + 6;
+            wave_ram_index = 1;
+            wave_timer = (2048 - period.current_value) * 2 + 7;
         }
 
         void tick_length_timer()
@@ -65,7 +65,7 @@ namespace audio
 
                 if (wave_timer == 0)
                 {
-                    wave_ram_index = (wave_ram_index + 1) & 31;
+                    period.reset();
                     wave_timer = (2048 - period.current_value) * 2;
 
                     const std::uint32_t byte_index = wave_ram_index / 2;
@@ -75,6 +75,7 @@ namespace audio
                     const std::uint8_t sample_nibble = (sample_byte >> 4 * (1 - nibble_index)) & 0xF;
 
                     current_output = apply_volume(sample_nibble, volume.current_value);
+                    wave_ram_index = (wave_ram_index + 1) & 31;
                 }
             }
         };
