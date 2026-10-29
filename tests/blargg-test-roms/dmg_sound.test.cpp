@@ -72,7 +72,12 @@ TEST_CASE("blargg.dmg_sound.09-wave read while on")
 {
     blargg::run_memory_test(
         "roms/dmg_sound/09-wave read while on.gb",
-        "09-wave read while on\n\n\nPassed\n",
+        "09-wave read while on\n\n"
+        "FF FF 00 FF 11 FF 11 FF 22 FF 22 FF 33 FF 33 FF 44 FF "
+        "44 FF 55 FF 55 FF 66 FF 66 FF 77 FF 77 FF 88 FF 88 FF "
+        "99 FF 99 FF AA FF AA FF BB FF BB FF CC FF CC FF DD FF "
+        "DD FF EE FF EE FF FF FF FF FF 00 FF 00 FF 11 \n"
+        "Passed\n",
         static_cast<std::uint32_t>(30e6));
 }
 
