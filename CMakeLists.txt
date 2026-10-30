@@ -15,6 +15,7 @@ project(gameboy-cpp
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 option(HEADLESS_BUILD "Build with no graphical interface" OFF)
 option(WARNINGS_AS_ERRORS "Treat all warnings as errors" ON)
+option(BUILD_TESTING "Build the test tree" OFF)
 
 include(cmake/compiler_warnings.cmake)
 include(cmake/third_party.cmake)

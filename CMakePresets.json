@@ -14,7 +14,6 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "BUILD_TESTING": "ON",
         "CMAKE_VERBOSE_MAKEFILE": "ON"
       }
     },
@@ -23,7 +22,6 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_TESTING": "OFF",
         "CMAKE_VERBOSE_MAKEFILE": "OFF"
       }
     },
@@ -32,7 +30,6 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "BUILD_TESTING": "ON",
         "CMAKE_VERBOSE_MAKEFILE": "OFF"
       }
     },
@@ -118,6 +115,13 @@
       "hidden": true,
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "with-tests",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_TESTING": "ON"
       }
     },
     {
@@ -237,8 +241,14 @@
       "name": "ninja-no-profiling-headless-debug",
       "displayName": "Ninja Debug (Headless)",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "inherits": ["ninja", "debug", "headless"]
-    }
+      "inherits": ["ninja", "debug", "headless", "with-tests"]
+    },
+    {
+      "name": "ninja-no-profiling-headless-tests-release",
+      "displayName": "Ninja Release Tests (Headless)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "inherits": ["ninja", "release", "headless", "with-tests"]
+      }
   ],
   "buildPresets": [
     {
@@ -254,11 +264,6 @@
       "targets": ["gameboy-cpp"]
     },
     {
-      "name": "ninja-no-profiling-headless-debug",
-      "displayName": "Gameboy-cpp Debug (Headless)",
-      "configurePreset": "ninja-no-profiling-headless-debug"
-    },
-    {
       "name": "gameboy-cpp-qml-validation",
       "displayName": "Gameboy-cpp Release (Qt QML Validation)",
       "configurePreset": "ninja-no-profiling-qt-release",
@@ -269,7 +274,7 @@
     {
       "name": "test-all-headless",
       "displayName": "Test All (headless)",
-      "configurePreset": "ninja-no-profiling-headless-debug",
+      "configurePreset": "ninja-no-profiling-headless-tests-release",
       "output": {
         "outputOnFailure": true
       },
