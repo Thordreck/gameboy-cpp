@@ -344,7 +344,7 @@ case (audio::wave_ram_start_address + (i)): \
                 audio::write_channel_3_period_low_address(apu, value);
                 break;
             case audio::channel_3_period_high_and_control_address:
-                audio::write_channel_3_period_high_and_control_address(apu, value);
+                audio::write_channel_3_period_high_and_control_address(apu, value, wave_ram);
                 break;
             case audio::channel_4_length_timer_address:
                 audio::write_channel_4_length_timer_address(apu, value);

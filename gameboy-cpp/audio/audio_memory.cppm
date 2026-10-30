@@ -352,7 +352,10 @@ namespace audio
         apu.set_channel_3_period(new_period);
     }
 
-    export void write_channel_3_period_high_and_control_address(audio_processing_unit& apu, const memory::memory_data_t value)
+    export void write_channel_3_period_high_and_control_address(
+        audio_processing_unit& apu,
+        const memory::memory_data_t value,
+        wave_ram_view_t wave_ram)
     {
         const bool should_trigger = utils::is_bit_set<7>(value);
         const bool enable_length_timer = utils::is_bit_set<6>(value);
@@ -363,6 +366,22 @@ namespace audio
 
         apu.set_channel_3_period(new_period);
         apu.enable_channel_3_length_timer(enable_length_timer);
+
+        // Wave ram corruption
+        if (should_trigger && apu.channel_3_on() && apu.get_channel_3_read_timer() == 3)
+        {
+            if (const std::uint8_t wave_read_index = apu.get_channel_3_wave_index(); wave_read_index <= 3)
+            {
+                wave_ram[0] = wave_ram[wave_read_index];
+            }
+            else
+            {
+                auto dst = wave_ram.subspan<0, 4>();
+                auto src = wave_ram.subspan(static_cast<std::uint8_t>(wave_read_index / 4) * 4, 4);
+
+                std::ranges::copy(src, dst.begin());
+            }
+        }
 
         if (should_trigger)
         {
