@@ -48,7 +48,20 @@ namespace engine
             cpu.reg.e() = 0xD8;
             cpu.reg.h() = 0x01;
             cpu.reg.l() = 0x4D;
-            timers.set_divider(0xAC00);
+
+            //timers.set_divider(0xAC00);
+            timers.set_divider(0xABCC);
+
+            interrupts.request(interrupts::vblank_interrupt);
+
+            apu.set_channel_1_envelope({ 0b1111, {}, 0b011 });
+            apu.set_channel_1_duty_cycle(audio::duty_cycle::_50);
+            apu.set_master_volume({ 0b111, 0b111 });
+            apu.set_channel_1_panning({ true, true });
+            apu.set_channel_2_panning({ true, true });
+            apu.set_channel_3_panning({ true, false });
+            apu.set_channel_4_panning({ true, false });
+            apu.trigger_channel_1();
         }
 
         ~engine() override = default;
