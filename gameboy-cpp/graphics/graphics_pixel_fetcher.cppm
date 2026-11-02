@@ -393,7 +393,7 @@ namespace graphics
                 ? 0_u8
                 : new_target.x == 0
                     ? 5_u8
-                    : std::max<std::uint8_t>(0, 7 - (new_target.x % 8) - 2);
+                    : static_cast<std::uint8_t>(std::max(0, 7 - (new_target.x % 8) - 2));
         }
 
         void reset()

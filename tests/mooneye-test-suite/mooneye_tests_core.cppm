@@ -32,7 +32,7 @@ namespace mooneye
 
 		for (size_t i = 0; i < max_num_seconds; i++)
 		{
-			constexpr size_t ticks_per_second = 4.19e6;
+			constexpr auto ticks_per_second = static_cast<std::uint32_t>(4.19e6);
 			engine->tick(ticks_per_second);
 
 			if (serial.result().size() >= expected_num_result_numbers)
