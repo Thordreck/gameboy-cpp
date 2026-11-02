@@ -10,6 +10,7 @@ namespace audio
     {
     public:
         [[nodiscard]] std::uint8_t value() const { return counter; }
+        void reset() { }
 
         [[nodiscard]] bool tick(const std::uint16_t div)
         {
@@ -18,17 +19,14 @@ namespace audio
 
             prev_div = div;
 
-            if (should_advance && ++counter > 7)
-            {
-                counter = 0;
-            }
+            counter += should_advance;
+            counter &= 0x7;
 
             return should_advance;
         }
 
     private:
-        std::uint8_t counter { 0 };
+        std::int8_t counter { -1 };
         std::uint16_t prev_div { 0 };
-
     };
 }

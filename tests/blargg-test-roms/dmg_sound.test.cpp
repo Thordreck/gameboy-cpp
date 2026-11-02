@@ -64,7 +64,7 @@ TEST_CASE("blargg.dmg_sound.08-len ctr during power")
 {
     blargg::run_memory_test(
         "roms/dmg_sound/08-len ctr during power.gb",
-        "08-len ctr during power\n\n\nPassed\n",
+        "08-len ctr during power\n\n33 44 11 22 \nPassed\n",
         static_cast<std::uint32_t>(30e6));
 }
 

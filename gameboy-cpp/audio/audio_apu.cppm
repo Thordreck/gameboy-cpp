@@ -52,9 +52,8 @@ namespace audio
                 channel_1.set_active(false);
             }
 
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
             if (channel_1.is_length_timer_enabled()
-                && next_div_apu_step_does_not_clock_length
+                && next_div_apu_step_does_not_tick_length(div_apu)
                 && channel_1.is_length_timer_at_max_value())
             {
                 channel_1.tick_length_timer();
@@ -76,11 +75,11 @@ namespace audio
         void enable_channel_1_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_1.is_length_timer_enabled();
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
-
             channel_1.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled
+                && new_enabled
+                && next_div_apu_step_does_not_tick_length(div_apu))
             {
                 channel_1.tick_length_timer();
             }
@@ -116,9 +115,8 @@ namespace audio
                 channel_2.set_active(false);
             }
 
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
             if (channel_2.is_length_timer_enabled()
-                && next_div_apu_step_does_not_clock_length
+                && next_div_apu_step_does_not_tick_length(div_apu)
                 && channel_2.is_length_timer_at_max_value())
             {
                 channel_2.tick_length_timer();
@@ -137,11 +135,10 @@ namespace audio
         void enable_channel_2_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_2.is_length_timer_enabled();
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
-
             channel_2.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled && new_enabled
+                && next_div_apu_step_does_not_tick_length(div_apu))
             {
                 channel_2.tick_length_timer();
             }
@@ -177,9 +174,8 @@ namespace audio
                 channel_3.set_active(false);
             }
 
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
             if (channel_3.is_length_timer_enabled()
-                && next_div_apu_step_does_not_clock_length
+                && next_div_apu_step_does_not_tick_length(div_apu)
                 && channel_3.is_length_timer_at_max_value())
             {
                 channel_3.tick_length_timer();
@@ -206,11 +202,11 @@ namespace audio
         void enable_channel_3_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_3.is_length_timer_enabled();
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
-
             channel_3.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled
+                && new_enabled
+                && next_div_apu_step_does_not_tick_length(div_apu))
             {
                 channel_3.tick_length_timer();
             }
@@ -238,9 +234,8 @@ namespace audio
                 channel_4.set_active(false);
             }
 
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
             if (channel_4.is_length_timer_enabled()
-                && next_div_apu_step_does_not_clock_length
+                && next_div_apu_step_does_not_tick_length(div_apu)
                 && channel_4.is_length_timer_at_max_value())
             {
                 channel_4.tick_length_timer();
@@ -256,11 +251,11 @@ namespace audio
         void enable_channel_4_length_timer(const bool new_enabled)
         {
             const bool was_length_enabled = channel_4.is_length_timer_enabled();
-            const bool next_div_apu_step_does_not_clock_length = !(div_apu.value() & 0b1);
-
             channel_4.set_length_timer_enabled(new_enabled);
 
-            if (!was_length_enabled && new_enabled && next_div_apu_step_does_not_clock_length)
+            if (!was_length_enabled
+                && new_enabled
+                && next_div_apu_step_does_not_tick_length(div_apu))
             {
                 channel_4.tick_length_timer();
             }
@@ -304,6 +299,11 @@ namespace audio
         }
 
     private:
+        static bool next_div_apu_step_does_not_tick_length(const div_apu& div_apu)
+        {
+            return !(div_apu.value() & 0b1);
+        }
+
         void tick_frame_sequencer(const std::uint16_t current_div)
         {
             if (!div_apu.tick(current_div)) { return; }
