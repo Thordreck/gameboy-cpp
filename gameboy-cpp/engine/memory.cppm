@@ -214,6 +214,8 @@ case (audio::wave_ram_start_address + (i)): \
             case graphics::lcd_cy_address: return ppu.lyc();
             case graphics::scx_address: return ppu.get_scx();
             case graphics::scy_address: return ppu.get_scy();
+            case graphics::wx_address: return ppu.get_wx();
+            case graphics::wy_address: return ppu.get_wy();
             case graphics::oam_dma_transfer_address: return static_cast<memory::memory_data_t>(oam_dma.start_address() / 0x100);
             case interrupts::if_address: return interrupts::read_if_register(interrupts);
             case interrupts::ie_address: return interrupts::read_ie_register(interrupts) | (ie_unused_bits & 0xE0);
@@ -283,6 +285,12 @@ case (audio::wave_ram_start_address + (i)): \
                 break;
             case graphics::scy_address:
                 ppu.set_scy(value);
+                break;
+            case graphics::wx_address:
+                ppu.set_wx(value);
+                break;
+            case graphics::wy_address:
+                ppu.set_wy(value);
                 break;
             case interrupts::if_address:
                 interrupts::write_if_register(interrupts, value);

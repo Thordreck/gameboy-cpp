@@ -21,29 +21,27 @@ import :object_buffer;
 
 namespace graphics
 {
-    template<memory::ReadOnlyMemory Memory>
     [[nodiscard]] bool is_window_present_in_scanline(
         const std::uint8_t lcd_y,
-        const Memory& memory)
+        const std::uint8_t wy)
     {
-        return lcd_y >= wy(memory);
+        return lcd_y >= wy;
     }
 
-    template<memory::ReadOnlyMemory Memory>
     [[nodiscard]] bool is_window_visible(
-        const Memory& memory,
+        const std::uint8_t wx,
+        const std::uint8_t wy,
         const std::uint8_t lcd_y,
         const std::uint8_t screen_x)
     {
-        return is_window_present_in_scanline(lcd_y, memory) && screen_x >= static_cast<int>(wx(memory)) - 7;
+        return is_window_present_in_scanline(lcd_y, wy) && screen_x >= static_cast<int>(wx) - 7;
     }
 
-    template<memory::ReadOnlyMemory Memory>
     [[nodiscard]] bool is_window_first_line(
         const std::uint8_t lcd_y,
-        const Memory& memory)
+        const std::uint8_t wy)
     {
-        return lcd_y == wy(memory);
+        return lcd_y == wy;
     }
 
     [[nodiscard]] const pixel& mix(
@@ -179,6 +177,12 @@ namespace graphics
 
         void set_scy(const std::uint8_t new_scy) { scy = new_scy; }
         [[nodiscard]] std::uint8_t get_scy() const { return scy; }
+
+        void set_wx(const std::uint8_t new_wx) { wx = new_wx; }
+        [[nodiscard]] std::uint8_t get_wx() const { return wx; }
+
+        void set_wy(const std::uint8_t new_wy) { wy = new_wy; }
+        [[nodiscard]] std::uint8_t get_wy() const { return wy; }
 
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
@@ -318,15 +322,15 @@ namespace graphics
             // Window start
             if (!window_active_in_scanline
                 && window_enabled
-                && is_window_visible(memory, scanline(), pixels_drawn_in_scanline))
+                && is_window_visible(wx, wy, scanline(), pixels_drawn_in_scanline))
             {
                 window_active_in_scanline = true;
-                window_line = is_window_first_line(scanline(), memory) ? 0 : window_line;
+                window_line = is_window_first_line(scanline(), wy) ? 0 : window_line;
 
                 background_fifo.clear();
                 pixel_fetcher.reset();
                 pixels_to_discard = 0;
-                window_fetcher_penalty = wx(memory) > 0 ? 6 : 0;
+                window_fetcher_penalty = wx > 0 ? 6 : 0;
             }
 
             if (window_fetcher_penalty > 0)
@@ -554,6 +558,9 @@ namespace graphics
 
         std::uint8_t scx {};
         std::uint8_t scy {};
+
+        std::uint8_t wx {};
+        std::uint8_t wy {};
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)
