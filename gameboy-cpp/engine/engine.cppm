@@ -62,6 +62,8 @@ namespace engine
             apu.set_channel_3_panning({ true, false });
             apu.set_channel_4_panning({ true, false });
             apu.trigger_channel_1();
+
+            ppu_.set_bg_palette(0xFC);
         }
 
         ~engine() override = default;
