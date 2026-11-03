@@ -683,6 +683,19 @@ namespace emulator
             std::make_pair("debugMode", false)));
 #endif
 
+        QObject::connect(
+            &imp->engine,
+            &QQmlApplicationEngine::objectCreationFailed,
+            &imp->app,
+            [] (const QUrl& url)
+            {
+                qFatal("Error creating qml object (url: %s)",
+                    url.isEmpty()
+                        ? "unknown"
+                        : url.toDisplayString().toStdString().c_str());
+            },
+            Qt::QueuedConnection);
+
         imp->engine.loadFromModule("Gameboy.UI", "EmulatorUI");
         return imp->app.exec();
     }
