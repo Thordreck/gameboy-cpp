@@ -19,18 +19,6 @@ namespace graphics
 	export constexpr memory::memory_address_t wx_address = 0xFF4B;
 
 	export template<memory::ReadOnlyMemory Memory>
-	memory::memory_data_t scy(const Memory& memory)
-	{
-		return memory.read(scy_address);
-	}
-
-	export template<memory::ReadOnlyMemory Memory>
-	memory::memory_data_t scx(const Memory& memory)
-	{
-		return memory.read(scx_address);
-	}
-
-	export template<memory::ReadOnlyMemory Memory>
 	memory::memory_data_t wy(const Memory& memory)
 	{
 		return memory.read(wy_address);

@@ -174,6 +174,12 @@ namespace graphics
         void set_background_and_window_display_enabled(const bool new_enabled) { bg_and_window_display_enabled = new_enabled; }
         [[nodiscard]] bool get_background_and_window_display_enabled() const { return bg_and_window_display_enabled; }
 
+        void set_scx(const std::uint8_t new_scx) { scx = new_scx; }
+        [[nodiscard]] std::uint8_t get_scx() const { return scx; }
+
+        void set_scy(const std::uint8_t new_scy) { scy = new_scy; }
+        [[nodiscard]] std::uint8_t get_scy() const { return scy; }
+
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
         {
@@ -295,7 +301,7 @@ namespace graphics
                 sprite_fifo.clear();
 
                 pixels_drawn_in_scanline = 0;
-                pixels_to_discard = scx(memory) % 8;
+                pixels_to_discard = scx % 8;
 
                 update_stat_line(interrupts);
             }
@@ -344,7 +350,7 @@ namespace graphics
                 if (const std::optional next_object = pop_object_at_x(sprite_buffer, pixels_drawn_in_scanline);
                     next_object.has_value())
                 {
-                    sprite_fetcher.set_target(next_object.value(), memory, window_active_in_scanline);
+                    sprite_fetcher.set_target(next_object.value(), window_active_in_scanline, scx);
                 }
             }
 
@@ -499,6 +505,8 @@ namespace graphics
                 bg_tile_data_area,
                 bg_and_window_display_enabled,
                 scanline(),
+                scx,
+                scy,
                 memory);
         }
 
@@ -543,6 +551,9 @@ namespace graphics
         object_size obj_size {};
 
         bool bg_and_window_display_enabled {};
+
+        std::uint8_t scx {};
+        std::uint8_t scy {};
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)

@@ -12,14 +12,13 @@ import utilities;
 
 namespace graphics
 {
-    template<memory::ReadOnlyMemory Memory>
     [[nodiscard]] std::uint8_t compute_fetcher_y(
-        const Memory& memory,
+        const std::uint8_t scy,
         const std::uint8_t lcd_y,
         const bool is_window_tile,
         const std::uint8_t window_line)
     {
-        return is_window_tile ? window_line : lcd_y + scy(memory);
+        return is_window_tile ? window_line : lcd_y + scy;
     }
 
     [[nodiscard]] std::uint8_t compute_tile_y(const std::uint8_t fetcher_y)
@@ -32,13 +31,12 @@ namespace graphics
         return fetcher_y % 8;
     }
 
-    template<memory::ReadOnlyMemory Memory>
-    std::uint8_t compute_tile_x(
-        const Memory& memory,
+    [[nodiscard]] std::uint8_t compute_tile_x(
+        const std::uint8_t scx,
         const std::uint8_t fetcher_x,
         const bool is_window_tile)
     {
-        return is_window_tile ? fetcher_x : ((scx(memory) / 8) + fetcher_x) & 0x1F;
+        return is_window_tile ? fetcher_x : ((scx / 8) + fetcher_x) & 0x1F;
     }
 
     [[nodiscard]] std::uint16_t compute_tilemap_base_address(
@@ -200,12 +198,14 @@ namespace graphics
             const background_tile_data_area bg_tile_data_area,
             const bool bg_and_window_display_enabled,
             const std::uint8_t scanline,
+            const std::uint8_t scx,
+            const std::uint8_t scy,
             const Memory& memory)
         {
             switch (current_step)
             {
             case pixel_fetch_step::get_tile_address:
-                fetch_tile_address(is_window_active, window_line, window_tilemap_area, bg_tilemap_area, bg_tile_data_area, scanline, memory);
+                fetch_tile_address(is_window_active, window_line, window_tilemap_area, bg_tilemap_area, bg_tile_data_area, scanline, scx, scy, memory);
                 break;
             case pixel_fetch_step::get_tile_data_low:
                 get_tile_data_low(memory);
@@ -232,6 +232,8 @@ namespace graphics
             const background_tilemap_area bg_tilemap_area,
             const background_tile_data_area bg_tile_data_area,
             const std::uint8_t scanline,
+            const std::uint8_t scx,
+            const std::uint8_t scy,
             const Memory& memory)
         {
             current_dot++;
@@ -241,9 +243,9 @@ namespace graphics
                 return;
             }
 
-            const std::uint8_t fetcher_y = compute_fetcher_y(memory, scanline, is_window_active, window_line);
+            const std::uint8_t fetcher_y = compute_fetcher_y(scy, scanline, is_window_active, window_line);
 
-            const std::uint8_t tile_x = compute_tile_x(memory, fetcher_x, is_window_active);
+            const std::uint8_t tile_x = compute_tile_x(scx, fetcher_x, is_window_active);
             const std::uint8_t tile_y = compute_tile_y(fetcher_y);
             const std::uint8_t tile_line = compute_tile_line(fetcher_y);
 
@@ -379,14 +381,16 @@ namespace graphics
 
         [[nodiscard]] bool is_fetching() const { return current_target.has_value(); }
 
-        template<memory::ReadOnlyMemory Memory>
-        void set_target(const object& new_target, const Memory& memory, const bool is_window_active)
+        void set_target(
+            const object& new_target,
+            const bool is_window_active,
+            const std::uint8_t scx)
         {
             current_step = sprite_fetch_step::get_tile_address;
             step_cycle = 0;
             current_target = new_target;
 
-            const std::uint8_t current_tile_x = compute_tile_x(memory, new_target.x, is_window_active);
+            const std::uint8_t current_tile_x = compute_tile_x(scx, new_target.x, is_window_active);
             const std::uint8_t current_tile = current_tile_x / 8;
 
             const bool same_tile_as_prev = last_obj_tile
