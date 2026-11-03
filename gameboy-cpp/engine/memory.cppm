@@ -216,6 +216,9 @@ case (audio::wave_ram_start_address + (i)): \
             case graphics::scy_address: return ppu.get_scy();
             case graphics::wx_address: return ppu.get_wx();
             case graphics::wy_address: return ppu.get_wy();
+            case graphics::bgp_address: return ppu.get_bg_palette();
+            case graphics::obp0_address: return ppu.get_obj_palette_0();
+            case graphics::obp1_address: return ppu.get_obj_palette_1();
             case graphics::oam_dma_transfer_address: return static_cast<memory::memory_data_t>(oam_dma.start_address() / 0x100);
             case interrupts::if_address: return interrupts::read_if_register(interrupts);
             case interrupts::ie_address: return interrupts::read_ie_register(interrupts) | (ie_unused_bits & 0xE0);
@@ -246,7 +249,7 @@ case (audio::wave_ram_start_address + (i)): \
             WAVE_RAM_CASES(WAVE_RAM_READ_CASE)
             HRAM_CASES(HRAM_READ_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_READ_CASE)
-            default: return fallback_memory[address - start];
+            default: std::terminate();
             }
         }
 
@@ -291,6 +294,15 @@ case (audio::wave_ram_start_address + (i)): \
                 break;
             case graphics::wy_address:
                 ppu.set_wy(value);
+                break;
+            case graphics::bgp_address:
+                ppu.set_bg_palette(value);
+                break;
+            case graphics::obp0_address:
+                ppu.set_obj_palette_0(value);
+                break;
+            case graphics::obp1_address:
+                ppu.set_obj_palette_1(value);
                 break;
             case interrupts::if_address:
                 interrupts::write_if_register(interrupts, value);
@@ -377,8 +389,7 @@ case (audio::wave_ram_start_address + (i)): \
             HRAM_CASES(HRAM_WRITE_CASE)
             UNUSED_HW_IO_CASES(UNUSED_HW_IO_WRITE_CASE)
             default:
-                fallback_memory[address - start] = value;
-                break;
+                std::terminate();
             }
         }
 
@@ -396,9 +407,6 @@ case (audio::wave_ram_start_address + (i)): \
         // The IE is a special register where the unused bits are actually present. ROM tests expect to
         // be able to write and read back whatever value was set.
         memory::memory_data_t ie_unused_bits {};
-
-        // TODO: replace by remaining missing io registers
-        std::array<memory::memory_data_t, end - start + 1> fallback_memory{};
     };
 
     export template<mbc::MemoryBankController MBC>

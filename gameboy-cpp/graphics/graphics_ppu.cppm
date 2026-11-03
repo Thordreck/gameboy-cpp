@@ -79,20 +79,27 @@ namespace graphics
         return sprite;
     }
 
-    [[nodiscard]] memory::memory_address_t get_palette_address(const pixel& pixel)
+    [[nodiscard]] memory::memory_data_t get_palette_data(
+        const pixel& pixel,
+        const std::uint8_t bg_palette,
+        const std::uint8_t obj_palette_0,
+        const std::uint8_t obj_palette_1)
     {
         return pixel.palette_index
-            .transform([] (const auto index) { return index == 1 ? obp1_address : obp0_address; })
-            .value_or(bgp_address);
+            .transform([obj_palette_0, obj_palette_1] (const auto index) { return index == 1 ? obj_palette_1 : obj_palette_0; })
+            .value_or(bg_palette);
     }
 
-    template<memory::ReadOnlyMemory Memory>
-    [[nodiscard]] color get_pixel_color(const pixel& pixel, const Memory& memory, const lcd_color_palette_t palette)
+    [[nodiscard]] color get_pixel_color(
+        const pixel& pixel,
+        const std::uint8_t bg_palette,
+        const std::uint8_t obj_palette_0,
+        const std::uint8_t obj_palette_1,
+        const lcd_color_palette_t palette)
     {
         using namespace memory;
 
-        const memory_address_t palette_address = get_palette_address(pixel);
-        const memory_data_t palette_data = memory.read(palette_address);
+        const memory_data_t palette_data = get_palette_data(pixel, bg_palette, obj_palette_0, obj_palette_1);
         const std::uint8_t mapped_color_index = (palette_data >> (pixel.color_index * 2)) & 0b11;
 
         return palette[mapped_color_index];
@@ -183,6 +190,15 @@ namespace graphics
 
         void set_wy(const std::uint8_t new_wy) { wy = new_wy; }
         [[nodiscard]] std::uint8_t get_wy() const { return wy; }
+
+        void set_bg_palette(const std::uint8_t new_palette) { bg_palette = new_palette; }
+        [[nodiscard]] std::uint8_t get_bg_palette() const { return bg_palette; }
+
+        void set_obj_palette_0(const std::uint8_t new_palette) { obj_palette_0 = new_palette; }
+        [[nodiscard]] std::uint8_t get_obj_palette_0() const { return obj_palette_0; }
+
+        void set_obj_palette_1(const std::uint8_t new_palette) { obj_palette_1 = new_palette; }
+        [[nodiscard]] std::uint8_t get_obj_palette_1() const { return obj_palette_1; }
 
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
@@ -390,13 +406,18 @@ namespace graphics
                     : bg_pixel.value();
 
                 // TODO: make palette configurable
-                const color pixel_color = get_pixel_color(mixed_pixel, memory, grayscale_lcd_color_palette);
+                const auto [r, g, b] = get_pixel_color(
+                    mixed_pixel,
+                    bg_palette,
+                    obj_palette_0,
+                    obj_palette_1,
+                    grayscale_lcd_color_palette);
 
                 // TODO: rethink this
                 const std::size_t pixel_data_pos = pixels_drawn_in_scanline * num_color_channels;
-                scanline_buffer[pixel_data_pos] = pixel_color.r;
-                scanline_buffer[pixel_data_pos + 1] = pixel_color.g;
-                scanline_buffer[pixel_data_pos + 2] = pixel_color.b;
+                scanline_buffer[pixel_data_pos] = r;
+                scanline_buffer[pixel_data_pos + 1] = g;
+                scanline_buffer[pixel_data_pos + 2] = b;
 
                 pixels_drawn_in_scanline++;
             }
@@ -561,6 +582,10 @@ namespace graphics
 
         std::uint8_t wx {};
         std::uint8_t wy {};
+
+        std::uint8_t bg_palette {};
+        std::uint8_t obj_palette_0 {};
+        std::uint8_t obj_palette_1 {};
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)
