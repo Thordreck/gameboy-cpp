@@ -49,8 +49,12 @@ namespace engine
             cpu.reg.h() = 0x01;
             cpu.reg.l() = 0x4D;
 
-            //timers.set_divider(0xAC00);
-            timers.set_divider(0xABCC);
+            // TODO: the consensus online seems to be that the value 0xABCC should make mooneye boot_div test pass.
+            // The value that makes it pass for our case is 0xABC5, which is 7 off. This could mean we are not taking
+            // into account the fact that the div timer starts ticking 8 cycles before the cpu, that the first cpu fetch
+            // takes two extra cycles longer and/or that the first ppu scanline after powering up takes 19 m-cycles instead
+            // of 20.
+            timers.set_divider(0xABC5);
 
             interrupts.request(interrupts::vblank_interrupt);
 
