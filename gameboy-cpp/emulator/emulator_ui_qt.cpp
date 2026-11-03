@@ -1,19 +1,10 @@
 #include "emulator_ui_qt.hpp"
 #include "emulator_ui_qt_types.hpp"
 
+void qml_register_types_Gameboy_UI();
+
 namespace emulator
 {
-    template<typename TExpected, typename TError>
-    [[nodiscard]] static TExpected required(std::expected<TExpected, TError>&& result)
-    {
-        if (!result.has_value())
-        {
-            qFatal(std::format("Unexpected error. {}", result.error()).c_str());
-        }
-
-        return std::forward<TExpected>(result.value());
-    }
-
     template<typename TError>
     static void required(std::expected<void, TError>&& result)
     {
@@ -640,6 +631,11 @@ namespace emulator
 
     int qt_graphical_interface::render(const backend_functions& backend)
     {
+        // Note: as documented in https://doc.qt.io/qt-6.11/qtqml-modules-cppplugins.html
+        // This ensures the linker does not optimize out the registration function generated automatically by Qt
+        volatile auto registration = &qml_register_types_Gameboy_UI;
+        Q_UNUSED(registration);
+
         required(
             load_icon(":/icons/gameboy-icon.png")
             .transform([this] (const auto& icon) { imp->app.setWindowIcon(icon); }));

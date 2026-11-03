@@ -32,33 +32,33 @@ namespace emulator
 
         q_expected(QMLCompatible auto&& value, QJSEngine* engine)
             : is_error { false }
-            , value { QVariant::fromValue(std::forward<decltype(value)>(value)) }
-            , engine { engine }
+        , value { QVariant::fromValue(std::forward<decltype(value)>(value)) }
+        , engine { engine }
         {}
 
         template<QMLCompatible Error>
         q_expected(std::unexpected<Error>&& unexpected, QJSEngine* engine)
             : is_error { true }
-            , value { QVariant::fromValue(std::forward<decltype(unexpected)>(unexpected).error()) }
-            , engine { engine }
+        , value { QVariant::fromValue(std::forward<decltype(unexpected)>(unexpected).error()) }
+        , engine { engine }
         {}
 
         template<QMLCompatible Result, QMLCompatible Error>
         q_expected(std::expected<Result, Error>&& expected, QJSEngine* engine)
             : is_error { !expected.has_value() }
-            , value { QVariant::fromValue(expected.has_value()
-                    ? std::forward<decltype(expected)>(expected).value()
-                    : std::forward<decltype(expected)>(expected).error()) }
-            , engine { engine }
+        , value { QVariant::fromValue(expected.has_value()
+                ? std::forward<decltype(expected)>(expected).value()
+                : std::forward<decltype(expected)>(expected).error()) }
+        , engine { engine }
         {}
 
         template<QMLCompatible Error>
         q_expected(std::expected<void, Error>&& expected, QJSEngine* engine)
             : is_error { !expected.has_value() }
-            , value { expected.has_value()
-                    ? QVariant{}
-                    : QVariant::fromValue(std::forward<decltype(expected)>(expected).error()) }
-            , engine { engine }
+        , value { expected.has_value()
+                ? QVariant{}
+            : QVariant::fromValue(std::forward<decltype(expected)>(expected).error()) }
+        , engine { engine }
         {}
 
         Q_INVOKABLE void visit(const QJSValue& on_expected, const QJSValue& on_error) const;
@@ -127,7 +127,7 @@ namespace emulator
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(EmulatorVideoSource)
-        QML_UNCREATABLE("")
+        QML_INTERFACE
 
     public:
         virtual QImage frame() = 0;
@@ -136,12 +136,18 @@ namespace emulator
         signals:
             void frameAvailable();
     };
+}
 
+Q_DECLARE_INTERFACE(emulator::emulator_ui_video_source, "EmulatorVideoSource")
+
+namespace emulator
+{
     class emulator_ui_framebuffer_source : public emulator_ui_video_source
     {
         Q_OBJECT
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorFramebuffer)
+        QML_IMPLEMENTS_INTERFACES(emulator::emulator_ui_video_source)
 
         Q_PROPERTY(QImage frame READ frame NOTIFY frameAvailable FINAL)
         Q_PROPERTY(QSize size READ size CONSTANT FINAL)
@@ -163,7 +169,7 @@ namespace emulator
     {
         Q_OBJECT
         QML_NAMED_ELEMENT(EmulatorVideo)
-        Q_PROPERTY(emulator::emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED FINAL)
+        Q_PROPERTY(::emulator::emulator_ui_video_source* source READ get_source WRITE set_source REQUIRED FINAL)
 
     public:
         emulator_ui_video();
@@ -244,6 +250,7 @@ namespace emulator
         Q_OBJECT
         QML_UNCREATABLE("")
         QML_NAMED_ELEMENT(EmulatorBackground)
+        QML_IMPLEMENTS_INTERFACES(emulator::emulator_ui_video_source)
 
         Q_PROPERTY(QImage image READ frame BINDABLE bindable_image NOTIFY frameAvailable FINAL)
         Q_PROPERTY(QRect window READ window BINDABLE bindable_window FINAL)
@@ -349,6 +356,7 @@ namespace emulator
     private:
         QJSEngine& engine;
     };
+
 }
 
 namespace emulator_status_enum_foreign
@@ -357,3 +365,5 @@ namespace emulator_status_enum_foreign
     QML_NAMED_ELEMENT(EmulatorStatus)
     QML_FOREIGN_NAMESPACE(::emulator::emulator_ui_status_enum)
 }
+
+

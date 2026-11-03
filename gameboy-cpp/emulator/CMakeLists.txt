@@ -36,17 +36,17 @@ if(UI_BACKEND STREQUAL "SDL")
 elseif(UI_BACKEND STREQUAL "Qt")
 	qt_add_qml_module(emulator-qml
 			URI Gameboy.UI
-			VERSION ${PROJECT_VERSION}
+			NO_PLUGIN
 			STATIC
+			VERSION ${PROJECT_VERSION}
 			SOURCES
 				${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt.cpp
 				${CMAKE_CURRENT_SOURCE_DIR}/emulator_ui_qt_types.hpp
-			QML_FILES emulator_ui_qt.qml
+			QML_FILES EmulatorUI.qml
 			OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Gameboy/UI
-			PLUGIN_TARGET emulator-qml-plugin
 			DEPENDENCIES QtCore QtQuick
-			CLASS_NAME EmulatorUI
 	)
+
 	target_compile_warnings(emulator-qml)
 	target_compile_features(emulator-qml PUBLIC cxx_std_23)
 	target_link_libraries(emulator-qml PRIVATE Qt6::Core Qt6::Qml Qt6::Quick Boost::lockfree)
@@ -83,7 +83,6 @@ elseif(UI_BACKEND STREQUAL "Qt")
 	qt_add_resources(emulator-qml "qtquickcontrols2.conf" FILES qtquickcontrols2.conf)
 	set_target_properties(emulator-qml PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "--verbose")
 	set_target_properties(emulator-qml PROPERTIES QT_QMLCACHEGEN_DIRECT_CALLS ON)
-	target_link_libraries(emulator-qml PRIVATE emulator-qml-plugin)
 	target_compile_definitions(emulator-qml PRIVATE "$<$<CONFIG:Debug>:QT_QML_DEBUG>")
 	target_compile_definitions(emulator-qml PRIVATE "$<$<CONFIG:RelWithDebInfo>:QT_QML_DEBUG>")
 
