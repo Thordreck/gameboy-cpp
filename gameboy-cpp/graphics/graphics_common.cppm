@@ -1,5 +1,6 @@
+
 export module graphics:common;
-export import std;
+import std;
 
 namespace graphics
 {

@@ -209,7 +209,7 @@ case (audio::wave_ram_start_address + (i)): \
             case timer::tma_address: return timer::read_tma_address(timers);
             case timer::tac_address: return timer::read_tac_address(timers);
             case graphics::lcd_status_address: return graphics::lcd_status(ppu);
-            case graphics::lcdc_address: return (ppu.is_enabled() << 7) | fallback_memory[address - start];
+            case graphics::lcdc_address: return graphics::read_lcdc_register(ppu);
             case graphics::lcd_y_address: return ppu.scanline();
             case graphics::lcd_cy_address: return ppu.lyc();
             case graphics::oam_dma_transfer_address: return static_cast<memory::memory_data_t>(oam_dma.start_address() / 0x100);
@@ -266,8 +266,7 @@ case (audio::wave_ram_start_address + (i)): \
                 graphics::set_lcd_status(value, ppu, interrupts);
                 break;
             case graphics::lcdc_address:
-                ppu.set_enabled(utils::is_bit_set<7>(value), interrupts);
-                fallback_memory[address - start] = value;
+                graphics::write_lcdc_register(ppu, value, interrupts);
                 break;
             case graphics::lcd_y_address: // readonly
                 break;

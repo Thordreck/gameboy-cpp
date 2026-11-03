@@ -1,11 +1,18 @@
 
 export module graphics:memory;
 
-export import :ppu;
-export import :oam;
-export import :vram;
-export import memory;
-export import std;
+import std;
+
+import memory;
+import utilities;
+import interrupts;
+
+import :ppu;
+import :oam;
+import :vram;
+import :window;
+import :objects;
+import :background;
 
 namespace graphics
 {
@@ -93,4 +100,41 @@ namespace graphics
         const pixel_processing_unit& ppu;
     };
 
+    // lcdc
+    export void write_lcdc_register(
+        pixel_processing_unit& ppu,
+        const memory::memory_data_t value,
+        interrupts::interrupt_controller& interrupts)
+    {
+        using namespace utils;
+
+        using enum object_size;
+        using enum window_tilemap_address_mode;
+        using enum background_tile_data_area;
+
+        ppu.set_enabled(is_bit_set<7>(value), interrupts);
+        ppu.set_window_tilemap_area(is_bit_set<6>(value) ? _0x9C00 : _0x9800);
+        ppu.set_window_enabled(is_bit_set<5>(value));
+        ppu.set_background_tile_data_area(is_bit_set<4>(value) ? _0x8000 : _0x8800);
+        ppu.set_background_tilemap_area(is_bit_set<3>(value) ? background_tilemap_area::_0x9C00 : background_tilemap_area::_0x9800);
+        ppu.set_objects_size(is_bit_set<2>(value) ? _8x16 : _8x8);
+        ppu.set_objects_enabled(is_bit_set<1>(value));
+        ppu.set_background_and_window_display_enabled(is_bit_set<0>(value));
+    }
+
+    export [[nodiscard]] memory::memory_data_t read_lcdc_register(const pixel_processing_unit& ppu)
+    {
+        using enum object_size;
+        using enum window_tilemap_address_mode;
+        using enum background_tile_data_area;
+
+        return (ppu.is_enabled() << 7)
+            | ((ppu.get_window_tilemap_area() == _0x9C00) << 6)
+            | (ppu.get_window_enabled() << 5)
+            | ((ppu.get_background_tile_data_area() == _0x8000) << 4)
+            | ((ppu.get_background_tilemap_area() == background_tilemap_area::_0x9C00) << 3)
+            | ((ppu.get_objects_size() == _8x16) << 2)
+            | (ppu.get_objects_enabled() << 1)
+            | (ppu.get_background_and_window_display_enabled() << 0);
+    }
 }

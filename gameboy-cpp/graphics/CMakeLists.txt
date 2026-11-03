@@ -11,6 +11,9 @@ target_sources(graphics PUBLIC
 	FILES 
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_common.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_background.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_window.cppm
+		${CMAKE_CURRENT_SOURCE_DIR}/graphics_objects.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_vram.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_registers.cppm
 		${CMAKE_CURRENT_SOURCE_DIR}/graphics_lcd.cppm

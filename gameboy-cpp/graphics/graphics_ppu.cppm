@@ -2,46 +2,56 @@ module;
 #include "profiling.hpp"
 
 export module graphics:ppu;
-export import memory;
-export import :lcd;
 
 import std;
 
+import memory;
 import utilities;
 import interrupts;
 
+import :lcd;
 import :oam;
 import :fifo;
 import :common;
+import :window;
+import :objects;
+import :background;
 import :pixel_fetcher;
 import :object_buffer;
 
 namespace graphics
 {
     template<memory::ReadOnlyMemory Memory>
-    bool is_window_present_in_scanline(const Memory& memory)
+    [[nodiscard]] bool is_window_present_in_scanline(
+        const std::uint8_t lcd_y,
+        const Memory& memory)
     {
-        return lcd_y(memory) >= wy(memory);
+        return lcd_y >= wy(memory);
     }
 
     template<memory::ReadOnlyMemory Memory>
-    bool is_window_visible(const Memory& memory, const std::uint8_t screen_x)
+    [[nodiscard]] bool is_window_visible(
+        const Memory& memory,
+        const std::uint8_t lcd_y,
+        const std::uint8_t screen_x)
     {
-        return is_window_present_in_scanline(memory) && screen_x >= static_cast<int>(wx(memory)) - 7;
+        return is_window_present_in_scanline(lcd_y, memory) && screen_x >= static_cast<int>(wx(memory)) - 7;
     }
 
     template<memory::ReadOnlyMemory Memory>
-    bool is_window_first_line(const Memory& memory)
+    [[nodiscard]] bool is_window_first_line(
+        const std::uint8_t lcd_y,
+        const Memory& memory)
     {
-        return lcd_y(memory) == wy(memory);
+        return lcd_y == wy(memory);
     }
 
-    template<memory::ReadOnlyMemory Memory>
-    const pixel& mix(const pixel& background, const pixel& sprite, const Memory& memory)
+    [[nodiscard]] const pixel& mix(
+        const pixel& background,
+        const pixel& sprite,
+        const bool bg_and_window_enabled,
+        const bool objects_enabled)
     {
-        const bool bg_and_windows_enabled = is_bg_and_window_display_flag_set(memory);
-        const bool objects_enabled = is_obj_enabled(memory);
-
         // Sprites with color index zero are transparent.
         if (sprite.color_index == 0)
         {
@@ -53,7 +63,7 @@ namespace graphics
             return background;
         }
 
-        if (!bg_and_windows_enabled)
+        if (!bg_and_window_enabled)
         {
             return sprite;
         }
@@ -71,7 +81,7 @@ namespace graphics
         return sprite;
     }
 
-    memory::memory_address_t get_palette_address(const pixel& pixel)
+    [[nodiscard]] memory::memory_address_t get_palette_address(const pixel& pixel)
     {
         return pixel.palette_index
             .transform([] (const auto index) { return index == 1 ? obp1_address : obp0_address; })
@@ -79,7 +89,7 @@ namespace graphics
     }
 
     template<memory::ReadOnlyMemory Memory>
-    color get_pixel_color(const pixel& pixel, const Memory& memory, const lcd_color_palette_t palette)
+    [[nodiscard]] color get_pixel_color(const pixel& pixel, const Memory& memory, const lcd_color_palette_t palette)
     {
         using namespace memory;
 
@@ -111,8 +121,8 @@ namespace graphics
     public:
         explicit pixel_processing_unit()
             : enabled{true}
-            , pixel_fetcher(background_fifo)
-            , sprite_fetcher(sprite_fifo)
+        , pixel_fetcher(background_fifo)
+        , sprite_fetcher(sprite_fifo)
         {}
 
         [[nodiscard]] std::uint8_t scanline() const
@@ -142,6 +152,27 @@ namespace graphics
         [[nodiscard]] ppu_mode mode() const { return initial_state_after_on ? ppu_mode::h_blank : current_mode; }
         [[nodiscard]] bool is_enabled() const { return enabled; }
         [[nodiscard]] ppu_interrupt_sources interrupts() const { return interrupt_sources; }
+
+        void set_window_tilemap_area(const window_tilemap_address_mode mode) { window_tilemap_area = mode; }
+        [[nodiscard]] window_tilemap_address_mode get_window_tilemap_area() const { return window_tilemap_area; }
+
+        void set_window_enabled(const bool new_enabled) { window_enabled = new_enabled; }
+        [[nodiscard]] bool get_window_enabled() const { return window_enabled; }
+
+        void set_background_tile_data_area(const background_tile_data_area new_area) { bg_tile_data_area = new_area; }
+        [[nodiscard]] background_tile_data_area get_background_tile_data_area() const { return bg_tile_data_area; }
+
+        void set_background_tilemap_area(const background_tilemap_area new_area) { bg_tilemap_area = new_area; }
+        [[nodiscard]] background_tilemap_area get_background_tilemap_area() const { return bg_tilemap_area; }
+
+        void set_objects_size(const object_size new_size) { obj_size = new_size; }
+        [[nodiscard]] object_size get_objects_size() const { return obj_size; }
+
+        void set_objects_enabled(const bool new_enabled) { objects_enabled = new_enabled; }
+        [[nodiscard]] bool get_objects_enabled() const { return objects_enabled; }
+
+        void set_background_and_window_display_enabled(const bool new_enabled) { bg_and_window_display_enabled = new_enabled; }
+        [[nodiscard]] bool get_background_and_window_display_enabled() const { return bg_and_window_display_enabled; }
 
         [[nodiscard]] bool active() const { return is_enabled(); }
         [[nodiscard]] std::uint32_t tick_batch() const
@@ -243,7 +274,7 @@ namespace graphics
 
                 const std::uint8_t object_index = static_cast<std::uint8_t>(scanline_cycle / 2);
                 const object candidate = get_object(object_index, memory);
-                const std::uint8_t objects_height = get_objects_height(memory);
+                const std::uint8_t objects_height = get_objects_height(obj_size);
                 const bool is_visible = is_in_scanline(candidate, objects_height, current_scanline);
 
                 if (is_visible && !sprite_buffer.is_full())
@@ -272,7 +303,7 @@ namespace graphics
             return ticks_consumed;
         }
 
-	    template<memory::Memory Memory, interrupts::InterruptRequestController InterruptController>
+        template<memory::Memory Memory, interrupts::InterruptRequestController InterruptController>
         std::uint32_t handle_draw(const std::uint32_t, Memory& memory, InterruptController& interrupts)
         {
             constexpr std::uint32_t ticks_consumed = 1;
@@ -280,11 +311,11 @@ namespace graphics
 
             // Window start
             if (!window_active_in_scanline
-                && is_window_enabled(memory)
-                && is_window_visible(memory, pixels_drawn_in_scanline))
+                && window_enabled
+                && is_window_visible(memory, scanline(), pixels_drawn_in_scanline))
             {
                 window_active_in_scanline = true;
-                window_line = is_window_first_line(memory) ? 0 : window_line;
+                window_line = is_window_first_line(scanline(), memory) ? 0 : window_line;
 
                 background_fifo.clear();
                 pixel_fetcher.reset();
@@ -299,8 +330,6 @@ namespace graphics
             }
 
             // Sprite fetch
-            const bool objects_enabled = is_obj_enabled(memory);
-
             // TODO: sprite fetch cancelling timing
             /*
             if (!objects_enabled)
@@ -323,15 +352,14 @@ namespace graphics
             if (sprite_fetcher.is_fetching()
                 && !(pixel_fetcher.dot() >= 6 || background_fifo.count() > 0))
             {
-                pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
-
+                tick_pixel_fetcher(memory);
                 return ticks_consumed;
             }
 
             // Wait until sprite fetch completes
             if (sprite_fetcher.is_fetching())
             {
-                sprite_fetcher.tick(memory);
+                tick_sprite_fetcher(memory);
                 return ticks_consumed;
             }
 
@@ -339,7 +367,7 @@ namespace graphics
             {
                 if (pixels_to_discard > 0)
                 {
-                    pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
+                    tick_pixel_fetcher(memory);
                     pixels_to_discard--;
 
                     return ticks_consumed;
@@ -348,14 +376,14 @@ namespace graphics
                 const std::optional sprite_pixel = sprite_fifo.try_pop();
 
                 const pixel& mixed_pixel = sprite_pixel.has_value()
-                    ? mix(bg_pixel.value(), sprite_pixel.value(), memory)
+                    ? mix(bg_pixel.value(), sprite_pixel.value(), bg_and_window_display_enabled, objects_enabled)
                     : bg_pixel.value();
 
                 // TODO: make palette configurable
                 const color pixel_color = get_pixel_color(mixed_pixel, memory, grayscale_lcd_color_palette);
 
                 // TODO: rethink this
-			    const std::size_t pixel_data_pos = pixels_drawn_in_scanline * num_color_channels;
+                const std::size_t pixel_data_pos = pixels_drawn_in_scanline * num_color_channels;
                 scanline_buffer[pixel_data_pos] = pixel_color.r;
                 scanline_buffer[pixel_data_pos + 1] = pixel_color.g;
                 scanline_buffer[pixel_data_pos + 2] = pixel_color.b;
@@ -364,7 +392,7 @@ namespace graphics
             }
 
             // Background/window fetch
-            pixel_fetcher.tick(window_active_in_scanline, window_line, memory);
+            tick_pixel_fetcher(memory);
 
             if (pixels_drawn_in_scanline == 160)
             {
@@ -375,7 +403,7 @@ namespace graphics
             return ticks_consumed;
         }
 
-	    template<LCD Screen, interrupts::InterruptRequestController InterruptController>
+        template<LCD Screen, interrupts::InterruptRequestController InterruptController>
         std::uint32_t handle_h_blank(const std::uint32_t num_ticks, Screen& screen, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
@@ -414,7 +442,7 @@ namespace graphics
             return ticks_consumed;
         }
 
-	    template<interrupts::InterruptRequestController InterruptController>
+        template<interrupts::InterruptRequestController InterruptController>
         std::uint32_t handle_v_blank(const std::uint32_t num_ticks, InterruptController& interrupts)
         {
             const std::uint32_t ticks_consumed = std::min(num_ticks, tick_batch());
@@ -438,7 +466,7 @@ namespace graphics
             return ticks_consumed;
         }
 
-	    template<interrupts::InterruptRequestController InterruptController>
+        template<interrupts::InterruptRequestController InterruptController>
         void update_stat_line(InterruptController& interrupts)
         {
             if (!enabled) [[unlikely]] { return; }
@@ -458,6 +486,26 @@ namespace graphics
             }
 
             stat_line = new_stat_line;
+        }
+
+        template<memory::Memory Memory>
+        void tick_pixel_fetcher(Memory& memory)
+        {
+            pixel_fetcher.tick(
+                window_active_in_scanline,
+                window_line,
+                window_tilemap_area,
+                bg_tilemap_area,
+                bg_tile_data_area,
+                bg_and_window_display_enabled,
+                scanline(),
+                memory);
+        }
+
+        template<memory::Memory Memory>
+        void tick_sprite_fetcher(Memory& memory)
+        {
+            sprite_fetcher.tick(scanline(), obj_size, memory);
         }
 
         bool enabled;
@@ -484,6 +532,17 @@ namespace graphics
 
         bool initial_state_after_on { false };
         bool latched_ly_lyc_bit { };
+
+        bool window_enabled {};
+        window_tilemap_address_mode window_tilemap_area {};
+
+        background_tile_data_area bg_tile_data_area {};
+        background_tilemap_area bg_tilemap_area {};
+
+        bool objects_enabled {};
+        object_size obj_size {};
+
+        bool bg_and_window_display_enabled {};
     };
 
     export std::uint8_t lcd_status(const pixel_processing_unit& ppu)
