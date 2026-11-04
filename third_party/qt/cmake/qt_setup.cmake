@@ -6,4 +6,4 @@ cmake_diagnostic(SET CMD_UNINITIALIZED IGNORE)
 find_package(QtDocs)
 cmake_diagnostic(POP)
 
-qt_standard_project_setup(REQUIRES 6.11)
+qt_standard_project_setup()

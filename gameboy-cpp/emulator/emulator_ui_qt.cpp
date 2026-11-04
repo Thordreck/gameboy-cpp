@@ -649,20 +649,26 @@ namespace emulator
         emulator_ui_sprites_model ui_debug_sprites_model { backend };
         emulator_ui_sprites_image_provider ui_debug_sprites_provider { backend };
         emulator_ui_background ui_debug_background { backend };
-        emulator_ui_background_image_provider ui_debug_background_provider { backend };
+        emulator_ui_background_image_provider ui_debug_background_provider { ui_debug_background };
 
-        engine.add_image_provider("sprites", &ui_debug_sprites_provider);
-        engine.add_image_provider("background", &ui_debug_background_provider);
+        imp->engine.addImageProvider("sprites", &ui_debug_sprites_provider);
+        imp->engine.addImageProvider("background", &ui_debug_background_provider);
 
-        qt::register_shortcut(qt::standard_key::refresh, [this]
+        const QShortcut refresh_shortcut
         {
-            std::ranges::for_each(engine.root_objects(), [] (auto object) { object.delete_later(); });
-            engine.clear_singletons();
-            engine.clear_component_cache();
+            QKeySequence::StandardKey::Refresh,
+            &imp->app,
+            [this]
+            {
+                std::ranges::for_each(imp->engine.rootObjects(), [] (auto object) { object->deleteLater(); });
 
-            engine.load(QML_HOT_RELOAD_PATH);
+                imp->engine.clearSingletons();
+                imp->engine.clearComponentCache();
+                imp->engine.load(QML_HOT_RELOAD_PATH);
+            },
+            Qt::ShortcutContext::ApplicationShortcut
+        };
 
-        }, qt::shortcut_context::application, app);
 #endif
 
         imp->engine.setInitialProperties(make_variant_map(
@@ -674,7 +680,7 @@ namespace emulator
 #ifdef QT_UI_DEBUG_MODE
             std::make_pair("debugMode", true),
             std::make_pair("sprites", &ui_debug_sprites_model),
-            std::make_pair("bg", &ui_debug_background));
+            std::make_pair("bg", &ui_debug_background)));
 #else
             std::make_pair("debugMode", false)));
 #endif

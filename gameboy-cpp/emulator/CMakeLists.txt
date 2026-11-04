@@ -45,6 +45,7 @@ elseif(UI_BACKEND STREQUAL "Qt")
 			QML_FILES EmulatorUI.qml
 			OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Gameboy/UI
 			DEPENDENCIES QtCore QtQuick
+			RESOURCE_PREFIX /qt/qml
 	)
 
 	target_compile_warnings(emulator-qml)

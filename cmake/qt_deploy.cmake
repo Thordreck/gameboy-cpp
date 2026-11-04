@@ -14,6 +14,9 @@ function(deploy_qt_libraries target)
                 "$<$<PLATFORM_ID:Windows>:${Qt6_DIR}/../../../bin/windeployqt.exe>"
                 "$<$<PLATFORM_ID:Android>:${Qt6_DIR}/../../../bin/androiddeployqt.exe>"
                 "$<$<BOOL:${arg_QML_DIR}>:--qmldir;${arg_QML_DIR}>"
+                "$<$<CONFIG:Debug>:--debug>"
+                "$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug,RelWithDebInfo>>:--pdb>"
+                "$<$<CONFIG:Release,RelWithDebInfo>:--release>"
                 "$<IF:$<BOOL:${arg_TRANSLATIONS}>,--translations ${arg_TRANSLATIONS},--no-translations>"
                 "$<TARGET_FILE:${target}>"
         )
