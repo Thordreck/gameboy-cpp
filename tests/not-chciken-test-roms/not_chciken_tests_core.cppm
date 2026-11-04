@@ -14,38 +14,36 @@ import engine;
 import graphics;
 import cartridge;
 import utilities;
-
-// TODO: remove once done debugging
-import stb_image;
+import tests.core;
 
 namespace not_chciken
 {
-	template<typename TExpected, typename TError>
-	TExpected required(std::expected<TExpected, TError>&& result)
+	template<typename Samples>
+	requires std::ranges::contiguous_range<Samples> && sdl::AudioSample<std::ranges::range_value_t<Samples>>
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> export_audio(
+		const Samples& samples,
+		const std::uint8_t num_channels,
+		const std::uint32_t sample_rate)
 	{
-		REQUIRE_MESSAGE(result.has_value(), std::format("Unexpected error. {}", result.error()));
-		return std::forward<TExpected>(result.value());
+		using namespace sdl;
+		using namespace tests;
+
+		const std::filesystem::path output_filepath = get_temp_file(".wav");
+
+		return save_wav(samples, num_channels, sample_rate, output_filepath)
+			.transform([&output_filepath] { return output_filepath; });
 	}
 
-	template<typename TError>
-	void required(std::expected<void, TError>&& result)
-	{
-		REQUIRE_MESSAGE(result.has_value(), std::format("Unexpected error. {}", result.error()));
-	}
-
-	[[nodiscard]] std::expected<std::filesystem::path, std::string> export_plot(
-		plot::figure& figure,
-		const std::string_view filename)
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> export_plot(plot::figure& figure)
 	{
 		using namespace plot;
 		using namespace svg;
+		using namespace tests;
 
 		std::stringstream svg_export_stream {};
 		required(save_as_svg(figure, svg_export_stream));
 
-		const std::filesystem::path output_filepath
-			= std::filesystem::temp_directory_path()
-			/ std::filesystem::path(filename).filename().replace_extension("png");
+		const std::filesystem::path output_filepath = get_temp_file(".png");
 
 		return document::load(svg_export_stream.view().data(), svg_export_stream.str().size())
 			.and_then([] (auto doc) { return doc.to_bitmap(); })
@@ -170,92 +168,18 @@ namespace not_chciken
 			.minors(tick { 0 }, tick { *max_correlation_it, std::format("{:.2f}", *max_correlation_it) } );
 	}
 
-	sdl::audio_data<float> get_expected_audio(const std::filesystem::path& expected_audio_file)
+	[[nodiscard]] sdl::audio_data<float> get_expected_audio(const std::filesystem::path& expected_audio_file)
 	{
 		using namespace sdl;
+		using namespace tests;
 
-		auto audio_data = required(
-			load_wav<float>(expected_audio_file)
-			.and_then([] (const auto& wav_audio)
-				{
-					return convert_audio(wav_audio, wav_audio.specs().channels, 8000);
-				})
-			);
+		auto audio_data = required(load_wav<float>(expected_audio_file));
 
 		REQUIRE_MESSAGE(audio_data.specs().channels <= 2, "Reference audio file must be mono or stereo");
 		REQUIRE_MESSAGE(audio_data.specs().channels > 0, "Reference audio file must have at least one channel");
 
 		return std::move(audio_data);
 	}
-
-	struct dummy_serial
-	{
-		[[nodiscard]] static std::uint8_t transfer_bit(const std::uint8_t) { return 0x00; }
-	};
-
-	struct dummy_lcd
-	{
-		void write_frame(const graphics::lcd_memory_view_t new_frame)
-		{
-			std::ranges::copy(new_frame.begin(), new_frame.end(), frame.begin());
-
-			const std::filesystem::path output_filepath
-				= std::filesystem::temp_directory_path()
-			/ std::format("square-test-frame-{}.png", num_frame++);
-
-			constexpr stb::image_metadata output_metadata
-			{
-				graphics::lcd_width,
-				graphics::lcd_height,
-				graphics::num_color_channels
-			};
-
-			required(stb::write_png(output_filepath, frame.data(), output_metadata));
-		}
-
-	private:
-		graphics::lcd_memory_t frame {};
-		std::size_t num_frame {};
-	};
-
-	template<typename T>
-	concept AudioSinkBuffer = requires(T buffer, std::span<const float> samples)
-	{
-		{ buffer.push(samples) } -> std::convertible_to<size_t>;
-	};
-
-	template<AudioSinkBuffer Buffer>
-	class test_audio_sink
-	{
-	public:
-		test_audio_sink(Buffer& buffer, const std::uint8_t num_channels, const std::uint32_t sample_rate)
-			: buffer { buffer }
-			, num_channels { num_channels }
-			, audio_sample_rate { sample_rate }
-		{}
-
-		[[nodiscard]] std::uint8_t channel_count() const { return num_channels; }
-		[[nodiscard]] std::uint32_t sample_rate() const { return audio_sample_rate; }
-
-		void enable_capture() { capture_enabled = true; }
-		void disable_capture() { capture_enabled = false; }
-
-		void write(const std::span<const float> samples)
-		{
-			if (capture_enabled)
-			{
-				const auto num_samples_written = buffer.push(samples);
-				REQUIRE_MESSAGE(num_samples_written == samples.size(), "Could not write all audio samples into buffer");
-			}
-		}
-
-	private:
-		Buffer& buffer;
-		std::uint8_t num_channels;
-		std::uint32_t audio_sample_rate;
-
-		bool capture_enabled { false };
-	};
 
 	template<joypad::joypad_input Input>
 	void activate_input(std::span<bool, joypad::num_joypad_inputs> inputs)
@@ -306,42 +230,35 @@ namespace not_chciken
 		trigger_input<a>(engine);
 	}
 
-	std::vector<float> get_generated_audio(
+	[[nodiscard]] std::vector<float> get_generated_audio(
 		const std::filesystem::path& test_rom,
 		const std::uint8_t preset_idx,
 		const std::uint8_t num_channels,
 		const std::uint32_t sample_rate,
-		const std::chrono::seconds& expected_duration)
+		const std::chrono::duration<float>& expected_duration)
 	{
+		using namespace tests;
 		using namespace engine;
 		using namespace std::literals::chrono_literals;
 
 		dummy_lcd lcd {};
 		dummy_serial serial {};
-
-		const size_t buffer_capacity = std::llroundl(((expected_duration + 0.5s) / 1.0s) * sample_rate * num_channels);
-		utils::ring_buffer<float> audio_buffer { buffer_capacity };
-
-		test_audio_sink audio { audio_buffer, num_channels, sample_rate };
+		memory_audio audio { num_channels, sample_rate, false };
 
 		auto cartridge = required(cartridge::load_rom_file(test_rom));
 		auto engine = required(create_engine(cartridge, lcd, audio, serial));
 
 		trigger_preset(engine, preset_idx);
-		audio.enable_capture();
+		audio.open();
 
 		const auto num_ticks = static_cast<std::uint32_t>((expected_duration / frame_duration) * num_ticks_per_frame);
 		engine->tick(num_ticks);
 
-		std::vector<float> generated_samples(audio_buffer.read_available());
-		const size_t num_samples_read = audio_buffer.pop(generated_samples);
-		REQUIRE_MESSAGE(num_samples_read == generated_samples.size(), "Could not read all audio samples from buffer");
-
-		return generated_samples;
+		return audio.data();
 	}
 
 	template<sdl::AudioSample SampleType>
-	sdl::channel_span<const SampleType> get_audio_channel_view(
+	[[nodiscard]] sdl::channel_span<const SampleType> get_audio_channel_view(
 		const std::span<const SampleType> interleaved_samples,
 		const std::size_t target_channel,
 		const std::size_t total_channels)
@@ -354,7 +271,7 @@ namespace not_chciken
 
 	template<typename Container>
 	requires std::ranges::sized_range<Container> && sdl::AudioSample<std::ranges::range_value_t<Container>>
-	auto get_audio_channel_view(
+	[[nodiscard]] auto get_audio_channel_view(
 		Container&& interleaved_samples,
 		const std::size_t target_channel,
 		const std::size_t total_channels)
@@ -368,17 +285,16 @@ namespace not_chciken
     	const std::filesystem::path& expected_audio_file,
     	const std::uint8_t preset_idx)
     {
-		using namespace std::literals::chrono_literals;
-
 		const auto expected_audio = get_expected_audio(expected_audio_file);
 		const std::uint8_t channels = expected_audio.specs().channels;
 		const std::uint32_t sample_rate = expected_audio.specs().sample_rate;
+		const std::chrono::duration<float> expected_duration { expected_audio.samples().size() / channels / static_cast<float>(sample_rate) };
 		const auto generated_audio = get_generated_audio(
 			test_rom,
 			preset_idx,
 			channels,
 			sample_rate,
-			3s
+			expected_duration
 			);
 
 		// TODO: compute cross-correlation to check similarity score
@@ -398,8 +314,13 @@ namespace not_chciken
 			populate_correlation_plot(fig.plot(4, channel), expected_samples, generated_samples);
 		}
 
-		const auto image_path = required(export_plot(fig, "plot_test"));
-		FAIL(std::format("Generated result image at {}", image_path.string()));
+		using namespace tests;
+
+		const auto image_path = required(export_plot(fig));
+		FAIL_CHECK(std::format("Generated result image at {}", image_path.string()));
+
+		const auto audio_path = required(export_audio(generated_audio, channels, sample_rate));
+		FAIL_CHECK(std::format("Generated result audio at {}", audio_path.string()));
     }
 
 }

@@ -313,6 +313,59 @@ namespace sdl
             converted_spec);
     }
 
+    export template<typename Samples>
+    requires std::ranges::contiguous_range<Samples> && AudioSample<std::ranges::range_value_t<Samples>>
+    [[nodiscard]] outcome save_wav(
+        const Samples& samples,
+        const std::uint8_t num_channels,
+        const std::uint32_t sample_rate,
+        const std::filesystem::path& file)
+    {
+        SDL_IOStream* output_stream = SDL_IOFromFile(file.string().c_str(), "wb");
+
+        if (output_stream == nullptr)
+        {
+            return std::unexpected { SDL_GetError() };
+        }
+
+        const defer cleanup { [output_stream] { SDL_CloseIO(output_stream); }};
+
+        using enum audio_format;
+        using sample_t = std::ranges::range_value_t<Samples>;
+
+        const audio_format format = associated_audio_format<sample_t>();
+        const auto bits = SDL_AUDIO_BITSIZE(std::to_underlying(format));
+        const auto bytes_per_sample = bits / 8;
+        const auto byte_rate = sample_rate * num_channels * bytes_per_sample;
+        const auto block_align = num_channels * bytes_per_sample;
+        const auto sample_count = std::ranges::size(samples);
+        const auto length = sample_count * sizeof(sample_t);
+        const auto buffer = std::ranges::data(samples);
+        const auto wav_format = (format == f32 || format == f32_be || format == f32_le) ? 3 : 1;
+        const auto require = [](const bool condition) { return condition ? outcome{} : std::unexpected { SDL_GetError() }; };
+
+        return require(SDL_WriteU32LE(output_stream, 0x46464952)) // RIFF
+            .and_then([output_stream, &require, length] { return require(SDL_WriteU32LE(output_stream, 36 + length)); })
+            .and_then([output_stream, &require] { return require(SDL_WriteU32LE(output_stream, 0x45564157)); }) // WAVE
+            .and_then([output_stream, &require] { return require(SDL_WriteU32LE(output_stream, 0x20746D66)); }) // fmt
+            .and_then([output_stream, &require] { return require(SDL_WriteU32LE(output_stream, 16)); })
+            .and_then([output_stream, &require, wav_format] { return require(SDL_WriteU16LE(output_stream, wav_format)); })
+            .and_then([output_stream, &require, num_channels] { return require(SDL_WriteU16LE(output_stream, num_channels)); })
+            .and_then([output_stream, &require, sample_rate] { return require(SDL_WriteU32LE(output_stream, sample_rate)); })
+            .and_then([output_stream, &require, byte_rate] { return require(SDL_WriteU32LE(output_stream, byte_rate)); })
+            .and_then([output_stream, &require, block_align] { return require(SDL_WriteU16LE(output_stream, block_align)); })
+            .and_then([output_stream, &require, bits] { return require(SDL_WriteU16LE(output_stream, bits)); })
+            .and_then([output_stream, &require] { return require(SDL_WriteU32LE(output_stream, 0x61746164)); }) // data
+            .and_then([output_stream, &require, length] { return require(SDL_WriteU32LE(output_stream, length)); })
+            .and_then([output_stream, &require, buffer, length] { return require(SDL_WriteIO(output_stream, buffer, length) == length); });
+    }
+
+    export template<AudioSample SampleType>
+    [[nodiscard]] outcome save_wav(const audio_data<SampleType>& samples, const std::filesystem::path& file)
+    {
+        return save_wav(samples.data(), samples.specs().channels, samples.specs().sample_rate, file);
+    }
+
     export template<AudioSample From, AudioSample To>
     [[nodiscard]] result<audio_data<To>> convert_audio(
         const audio_data<From>& source,

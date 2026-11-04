@@ -4,7 +4,7 @@ target_compile_warnings(not_chciken_tests_core)
 add_library(not_chciken::core ALIAS not_chciken_tests_core)
 
 set_target_properties(not_chciken_tests_core PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(not_chciken_tests_core PRIVATE engine doctest plot dsp sdl svg utilities stb_image)
+target_link_libraries(not_chciken_tests_core PRIVATE tests::core engine doctest plot dsp sdl svg utilities stb_image)
 target_sources(not_chciken_tests_core PUBLIC
         FILE_SET
         CXX_MODULES
