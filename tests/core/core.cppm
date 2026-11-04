@@ -7,3 +7,4 @@ export import :serial;
 export import :audio;
 export import :graphics;
 export import :memory;
+export import :io;

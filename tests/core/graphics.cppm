@@ -5,6 +5,7 @@ import graphics;
 import stb_image;
 import utilities;
 
+import :io;
 import :common;
 
 namespace tests
@@ -46,10 +47,8 @@ namespace tests
 
     export [[nodiscard]] result<std::filesystem::path> save_lcd_screenshot(const std::span<const std::uint8_t> lcd)
     {
-        using namespace utils;
         namespace files = std::filesystem;
-
-        const files::path output_filepath = files::temp_directory_path() / (generate_uuid() + ".png");
+        const files::path output_filepath = get_temp_file(".png");
 
         return save_lcd_screenshot(lcd, output_filepath)
             .transform([&output_filepath] { return output_filepath; });

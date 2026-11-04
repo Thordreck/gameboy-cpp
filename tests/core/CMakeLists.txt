@@ -17,4 +17,5 @@ target_sources(tests_core PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/graphics.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/memory.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/io.cppm
 )
