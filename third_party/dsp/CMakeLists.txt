@@ -1,5 +1,5 @@
 
-set(DSPLIB_NO_EXCEPTIONS ON CACHE BOOL "" FORCE)
+set(DSPLIB_NO_EXCEPTIONS OFF CACHE BOOL "" FORCE)
 set(DSPLIB_FFT_BACKEND ON CACHE STRING "fftw" FORCE)
 set(DSPLIB_ENABLE_LTO OFF CACHE BOOL "" FORCE)
 set(DSPLIB_USE_FLOAT32 ON CACHE BOOL "" FORCE)
@@ -11,6 +11,11 @@ target_compile_warnings(dsp)
 target_compile_features(dsp PUBLIC cxx_std_23)
 set_target_properties(dsp PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(dsp PRIVATE dsplib)
+target_compile_options(dsp PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4267 /wd4244>)
+target_compile_options(dsplib PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/W0 /external:anglebrackets /external:W0 /wd4244>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-everything>
+)
 add_third_party_module(dsplib https://github.com/vitalsong/dsplib ${CMAKE_CURRENT_SOURCE_DIR}/upstream/LICENSE)
 
 target_sources(dsp PUBLIC

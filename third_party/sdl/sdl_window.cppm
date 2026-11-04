@@ -50,7 +50,11 @@ namespace sdl
             const size_t height,
             const window_flags flags)
         {
-            if (SDL_Window* imp = SDL_CreateWindow(title.data(), width, height, std::to_underlying(flags)); imp != nullptr )
+            if (SDL_Window* imp = SDL_CreateWindow(
+                title.data(),
+                static_cast<int>(width),
+                static_cast<int>(height),
+                std::to_underlying(flags)); imp != nullptr )
             {
                 return internal::wrapper::create<window>(imp);
             }

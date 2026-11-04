@@ -38,13 +38,25 @@ namespace dsp
 
     export base_array<complex_t> make_array(const complex_t* data, const size_t size, const size_t stride)
     {
-        const auto slice = dsplib::slice_t<complex_t>::make_slice(data, size, 0, size, stride);
+        const auto slice = dsplib::slice_t<complex_t>::make_slice(
+            data,
+            static_cast<int>(size),
+            0,
+            static_cast<int>(size),
+            static_cast<int>(stride));
+
         return base_array<complex_t> { slice };
     }
 
     export base_array<real_t> make_array(const real_t* data, const size_t size, const size_t stride)
     {
-        const auto slice = dsplib::slice_t<real_t>::make_slice(data, size, 0, size, stride);
+        const auto slice = dsplib::slice_t<real_t>::make_slice(
+            data,
+            static_cast<int>(size),
+            0,
+            static_cast<int>(size),
+            static_cast<int>(stride));
+
         return base_array<real_t> { slice };
     }
 

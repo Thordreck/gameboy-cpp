@@ -59,8 +59,8 @@ namespace sdl
     // TODO: implement properly
     export [[nodiscard]] result<iostream> io_from_file(
         const std::filesystem::path& path,
-        const open_file_mode open_mode,
-        const bool binary)
+        const open_file_mode,
+        const bool)
     {
         if (SDL_IOStream* stream = SDL_IOFromFile(path.string().c_str(), "rb"); stream != nullptr)
         {

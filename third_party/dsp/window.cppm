@@ -10,7 +10,7 @@ namespace dsp
 {
     export base_array<real_t> hamming(const size_t n)
     {
-        return dsplib::window::hamming(n);
+        return dsplib::window::hamming(static_cast<int>(n));
     }
 
 }

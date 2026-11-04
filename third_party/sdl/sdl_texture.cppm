@@ -35,7 +35,8 @@ namespace sdl
                 internal::native::get_handle(renderer),
                 static_cast<SDL_PixelFormat>(format),
                 static_cast<SDL_TextureAccess>(access),
-                width, height); imp != nullptr)
+                static_cast<int>(width),
+                static_cast<int>(height)); imp != nullptr)
             {
                 return texture { imp };
             }
@@ -68,7 +69,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return height;
+            return static_cast<size_t>(std::floorl(height));
         }
 
         [[nodiscard]] result<std::size_t> width() const
@@ -81,7 +82,7 @@ namespace sdl
                 return std::unexpected{ SDL_GetError() };
             }
 
-            return width;
+            return static_cast<size_t>(std::floorl(width));
         }
 
     private:

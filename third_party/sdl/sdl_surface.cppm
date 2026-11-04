@@ -13,12 +13,15 @@ namespace sdl
     export class surface
     {
     public:
-        [[nodiscard]] result<surface> create(
+        static [[nodiscard]] result<surface> create(
             const std::size_t width,
             const std::size_t height,
             const pixel_format format)
         {
-            if (SDL_Surface* imp = SDL_CreateSurface(width, height, static_cast<SDL_PixelFormat>(format)); imp != nullptr)
+            if (SDL_Surface* imp = SDL_CreateSurface(
+                static_cast<int>(width),
+                static_cast<int>(height),
+                static_cast<SDL_PixelFormat>(format)); imp != nullptr)
             {
                 return internal::wrapper::create<surface>(imp);
             }

@@ -8,7 +8,7 @@ namespace sdl
 {
     export void delay(const std::chrono::milliseconds& ms)
     {
-        SDL_Delay(ms.count());
+        SDL_Delay(static_cast<std::uint32_t>(ms.count()));
     }
 
     export void delay_precise(const std::chrono::nanoseconds& ns)

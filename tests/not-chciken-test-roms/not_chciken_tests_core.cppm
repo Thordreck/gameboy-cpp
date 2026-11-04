@@ -330,7 +330,7 @@ namespace not_chciken
 		trigger_preset(engine, preset_idx);
 		audio.enable_capture();
 
-		const size_t num_ticks = (expected_duration / frame_duration) * num_ticks_per_frame;
+		const auto num_ticks = static_cast<std::uint32_t>((expected_duration / frame_duration) * num_ticks_per_frame);
 		engine->tick(num_ticks);
 
 		std::vector<float> generated_samples(audio_buffer.read_available());
