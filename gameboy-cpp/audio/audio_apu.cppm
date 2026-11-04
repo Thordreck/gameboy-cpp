@@ -377,14 +377,14 @@ namespace audio
                 {
                     tick_accumulator -= master_clock_rate;
 
-                    const auto [left, right] = generate_sample();
+                    const auto [left, right] = generate_sample(output_sample_rate);
                     const std::array raw_sample { left.data(), right.data() };
                     sink.write(raw_sample);
                 }
             }
         }
 
-        [[nodiscard]] stereo<analog_sample> generate_sample()
+        [[nodiscard]] stereo<analog_sample> generate_sample(const std::uint32_t sample_rate)
         {
             // Channels
             const digital_sample digital_ch1 = channel_1.output();
@@ -406,12 +406,15 @@ namespace audio
 
             // Mix, normalization, gain, filter
             const auto mixed = mix(stereo_analog_ch1, stereo_analog_ch2, stereo_analog_ch3, stereo_analog_ch4);
-            const auto normalized = normalize<num_apu_channels>(mixed);
 
             const stereo master_gain { (1 + master_volume.left) / 8.0f, (1 + master_volume.right) / 8.0f };
-            const auto amplified = apply_gain(normalized, master_gain);
+            const auto amplified = apply_gain(mixed, master_gain);
+            const auto normalized = normalize<num_apu_channels>(amplified);
+            const bool is_any_dac_enabled = std::ranges::any_of(channels_dac, [] (auto& dac) { return dac.is_enabled(); });
 
-            return high_pass_filter.apply(amplified);
+            return is_any_dac_enabled
+                ? high_pass_filter.apply(normalized, compute_high_pass_filter_charge_factor(sample_rate))
+                : stereo<analog_sample> {};
         }
 
         void reset()
