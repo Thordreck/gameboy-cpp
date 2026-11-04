@@ -24,8 +24,8 @@ TEST_CASE("audio.DAC generates expected result")
     const auto test = GENERATE(
         test_case{0, -1},
         test_case{0xF, 1},
-        test_case{0xC, 0.6},
-        test_case{0x8, 0.06}
+        test_case{0xC, 0.6f},
+        test_case{0x8, 0.06f}
         );
 
     const auto computed_value = audio::apply_dac(test.input);

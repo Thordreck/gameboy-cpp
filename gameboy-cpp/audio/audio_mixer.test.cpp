@@ -18,7 +18,7 @@ namespace
         {
             for (int i = 0; i < N; ++i)
             {
-                samples[0] = audio::stereo { Sample{ left_samples[i] }, Sample { right_samples[i] } };
+                samples[i] = audio::stereo { Sample{ left_samples[i] }, Sample { right_samples[i] } };
             }
 
             expected_output.left = expected_left;

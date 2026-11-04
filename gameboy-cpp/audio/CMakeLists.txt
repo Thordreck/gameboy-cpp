@@ -24,6 +24,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_noise.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_normalization.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_buffer.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.cppm
 )
 if(BUILD_TESTING)
     add_executable(audio_tests)
@@ -37,6 +38,7 @@ if(BUILD_TESTING)
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_dac.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_mixer.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.test.cpp
     )
 
 endif()

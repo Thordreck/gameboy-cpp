@@ -5,7 +5,7 @@ import :common;
 namespace audio
 {
     export template<AudioSample Output, AudioSample Input>
-    constexpr Output convert_sample(const Input input)
+    [[nodiscard]] constexpr Output convert_sample(const Input input)
     {
         static constexpr auto input_range = Input::max - Input::min;
         static constexpr auto output_range = Output::max - Output::min;
@@ -14,7 +14,7 @@ namespace audio
         return Output { Output::min + output_range * t };
     }
 
-    export constexpr analog_sample apply_dac(const digital_sample input)
+    export [[nodiscard]] constexpr analog_sample apply_dac(const digital_sample input)
     {
         return convert_sample<analog_sample>(input);
     }
@@ -25,19 +25,18 @@ namespace audio
         [[nodiscard]] bool is_enabled() const { return enabled; }
         void set_enabled(const bool new_enabled) { enabled = new_enabled; }
 
-        analog_sample convert(const digital_sample input)
+        [[nodiscard]] analog_sample convert(const digital_sample input) const
         {
             return enabled ? analog_sample { 1.0f * convert_sample<analog_sample>(input).data() } : analog_sample { };
         }
 
-        stereo<analog_sample> convert(const stereo<digital_sample> input)
+        [[nodiscard]] stereo<analog_sample> convert(const stereo<digital_sample> input) const
         {
             return { convert(input.left), convert(input.right) };
         }
 
     private:
         bool enabled { false };
-
     };
 
 }

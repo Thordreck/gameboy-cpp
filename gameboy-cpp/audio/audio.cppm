@@ -16,3 +16,4 @@ export import :buffer;
 export import :panning;
 export import :normalization;
 export import :apu;
+export import :window;
