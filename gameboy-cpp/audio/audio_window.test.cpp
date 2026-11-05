@@ -18,7 +18,7 @@ namespace
 
 TEST_CASE("audio.Blackman window generates expected values")
 {
-    const auto generated = audio::blackman_window<blackman_table.size()>();
+    const auto generated = audio::blackman_window_f<blackman_table.size()>();
 
     for (size_t i = 0; i < generated.size(); i++)
     {
