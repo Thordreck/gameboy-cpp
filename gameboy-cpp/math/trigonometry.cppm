@@ -20,4 +20,17 @@ namespace math
         }
     }
 
+    export template<typename T>
+    requires std::is_floating_point_v<T>
+    constexpr [[nodiscard]] T sin(const T x) noexcept
+    {
+        if consteval
+        {
+            return gcem::sin(x);
+        }
+        else
+        {
+            return std::sin(x);
+        }
+    }
 }

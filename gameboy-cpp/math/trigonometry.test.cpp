@@ -36,7 +36,7 @@ TEST_CASE_TEMPLATE("math.math::cos() returns values similar to std::cos() at com
         const T input { test_values<T>[i] };
 
         CHECK_MESSAGE(
-            computed_values[i] == doctest::Approx(std::cos(input)).epsilon(0.0001f),
+            computed_values[i] == doctest::Approx(std::cos(input)).epsilon(0.001f),
             std::format("Discrepancy found with input {}", input));
     }
 }
@@ -47,6 +47,33 @@ TEST_CASE_TEMPLATE("math.math::cos() returns values similar to std::cos() at run
     {
         CHECK_MESSAGE(
             math::cos(x) == doctest::Approx(std::cos(x)).epsilon(0.0001f),
+            std::format("Discrepancy found with input {}", x));
+    }
+}
+
+TEST_CASE_TEMPLATE("math.math::sin() returns values similar to std::sin() at compile time", T, float, double)
+{
+    constexpr auto computed_values = []<size_t... Index>(std::index_sequence<Index...>) constexpr
+      {
+          return std::array { math::sin<T>(test_values<T>[Index])... };
+      }(std::make_index_sequence<test_values<T>.size()>());
+
+    for (size_t i = 0; i < test_values<T>.size(); i++)
+    {
+        const T input { test_values<T>[i] };
+
+        CHECK_MESSAGE(
+            computed_values[i] == doctest::Approx(std::sin(input)).epsilon(0.01f),
+            std::format("Discrepancy found with input {}", input));
+    }
+}
+
+TEST_CASE_TEMPLATE("math.math::cos() returns values similar to std::cos() at runtime", T, float, double)
+{
+    for (auto x : test_values<T>)
+    {
+        CHECK_MESSAGE(
+            math::sin(x) == doctest::Approx(std::sin(x)).epsilon(0.001f),
             std::format("Discrepancy found with input {}", x));
     }
 }

@@ -3,7 +3,7 @@ target_compile_features(audio PUBLIC cxx_std_23)
 target_compile_warnings(audio)
 
 set_target_properties(audio PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-target_link_libraries(audio PUBLIC memory timer utilities)
+target_link_libraries(audio PUBLIC memory timer utilities math)
 target_sources(audio PUBLIC
         FILE_SET
         CXX_MODULES
@@ -25,6 +25,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_normalization.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_buffer.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.cppm
 )
 if(BUILD_TESTING)
     add_executable(audio_tests)
@@ -39,6 +40,7 @@ if(BUILD_TESTING)
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_dac.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_mixer.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.test.cpp
     )
 
 endif()

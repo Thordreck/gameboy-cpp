@@ -16,9 +16,19 @@ namespace
     };
 }
 
-TEST_CASE("audio.Blackman window generates expected values")
+TEST_CASE_TEMPLATE("audio.Blackman window generates expected values at compile time", T, float, double)
 {
-    const auto generated = audio::blackman_window_f<blackman_table.size()>();
+    constexpr auto generated = audio::blackman_window<T, blackman_table.size()>();
+
+    for (size_t i = 0; i < generated.size(); i++)
+    {
+        CHECK(generated[i] == doctest::Approx(blackman_table[i]).epsilon(0.001f));
+    }
+}
+
+TEST_CASE_TEMPLATE("audio.Blackman window generates expected values at runtime", T, float, double)
+{
+    const auto generated = audio::blackman_window<T, blackman_table.size()>();
 
     for (size_t i = 0; i < generated.size(); i++)
     {
