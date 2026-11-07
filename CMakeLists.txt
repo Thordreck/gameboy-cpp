@@ -108,6 +108,7 @@ if(JSON_PROVIDER STREQUAL "nlohmann")
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/boost)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/gcem)
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/memory)
@@ -125,6 +126,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/serial)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/engine)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/json)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/metadata)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/math)
 
 if(NOT HEADLESS_BUILD)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gameboy-cpp/emulator)

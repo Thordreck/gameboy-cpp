@@ -31,3 +31,6 @@
 [submodule "third_party/nlohmann/upstream"]
 	path = third_party/nlohmann/upstream
 	url = https://github.com/nlohmann/json.git
+[submodule "third_party/gcem/upstream"]
+	path = third_party/gcem/upstream
+	url = https://github.com/kthohr/gcem.git
