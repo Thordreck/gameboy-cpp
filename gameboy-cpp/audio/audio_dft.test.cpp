@@ -94,7 +94,7 @@ TEST_CASE_TEMPLATE("audio.dft() returns expected values at compile time", TestCa
     }
 }
 
-TEST_CASE_TEMPLATE("math.dft() returns expected values at runtime", TestCase, TEST_CASES)
+TEST_CASE_TEMPLATE("audio.dft() returns expected values at runtime", TestCase, TEST_CASES)
 {
     const auto test_case = TestCase::test;
     const auto computed = audio::dft(test_case.time);
@@ -111,5 +111,37 @@ TEST_CASE_TEMPLATE("math.dft() returns expected values at runtime", TestCase, TE
         CHECK_MESSAGE(
             computed[i].imag() == doctest::Approx(expected.imag()).epsilon(0.001f),
             std::format("Discrepancy found with on imaginary part {}i with input {} at index {}", expected.imag(), input, i));
+    }
+}
+
+TEST_CASE_TEMPLATE("audio.idft() returns expected values at compile time", TestCase, TEST_CASES)
+{
+    constexpr auto test_case = TestCase::test;
+    constexpr auto computed = audio::idft(test_case.dft);
+
+    for (size_t i = 0; i < computed.size(); i++)
+    {
+        const auto input { test_case.dft[i] };
+        const auto expected { test_case.time[i] };
+
+        CHECK_MESSAGE(
+            computed[i] == doctest::Approx(expected).epsilon(0.001f),
+            std::format("Discrepancy found on value {} with input ({}, {}i) at index {}", expected, input.real(), input.imag(), i));
+    }
+}
+
+TEST_CASE_TEMPLATE("audio.idft() returns expected values at runtime", TestCase, TEST_CASES)
+{
+    const auto test_case = TestCase::test;
+    const auto computed = audio::idft(test_case.dft);
+
+    for (size_t i = 0; i < computed.size(); i++)
+    {
+        const auto input { test_case.dft[i] };
+        const auto expected { test_case.time[i] };
+
+        CHECK_MESSAGE(
+            computed[i] == doctest::Approx(expected).epsilon(0.001f),
+            std::format("Discrepancy found on value {} with input ({}, {}i) at index {}", expected, input.real(), input.imag(), i));
     }
 }
