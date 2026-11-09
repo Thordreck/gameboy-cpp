@@ -17,4 +17,28 @@ namespace audio
             : math::sin(pi_v<SampleType> * x) / (pi_v<SampleType> * x);
     }
 
+    export template <std::size_t N, std::invocable<size_t> Generator>
+    constexpr auto make_array(Generator&& generator)
+    {
+        return [&]<size_t... Index>(std::index_sequence<Index...>) constexpr
+          {
+              return std::array { generator(Index)... };
+          }(std::make_index_sequence<N>());
+    }
+
+    template<typename>
+    struct is_complex : std::false_type {};
+
+    template<typename T>
+    struct is_complex<std::complex<T>> : std::true_type {};
+
+    export template<typename T>
+    constexpr bool is_complex_v = is_complex<T>::value;
+
+    export template<typename T>
+    concept complex = is_complex_v<T>;
+
+    export template<typename T>
+    concept static_sized_range = std::ranges::sized_range<T> && requires(T& t) { typename std::integral_constant<size_t, std::ranges::size(t)>; };
+
 }
