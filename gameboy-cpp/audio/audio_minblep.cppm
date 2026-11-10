@@ -1,5 +1,5 @@
 
-export module audio:blep;
+export module audio:minblep;
 import std;
 
 import :utils;
@@ -10,21 +10,26 @@ namespace audio
 {
     // Adapted from: https://www.experimentalscene.com/articles/minbleps.php
     export template <std::floating_point SampleType, size_t ZeroCrossings, size_t OverSampling>
-    requires ZeroCrossings > 0 && OverSampling > 0
+    requires (ZeroCrossings > 0) && (OverSampling > 0)
     constexpr [[nodiscard]] auto min_blep_table() noexcept
     {
-        constexpr size_t table_length { ZeroCrossings * 2 * OverSampling + 1 };
+        // TODO: missing + 1?
+        constexpr size_t table_length { ZeroCrossings * 2 * OverSampling  };
 
         // Sinc
-        constexpr auto sincs = make_array<table_length>([] (const size_t i) constexpr
+        const auto sincs = make_array<table_length>([] (const size_t i) constexpr
         {
-            const SampleType x = std::fma(2 * ZeroCrossings, i / static_cast<SampleType>(table_length - 1), -ZeroCrossings);
+            const SampleType x = math::fma(
+                static_cast<SampleType>(2 * ZeroCrossings),
+                i / static_cast<SampleType>(table_length - 1),
+                -static_cast<SampleType>(ZeroCrossings));
+
             return sinc(x);
         });
 
         // Windowing
-        constexpr auto window = blackman_window<SampleType, table_length>();
-        constexpr auto band_limited_sincs = make_array<table_length>([&](const size_t i) constexpr { return sincs[i] * window[i]; });
+        const auto window = blackman_window<SampleType, table_length>();
+        const auto band_limited_sincs = make_array<table_length>([&](const size_t i) constexpr { return sincs[i] * window[i]; });
 
         // Minimum phase
         const auto real_cepstrum = rceps(band_limited_sincs);
@@ -32,7 +37,7 @@ namespace audio
 
         // Integration
         SampleType accumulator {};
-        const auto integration = make_array<<table_length>([&] (const size_t i) constexpr
+        const auto integration = make_array<table_length>([&] (const size_t i) constexpr
         {
             accumulator += minimum_phase[i];
             return accumulator;

@@ -18,5 +18,7 @@ export import :normalization;
 export import :apu;
 export import :window;
 export import :dft;
+export import :fft;
 export import :signals;
+export import :minblep;
 export import :utils;

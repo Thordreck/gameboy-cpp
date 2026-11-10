@@ -5,6 +5,7 @@ import std;
 import math;
 
 import :dft;
+import :fft;
 import :utils;
 
 namespace audio
@@ -25,26 +26,20 @@ namespace audio
         && std::floating_point<std::ranges::range_value_t<Input>>
     constexpr [[nodiscard]] auto rceps(Input&& input)
     {
-        constexpr auto size = std::ranges::size(input);
-
-        const auto transform = dft(input);
-        const auto log_cabs = make_array<size>([&input] (const size_t i) constexpr
+        const auto transform = fft(input);
+        const auto log_cabs = make_array<transform.size()>([&transform] (const size_t i) constexpr
         {
-            using namespace math;
-
-            const auto input_value = *(std::ranges::begin(input) + i);
-            return log(cabs(input_value));
+            return std::complex { math::log(math::cabs(transform[i])) };
         });
 
-        const auto inverse = idft(log_cabs);
-        return make_array<size>([&inverse] (const size_t i) constexpr { return inverse[i].real(); });
+        return ifft(log_cabs);
     }
 
     export template <typename Input>
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto minimum_phase(Input&& input)
+    constexpr [[nodiscard]] auto min_phase(Input&& input)
     {
         using sample_type = std::ranges::range_value_t<Input>;
         constexpr auto n { std::ranges::size(input) };
@@ -71,10 +66,10 @@ namespace audio
             return sample_type {};
         });
 
-        const auto transform = dft(coefficients);
-        const auto cexp = make_array<n>([&transform, n] (const size_t i) constexpr { return math::cexp(transform[i]); });
+        const auto transform = fft(coefficients);
+        const auto cexp = make_array<transform.size()>([&transform] (const size_t i) constexpr { return math::cexp(transform[i]); });
 
-        return idft(cexp);
+        return ifft(cexp);
     }
 
 }
