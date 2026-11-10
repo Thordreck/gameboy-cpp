@@ -40,4 +40,41 @@ namespace audio
         return make_array<size>([&inverse] (const size_t i) constexpr { return inverse[i].real(); });
     }
 
+    export template <typename Input>
+    requires static_sized_range<Input>
+        && std::ranges::random_access_range<Input>
+        && std::floating_point<std::ranges::range_value_t<Input>>
+    constexpr [[nodiscard]] auto minimum_phase(Input&& input)
+    {
+        using sample_type = std::ranges::range_value_t<Input>;
+        constexpr auto n { std::ranges::size(input) };
+
+        const auto coefficients = make_array<n>([&input, n] (const size_t i) constexpr
+        {
+            if (i == 0)
+            {
+                return input[i];
+            }
+
+            const auto nd2 = n / 2;
+
+            if (i < nd2)
+            {
+                return 2 * input[i];
+            }
+
+            if (n % 2 == 0 && i == nd2)
+            {
+                return input[i];
+            }
+
+            return sample_type {};
+        });
+
+        const auto transform = dft(coefficients);
+        const auto cexp = make_array<n>([&transform, n] (const size_t i) constexpr { return math::cexp(transform[i]); });
+
+        return idft(cexp);
+    }
+
 }
