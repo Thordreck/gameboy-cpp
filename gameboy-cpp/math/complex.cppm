@@ -2,6 +2,9 @@
 export module math:complex;
 
 import std;
+import gcem;
+
+import :common;
 import :trigonometry;
 
 namespace math
@@ -28,6 +31,19 @@ namespace math
         else
         {
             return std::abs(x);
+        }
+    }
+
+    export template<complex T>
+    constexpr [[nodiscard]] auto cexp(const T x) noexcept
+    {
+        if consteval
+        {
+            return T { gcem::exp(x.real()) * cos(x.imag()), gcem::exp(x.real()) * sin(x.imag()) };
+        }
+        else
+        {
+            return std::exp(x);
         }
     }
 

@@ -18,6 +18,12 @@ namespace gcem_detail
         return gcem::log(x);
     }
 
+    template<std::floating_point T>
+    consteval T exp(T x) noexcept
+    {
+        return gcem::exp(x);
+    }
+
 }
 
 namespace gcem
@@ -32,6 +38,12 @@ namespace gcem
     consteval [[nodiscard]] T log(const T x) noexcept
     {
         return gcem_detail::log(x);
+    }
+
+    export template<std::floating_point T>
+    consteval [[nodiscard]] T exp(const T x) noexcept
+    {
+        return gcem_detail::exp(x);
     }
 
 }
