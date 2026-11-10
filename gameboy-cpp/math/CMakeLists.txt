@@ -9,7 +9,9 @@ target_sources(math PUBLIC
         CXX_MODULES
         FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/math.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/trigonometry.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/complex.cppm
 )
 
 if(BUILD_TESTING)
@@ -23,6 +25,8 @@ if(BUILD_TESTING)
     target_sources(math_tests
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/trigonometry.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/common.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/complex.test.cpp
     )
 
 endif()

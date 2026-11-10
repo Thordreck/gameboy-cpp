@@ -17,5 +17,6 @@ export import :panning;
 export import :normalization;
 export import :apu;
 export import :window;
-export import :utils;
 export import :dft;
+export import :signals;
+export import :utils;

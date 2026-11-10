@@ -13,5 +13,6 @@ target_sources(gcem PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/gcem.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/common.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/trigonometry.cppm
 )

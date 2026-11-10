@@ -25,8 +25,9 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_normalization.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_buffer.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_dft.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_signals.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.cppm
 )
 if(BUILD_TESTING)
     add_executable(audio_tests)
@@ -41,7 +42,7 @@ if(BUILD_TESTING)
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_dac.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_mixer.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_window.test.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/audio_signals.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_dft.test.cpp
     )
 

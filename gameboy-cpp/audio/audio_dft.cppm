@@ -10,7 +10,7 @@ namespace audio
     export template <typename Input>
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
-        && complex<std::ranges::range_value_t<Input>>
+        && math::complex<std::ranges::range_value_t<Input>>
     constexpr [[nodiscard]] auto dft(Input&& input) noexcept
     {
         using complex_type = std::ranges::range_value_t<Input>;
@@ -62,7 +62,7 @@ namespace audio
     export template <typename Input>
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
-        && complex<std::ranges::range_value_t<Input>>
+        && math::complex<std::ranges::range_value_t<Input>>
     constexpr [[nodiscard]] auto idft(Input&& input) noexcept
     {
         using complex_type = std::ranges::range_value_t<Input>;
