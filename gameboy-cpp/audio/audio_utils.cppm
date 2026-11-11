@@ -41,4 +41,18 @@ namespace audio
     export template<std::integral auto N>
     concept power_of_two = std::has_single_bit(N);
 
+    export template<static_sized_range Range>
+    constexpr [[nodiscard]] auto normalize(const Range& range)
+    {
+        constexpr size_t input_size = std::ranges::size(range);
+
+        return make_array<input_size>([&range] (const size_t i) constexpr
+        {
+            using range_element_t = std::ranges::range_value_t<Range>;
+            constexpr range_element_t normalization { range_element_t { 1 } / static_cast<range_element_t>(input_size) };
+
+            return range[i] * normalization;
+        });
+    }
+
 }
