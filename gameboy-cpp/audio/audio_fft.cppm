@@ -31,6 +31,14 @@ namespace audio
     export template <typename Input>
     concept RealFFTInput = StaticPowerOfTwoRange<Input> && FloatingPointRange<Input>;
 
+    template <typename Range>
+    requires ComplexRange<Range> && static_sized_range<Range>
+    constexpr [[nodiscard]] auto real(const Range& input)
+    {
+        constexpr size_t input_size = std::ranges::size(input);
+        return make_array<input_size>([&input](const size_t i) constexpr { return input[i].real(); });
+    }
+
     template<StaticPowerOfTwoRange Range>
     constexpr [[nodiscard]] auto bit_reversal_permutation(const Range& range)
     {
@@ -103,7 +111,7 @@ namespace audio
 
     template <ComplexFFTInput Input, IndexPermutationMap Permutation>
     requires (static_range_size_v<Input> == static_range_size_v<Permutation>)
-    constexpr [[nodiscard]] auto cooley_tukey_fft(const Input& input, const Permutation& permutation)
+    constexpr [[nodiscard]] auto cooley_tukey_fft(const Input& input, const Permutation& permutation, const bool forward)
     {
         using complex_type = std::ranges::range_value_t<Input>;
         using sample_type = complex_type::value_type;
@@ -117,8 +125,9 @@ namespace audio
         {
             const size_t block_size = size_t{1} << stage;
             const size_t half_block = block_size / 2;
-            const sample_type angle = -static_cast<sample_type>(2) * std::numbers::pi_v<sample_type> / static_cast<sample_type>(block_size);
-            const std::complex step{math::cos(angle), math::sin(angle)};
+            const auto direction = static_cast<sample_type>(forward ? -1 : 1);
+            const sample_type angle = direction * static_cast<sample_type>(2) * std::numbers::pi_v<sample_type> / static_cast<sample_type>(block_size);
+            const std::complex step { math::cos(angle), math::sin(angle) };
 
             for (size_t block = 0; block < input_size; block += block_size)
             {
@@ -135,7 +144,7 @@ namespace audio
                     result[even_index] = even + odd;
                     result[odd_index] = even - odd;
 
-                    phase = phase * step;
+                    phase *= step;
                 }
             }
         }
@@ -147,7 +156,7 @@ namespace audio
     constexpr [[nodiscard]] auto fft(const Input& input) noexcept
     {
         const auto permutation = bit_reversal_permutation(input);
-        const auto transform = cooley_tukey_fft(input, permutation);
+        const auto transform = cooley_tukey_fft(input, permutation, true);
 
         return normalize(transform);
     }
@@ -161,72 +170,13 @@ namespace audio
         return unpack_as_real(spectrum);
     }
 
-    export template <typename Input>
-        requires static_sized_range<Input>
-        && power_of_two<static_range_size_v<Input>>
-        && std::ranges::random_access_range<Input>
-        && math::complex<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto ifft(const Input& frequency) noexcept
+    export template <ComplexFFTInput Input>
+    constexpr [[nodiscard]] auto ifft(const Input& input) noexcept
     {
-        using complex_type = std::ranges::range_value_t<Input>;
-        using sample_type = complex_type::value_type;
+        const auto permutation = bit_reversal_permutation(input);
+        const auto transform = cooley_tukey_fft(input, permutation, false);
 
-        constexpr size_t input_size = std::ranges::size(frequency);
-
-        auto input = frequency;
-
-        constexpr size_t num_stages = std::countr_zero(input_size);
-
-        // Bit-reversal permutation
-        for (size_t i = 0; i < input_size; ++i)
-        {
-            size_t reversed{};
-            size_t value = i;
-
-            for (size_t bit = 0; bit < num_stages; ++bit)
-            {
-                reversed = (reversed << 1) | (value & 1);
-                value >>= 1;
-            }
-
-            if (i < reversed)
-            {
-                std::swap(input[i], input[reversed]);
-            }
-        }
-
-        // Cooley-Tukey butterflies
-        for (size_t stage = 1; stage <= num_stages; ++stage)
-        {
-            const size_t block_size = size_t{1} << stage;
-            const size_t half_block = block_size / 2;
-
-            const sample_type angle =
-                static_cast<sample_type>(2)
-                * std::numbers::pi_v<sample_type>
-                / static_cast<sample_type>(block_size);
-
-            const complex_type step { math::cos(angle), math::sin(angle) };
-
-            for (size_t block = 0; block < input_size; block += block_size)
-            {
-                complex_type phase{1, 0};
-
-                for (size_t j = 0; j < half_block; ++j)
-                {
-                    const auto even = input[block + j];
-                    const auto odd = input[block + j + half_block] * phase;
-
-                    input[block + j] = even + odd;
-                    input[block + j + half_block] = even - odd;
-
-                    phase *= step;
-                }
-            }
-        }
-
-        return make_array<input_size>([&](const size_t i) constexpr { return input[i].real(); });
+        return real(transform);
     }
-
 
 }
