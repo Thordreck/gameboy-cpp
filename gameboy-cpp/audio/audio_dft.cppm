@@ -11,7 +11,7 @@ namespace audio
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && math::complex<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto dft(Input&& input) noexcept
+    constexpr [[nodiscard]] auto dft(const Input& input) noexcept
     {
         using complex_type = std::ranges::range_value_t<Input>;
         using sample_type = complex_type::value_type;
@@ -45,7 +45,7 @@ namespace audio
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto dft(Input&& input) noexcept
+    constexpr [[nodiscard]] auto dft(const Input& input) noexcept
     {
         using sample_type = std::ranges::range_value_t<Input>;
         using complex_type = std::complex<sample_type>;
@@ -63,7 +63,7 @@ namespace audio
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && math::complex<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto idft(Input&& input) noexcept
+    constexpr [[nodiscard]] auto idft(const Input& input) noexcept
     {
         using complex_type = std::ranges::range_value_t<Input>;
         using sample_type = complex_type::value_type;

@@ -24,7 +24,7 @@ namespace audio
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto rceps(Input&& input)
+    constexpr [[nodiscard]] auto rceps(const Input& input)
     {
         const auto transform = fft(input);
         const auto log_cabs = make_array<transform.size()>([&transform] (const size_t i) constexpr
@@ -39,7 +39,7 @@ namespace audio
     requires static_sized_range<Input>
         && std::ranges::random_access_range<Input>
         && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto min_phase(Input&& input)
+    constexpr [[nodiscard]] auto min_phase(const Input& input)
     {
         using sample_type = std::ranges::range_value_t<Input>;
         constexpr auto n { std::ranges::size(input) };

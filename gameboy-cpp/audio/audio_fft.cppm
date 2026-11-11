@@ -12,7 +12,7 @@ namespace audio
         && power_of_two<static_range_size_v<Input>>
         && std::ranges::random_access_range<Input>
         && math::complex<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto fft(Input&& time) noexcept
+    constexpr [[nodiscard]] auto fft(const Input& time) noexcept
     {
         auto input = time;
 
@@ -86,7 +86,7 @@ namespace audio
         && power_of_two<static_range_size_v<Input>>
         && std::ranges::random_access_range<Input>
         && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto fft(Input&& time) noexcept
+    constexpr [[nodiscard]] auto fft(const Input& time) noexcept
     {
         using sample_type = std::ranges::range_value_t<Input>;
         using complex_type = std::complex<sample_type>;
@@ -133,7 +133,7 @@ namespace audio
         && power_of_two<static_range_size_v<Input>>
         && std::ranges::random_access_range<Input>
         && math::complex<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto ifft(Input&& frequency) noexcept
+    constexpr [[nodiscard]] auto ifft(const Input& frequency) noexcept
     {
         using complex_type = std::ranges::range_value_t<Input>;
         using sample_type = complex_type::value_type;
