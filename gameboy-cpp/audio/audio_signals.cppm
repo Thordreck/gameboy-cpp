@@ -20,11 +20,9 @@ namespace audio
             : math::sin(pi_v<SampleType> * x) / (pi_v<SampleType> * x);
     }
 
-    export template <typename Input>
-    requires static_sized_range<Input>
-        && std::ranges::random_access_range<Input>
-        && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto rceps(const Input& input)
+    export template <FloatingPointStaticRange Input, RealFFTRange Output>
+    requires SameSizeStaticRanges<Input, Output>
+    constexpr void rceps(const Input& input, Output& output)
     {
         const auto transform = fft(input);
         const auto log_cabs = make_array<transform.size()>([&transform] (const size_t i) constexpr
@@ -32,44 +30,60 @@ namespace audio
             return std::complex { math::log(math::cabs(transform[i])) };
         });
 
-        return ifft(log_cabs);
+        ifft(log_cabs, output);
     }
 
-    export template <typename Input>
-    requires static_sized_range<Input>
-        && std::ranges::random_access_range<Input>
-        && std::floating_point<std::ranges::range_value_t<Input>>
-    constexpr [[nodiscard]] auto min_phase(const Input& input)
+    export template <RealFFTRange Range>
+    constexpr void rceps(Range& range)
+    {
+        rceps(range, range);
+    }
+
+    export template <RealFFTRange Input, RealFFTRange Output>
+    requires SameSizeStaticRanges<Input, Output>
+    constexpr void min_phase(const Input& input, Output& output)
     {
         using sample_type = std::ranges::range_value_t<Input>;
         constexpr auto n { std::ranges::size(input) };
 
-        const auto coefficients = make_array<n>([&input, n] (const size_t i) constexpr
+        std::ranges::transform(input | std::views::enumerate, output.begin(), [] (auto&& entry) constexpr
         {
-            if (i == 0)
+            const auto [index, element] = entry;
+
+            if (index == 0)
             {
-                return input[i];
+                return element;
             }
 
             const auto nd2 = n / 2;
 
-            if (i < nd2)
+            if (index < nd2)
             {
-                return 2 * input[i];
+                return 2 * element;
             }
 
-            if (n % 2 == 0 && i == nd2)
+            if (n % 2 == 0 && index == nd2)
             {
-                return input[i];
+                return element;
             }
 
             return sample_type {};
         });
 
-        const auto transform = fft(coefficients);
-        const auto cexp = make_array<transform.size()>([&transform] (const size_t i) constexpr { return math::cexp(transform[i]); });
+        auto transform = fft(output);
 
-        return ifft(cexp);
+        std::ranges::transform(transform.begin(), transform.end(), transform.begin(), [] (auto&& element) constexpr
+        {
+            return math::cexp(element);
+        });
+
+        ifft(transform, output);
+    }
+
+    export template <RealFFTRange Range>
+    constexpr void min_phase(Range& range)
+    {
+        min_phase(range, range);
     }
 
 }

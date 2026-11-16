@@ -1,7 +1,6 @@
 add_library(audio)
 target_compile_features(audio PUBLIC cxx_std_23)
 target_compile_warnings(audio)
-target_compile_options(audio PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps10000000>)
 
 set_target_properties(audio PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
 target_link_libraries(audio PUBLIC memory timer utilities math)
@@ -37,7 +36,6 @@ if(BUILD_TESTING)
     target_compile_features(audio_tests PUBLIC cxx_std_23)
     target_link_libraries(audio_tests PRIVATE audio doctest::doctest_with_main plot svg utilities dsp)
     set_target_properties(audio_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
-    target_compile_options(audio_tests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps10000000>)
     doctest_discover_tests(audio_tests)
     target_compile_warnings(audio_tests)
 

@@ -120,7 +120,7 @@ namespace audio
     }
 
     export template<static_sized_range Input, static_sized_range Output>
-    requires (static_range_size_v<Output> > static_range_size_v<Input>) && CompatibleInputOutputRanges<Input, Output>
+    requires (static_range_size_v<Output> >= static_range_size_v<Input>) && CompatibleInputOutputRanges<Input, Output>
     constexpr auto add_padding(const Input& input, Output& output)
     {
         constexpr auto input_size = static_range_size_v<Input>;
@@ -128,6 +128,37 @@ namespace audio
 
         std::ranges::copy(input, output.begin());
         std::ranges::fill(std::next(output.begin(), input_size) , output.end(), range_value_t {});
+    }
+
+    export template<static_sized_range Input, static_sized_range Output>
+    requires CompatibleInputOutputStaticRanges<Input, Output>
+    constexpr void integrate(const Input& input, Output& output)
+    {
+        std::ranges::range_value_t<Input> accumulator {};
+        std::ranges::transform(input, output.begin(), [&accumulator] (auto&& element) constexpr
+        {
+            accumulator += element;
+            return accumulator;
+        });
+    }
+
+    export template<static_sized_range Range>
+    constexpr void integrate(Range& range)
+    {
+        integrate(range, range);
+    }
+
+    export template<FloatingPointStaticRange Input, FloatingPointStaticRange Output, std::floating_point Scale>
+    requires CompatibleInputOutputStaticRanges<Input, Output>
+    constexpr void scale(const Input& input, Output& output, const Scale scale)
+    {
+        std::ranges::transform(input, output.begin(), [scale] (auto&& element) constexpr { return element * scale; });
+    }
+
+    export template<FloatingPointStaticRange Range, std::floating_point Scale>
+    constexpr void scale(Range& range, const Scale scale)
+    {
+        std::ranges::transform(range, range.begin(), [scale] (auto&& element) constexpr { return element * scale; });
     }
 
 }

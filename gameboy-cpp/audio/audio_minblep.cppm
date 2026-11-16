@@ -11,44 +11,42 @@ namespace audio
     // Adapted from: https://www.experimentalscene.com/articles/minbleps.php
     export template <std::floating_point SampleType, size_t ZeroCrossings, size_t OverSampling>
     requires (ZeroCrossings > 0) && (OverSampling > 0)
-    constexpr [[nodiscard]] auto min_blep_table() noexcept
+    constexpr [[nodiscard]] auto min_blep() noexcept
     {
-        // TODO: missing + 1?
-        constexpr size_t table_length { ZeroCrossings * 2 * OverSampling  };
+        constexpr size_t table_length { ZeroCrossings * 2 * OverSampling + 1 };
+        constexpr size_t full_table_length { std::bit_ceil(table_length) };
 
-        // Sinc
-        const auto sincs = make_array<table_length>([] (const size_t i) constexpr
+        std::array<SampleType, full_table_length> full_table {};
+        std::span<SampleType, table_length> table { full_table.begin(), table_length };
+
+        std::ranges::transform(
+            std::views::iota(0uz, table_length),
+            table.begin(),
+            [] (const size_t i) constexpr
+            {
+                constexpr auto x = static_cast<SampleType>(2 * ZeroCrossings);
+                constexpr auto z = -static_cast<SampleType>(ZeroCrossings);
+                const auto y = i / static_cast<SampleType>(table_length - 1);
+
+                const auto fma = math::fma(x, y, z);
+                const auto w = blackman_window<SampleType, table_length>(i);
+
+                return sinc(fma) * w;
+            });
+
+        rceps(full_table);
+        min_phase(full_table);
+        integrate(table);
+        scale(table, 1 / table.back());
+
+        if constexpr (table_length == full_table_length)
         {
-            const SampleType x = math::fma(
-                static_cast<SampleType>(2 * ZeroCrossings),
-                i / static_cast<SampleType>(table_length - 1),
-                -static_cast<SampleType>(ZeroCrossings));
-
-            return sinc(x);
-        });
-
-        // Windowing
-        const auto window = blackman_window<SampleType, table_length>();
-        const auto band_limited_sincs = make_array<table_length>([&](const size_t i) constexpr { return sincs[i] * window[i]; });
-
-        // Minimum phase
-        const auto real_cepstrum = rceps(band_limited_sincs);
-        const auto minimum_phase = min_phase(real_cepstrum);
-
-        // Integration
-        SampleType accumulator {};
-        const auto integration = make_array<table_length>([&] (const size_t i) constexpr
+            return full_table;
+        }
+        else
         {
-            accumulator += minimum_phase[i];
-            return accumulator;
-        });
-
-        // Normalization
-        const SampleType normalization_factor {  1 / integration[table_length - 1] };
-        return make_array<table_length>([&] (const size_t i) constexpr
-        {
-            return integration[i] * normalization_factor;
-        });
+            return make_array<table_length>([full_table] (const size_t i) constexpr { return full_table[i]; });
+        }
     }
 
 }

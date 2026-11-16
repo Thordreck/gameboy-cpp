@@ -240,19 +240,28 @@ namespace audio
         return fft(output);
     }
 
-    export template <ComplexFFTRange Input>
-    constexpr [[nodiscard]] auto ifft(const Input& input) noexcept
+    export template <ComplexFFTRange Input, RealFFTRange Output>
+    requires SameSizeStaticRanges<Input, Output>
+    constexpr void ifft(const Input& input, Output& output) noexcept
     {
         using input_element_t = std::ranges::range_value_t<Input>;
-        using result_element_t = input_element_t::value_type;
         constexpr size_t input_size = std::ranges::size(input);
 
         std::array<input_element_t, input_size> transform {};
-        std::array<result_element_t, input_size> result {};
 
         bit_reversal_permutation(input, transform);
         cooley_tukey_fft(transform, transform, false);
-        real(transform, result);
+        real(transform, output);
+    }
+
+    export template <ComplexFFTRange Input>
+    constexpr [[nodiscard]] auto ifft(const Input& input) noexcept
+    {
+        using result_element_t = std::ranges::range_value_t<Input>::value_type;
+        constexpr size_t input_size = std::ranges::size(input);
+
+        std::array<result_element_t, input_size> result {};
+        ifft(input, result);
 
         return result;
     }
