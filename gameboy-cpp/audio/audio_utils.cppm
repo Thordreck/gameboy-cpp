@@ -1,19 +1,11 @@
 
 export module audio:utils;
+
 import std;
+import math;
 
 namespace audio
 {
-    export template <std::size_t N, std::invocable<size_t> Generator>
-    constexpr auto make_array(Generator&& generator)
-    {
-        return [&]<size_t... Index>(std::index_sequence<Index...>) constexpr
-          {
-              return std::array { generator(Index)... };
-          }
-        (std::make_index_sequence<N>());
-    }
-
     export template<typename T>
     concept static_sized_range
         = std::ranges::sized_range<T>
@@ -41,17 +33,86 @@ namespace audio
     export template<std::integral auto N>
     concept power_of_two = std::has_single_bit(N);
 
-    export template<static_sized_range Range>
-    constexpr [[nodiscard]] auto normalize(const Range& range)
+    template <typename Range>
+    concept StaticRange = static_sized_range<Range> && std::ranges::random_access_range<Range>;
+
+    template <typename Range>
+    concept ComplexRange = math::complex<std::ranges::range_value_t<Range>>;
+
+    template <typename Range>
+    concept ComplexStaticRange = StaticRange<Range> && ComplexRange<Range>;
+
+    template <typename Range>
+    concept UnsignedIntegralRange = std::unsigned_integral<std::ranges::range_value_t<Range>>;
+
+    template <typename Range>
+    concept UnsignedIntegralStaticRange = StaticRange<Range> && UnsignedIntegralRange<Range>;
+
+    template <typename Range>
+    concept FloatingPointRange = std::floating_point<std::ranges::range_value_t<Range>>;
+
+    template <typename Range>
+    concept FloatingPointStaticRange = StaticRange<Range> && FloatingPointRange<Range>;
+
+    template <typename Range>
+    concept StaticPowerOfTwoRange = StaticRange<Range> && power_of_two<static_range_size_v<Range>>;
+
+    export template <std::size_t N, std::invocable<size_t> Generator>
+    constexpr auto make_array(Generator&& generator)
     {
-        constexpr size_t input_size = std::ranges::size(range);
+        using value_type = std::remove_cvref_t<std::invoke_result_t<Generator&, std::size_t>>;
 
-        return make_array<input_size>([&range] (const size_t i) constexpr
+        std::array<value_type, N> result {};
+
+        for (std::size_t i = 0; i < N; ++i)
         {
-            using range_element_t = std::ranges::range_value_t<Range>;
-            constexpr range_element_t normalization { range_element_t { 1 } / static_cast<range_element_t>(input_size) };
+            result[i] = generator(i);
+        }
 
-            return range[i] * normalization;
+        return result;
+    }
+
+    export template<typename Input, typename Output>
+    requires (FloatingPointStaticRange<Input> || ComplexStaticRange<Input>)
+        && (FloatingPointStaticRange<Output> || ComplexStaticRange<Output>)
+        && (static_range_size_v<Input> == static_range_size_v<Output>)
+        && std::convertible_to<std::ranges::range_value_t<Input>, std::ranges::range_value_t<Output>>
+    constexpr void normalize(const Input& input, Output& output)
+    {
+        using input_element_t = std::ranges::range_value_t<Input>;
+
+        constexpr size_t size = std::ranges::size(input);
+        constexpr input_element_t normalization { input_element_t { 1 } / static_cast<input_element_t>(size) };
+
+        for (size_t i = 0; i < size; i++)
+        {
+            output[i] = input[i] * normalization;
+        }
+    }
+
+    export template<typename Range>
+    requires FloatingPointStaticRange<Range> || ComplexStaticRange<Range>
+    constexpr [[nodiscard]] auto normalize(const Range& input)
+    {
+        using range_element_t = std::ranges::range_value_t<Range>;
+        constexpr size_t input_size = std::ranges::size(input);
+
+        std::array<range_element_t, input_size> output {};
+        normalize(input, output);
+
+        return output;
+    }
+
+    export template<size_t Size, static_sized_range Range>
+    requires (Size > static_range_size_v<Range>)
+    constexpr [[nodiscard]] auto add_padding(const Range& range)
+    {
+        return make_array<Size>([&range] (const size_t i) constexpr
+        {
+            using range_value_t = std::ranges::range_value_t<Range>;
+            constexpr auto original_size = std::ranges::size(range);
+
+            return i < original_size ? range[i] : range_value_t{} ;
         });
     }
 

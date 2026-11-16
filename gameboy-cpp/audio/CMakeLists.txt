@@ -35,7 +35,7 @@ target_sources(audio PUBLIC
 if(BUILD_TESTING)
     add_executable(audio_tests)
     target_compile_features(audio_tests PUBLIC cxx_std_23)
-    target_link_libraries(audio_tests PRIVATE audio doctest::doctest_with_main)
+    target_link_libraries(audio_tests PRIVATE audio doctest::doctest_with_main plot svg utilities dsp)
     set_target_properties(audio_tests PROPERTIES CXX_SCAN_FOR_MODULES ON CXX_MODULE_STD ON)
     target_compile_options(audio_tests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/constexpr:steps10000000>)
     doctest_discover_tests(audio_tests)
@@ -49,6 +49,7 @@ if(BUILD_TESTING)
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_signals.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_dft_fft.test.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/audio_minblep.test.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.test.cpp
     )
 
 endif()
