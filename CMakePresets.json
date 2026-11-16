@@ -241,7 +241,7 @@
       "name": "ninja-no-profiling-headless-debug",
       "displayName": "Ninja Debug (Headless)",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "inherits": ["ninja", "debug", "headless", "with-tests"]
+      "inherits": ["ninja", "debug", "headless", "with-tests", "with-sanitizers"]
     },
     {
       "name": "ninja-no-profiling-headless-tests-release",
