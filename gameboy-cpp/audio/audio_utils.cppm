@@ -21,6 +21,9 @@ namespace audio
     template<typename T, size_t N>
     struct static_range_size_impl<std::array<T, N>> : std::integral_constant<size_t, N> {};
 
+    template<typename T, size_t N>
+    struct static_range_size_impl<std::span<T, N>> : std::integral_constant<size_t, N> {};
+
     export template<static_sized_range T>
     struct static_range_size
     {
@@ -57,6 +60,20 @@ namespace audio
     template <typename Range>
     concept StaticPowerOfTwoRange = StaticRange<Range> && power_of_two<static_range_size_v<Range>>;
 
+    template <typename Input, typename Output>
+    concept SameSizeStaticRanges
+        = StaticRange<Input> && StaticRange<Output>
+        && (static_range_size_v<Input> == static_range_size_v<Output>);
+
+    template <typename Input, typename Output>
+    concept CompatibleInputOutputRanges
+        = std::convertible_to<std::ranges::range_value_t<Input>, std::ranges::range_value_t<Output>>;
+
+    template <typename Input, typename Output>
+    concept CompatibleInputOutputStaticRanges
+        = SameSizeStaticRanges<Input, Output>
+        && CompatibleInputOutputRanges<Input, Output>;
+
     export template <std::size_t N, std::invocable<size_t> Generator>
     constexpr auto make_array(Generator&& generator)
     {
@@ -75,8 +92,7 @@ namespace audio
     export template<typename Input, typename Output>
     requires (FloatingPointStaticRange<Input> || ComplexStaticRange<Input>)
         && (FloatingPointStaticRange<Output> || ComplexStaticRange<Output>)
-        && (static_range_size_v<Input> == static_range_size_v<Output>)
-        && std::convertible_to<std::ranges::range_value_t<Input>, std::ranges::range_value_t<Output>>
+        && CompatibleInputOutputStaticRanges<Input, Output>
     constexpr void normalize(const Input& input, Output& output)
     {
         using input_element_t = std::ranges::range_value_t<Input>;
@@ -103,17 +119,15 @@ namespace audio
         return output;
     }
 
-    export template<size_t Size, static_sized_range Range>
-    requires (Size > static_range_size_v<Range>)
-    constexpr [[nodiscard]] auto add_padding(const Range& range)
+    export template<static_sized_range Input, static_sized_range Output>
+    requires (static_range_size_v<Output> > static_range_size_v<Input>) && CompatibleInputOutputRanges<Input, Output>
+    constexpr auto add_padding(const Input& input, Output& output)
     {
-        return make_array<Size>([&range] (const size_t i) constexpr
-        {
-            using range_value_t = std::ranges::range_value_t<Range>;
-            constexpr auto original_size = std::ranges::size(range);
+        constexpr auto input_size = static_range_size_v<Input>;
+        using range_value_t = std::ranges::range_value_t<Output>;
 
-            return i < original_size ? range[i] : range_value_t{} ;
-        });
+        std::ranges::copy(input, output.begin());
+        std::ranges::fill(std::next(output.begin(), input_size) , output.end(), range_value_t {});
     }
 
 }
