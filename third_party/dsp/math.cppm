@@ -6,24 +6,24 @@ import :common;
 
 namespace dsp
 {
-    export base_array<real_t> abs(SpanLike<real_t> auto&& input)
+    export auto abs(SpanLike<const real_t> auto const& input)
     {
-        return dsplib::abs(std::forward<decltype(input)>(input));
+        return to_vector(dsplib::abs(make_span(input)));
     }
 
-    export base_array<real_t> abs(SpanLike<complex_t> auto&& input)
+    export auto abs(SpanLike<const complex_t> auto const& input)
     {
-        return dsplib::abs(std::forward<decltype(input)>(input));
+        return to_vector(dsplib::abs(make_span(input)));
     }
 
-    export base_array<real_t> pow2db(SpanLike<real_t> auto&& input)
+    export auto pow2db(SpanLike<const real_t> auto const& input)
     {
-        return dsplib::pow2db(std::forward<decltype(input)>(input));
+        return to_vector(dsplib::pow2db(make_span(input)));
     }
 
-    export base_array<real_t> mag2db(SpanLike<real_t> auto&& input)
+    export auto pow2db(SpanLike<const complex_t> auto const& input)
     {
-        return dsplib::mag2db(std::forward<decltype(input)>(input));
+        return to_vector(dsplib::pow2db(make_span(input)));
     }
 
 }

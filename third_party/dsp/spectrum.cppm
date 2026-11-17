@@ -1,18 +1,26 @@
-export module dsp:spectrum;
+module;
+#include <dsplib.h>
 
-import :fft;
-import :math;
+export module dsp:spectrum;
 import :common;
-import :window;
 
 namespace dsp
 {
-    export auto spectrum(SpanLike<real_t> auto&& samples)
+    export auto spectrum(SpanLike<const real_t> auto const& samples)
     {
-        const auto hamming_window = hamming(samples.size());
-        const auto windowed_samples = hamming_window * samples;
-        const auto full_channel_fft = fft(windowed_samples) / windowed_samples.size();
+        const auto hamming_window = dsplib::window::hamming(samples.size());
+        const auto windowed_samples = hamming_window * make_span(samples);
+        const auto full_channel_fft = dsplib::fft(windowed_samples) / windowed_samples.size();
 
-        return abs(full_channel_fft.slice(0, full_channel_fft.size() / 2));
+        return to_vector(dsplib::abs(full_channel_fft.slice(0, full_channel_fft.size() / 2)));
     }
+
+    export auto nfft(SpanLike<const real_t> auto const& samples)
+    {
+        const auto hamming_window = dsplib::window::hamming(samples.size());
+        const auto windowed_samples = hamming_window * make_span(samples);
+
+        return windowed_samples.size();
+    }
+
 }

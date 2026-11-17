@@ -8,38 +8,36 @@ import :common;
 
 namespace dsp
 {
-    export base_array<complex_t> fft(SpanLike<real_t> auto&& input)
+    export auto fft(SpanLike<const real_t> auto const& input)
     {
-        dsplib::span_t span = dsplib::make_span(input);
-        return dsplib::fft(span);
+        return to_vector(dsplib::fft(make_span(input)));
     }
 
-    export base_array<complex_t> fft(const real_t* data, const size_t size, const size_t stride)
+    export auto fft(SpanLike<const complex_t> auto const& input)
     {
-        const auto slice = dsplib::slice_t<real_t>::make_slice(
-            data,
-            static_cast<int>(size),
-            0,
-            static_cast<int>(size),
-            static_cast<int>(stride));
-
-        dsplib::arr_real array { slice };
-        return fft(array);
+        return to_vector(dsplib::fft(make_span(input)));
     }
 
-    export base_array<complex_t> fft(SliceLike<real_t> auto&& input)
+    export template<RealOrComplex T>
+    auto fft(const T* data, const size_t size)
     {
-        return fft(input.data(), input.size(), input.stride());
+        return to_vector(dsplib::fft(make_span(data, size)));
     }
 
-    export auto fft_shift(SpanLike<complex_t> auto&& input)
+    export auto fft(SliceLike<const real_t> auto const& input)
     {
-        return dsplib::fftshift(input);
+        return to_vector(fft(make_array(input)));
     }
 
-    export auto fft_shift(SpanLike<real_t> auto&& input)
+    export auto fft(SliceLike<const complex_t> auto const& input)
     {
-        return dsplib::fftshift(input);
+        return to_vector(fft(make_array(input)));
+    }
+
+    export template<RealOrComplex T>
+    auto fft(const T* data, const size_t size, const size_t stride)
+    {
+        return to_vector(fft(make_array(data, size, stride)));
     }
 
 }

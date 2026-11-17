@@ -7,4 +7,3 @@ export import :math;
 export import :window;
 export import :correlation;
 export import :spectrum;
-export import :utils;

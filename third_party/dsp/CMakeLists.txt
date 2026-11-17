@@ -31,5 +31,4 @@ target_sources(dsp PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/window.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/correlation.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/spectrum.cppm
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils.cppm
 )

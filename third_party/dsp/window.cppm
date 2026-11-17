@@ -8,9 +8,9 @@ import :common;
 
 namespace dsp
 {
-    export base_array<real_t> hamming(const size_t n)
+    export auto hamming(const size_t n)
     {
-        return dsplib::window::hamming(static_cast<int>(n));
+        return to_vector(dsplib::window::hamming(static_cast<int>(n)));
     }
 
 }
