@@ -207,7 +207,7 @@ namespace not_chciken
         engine->tick(num_ticks_to_process_input);
     }
 
-    void trigger_preset(engine::base_engine_ptr& engine, const std::uint8_t preset_idx)
+    void select_preset(engine::base_engine_ptr& engine, const std::uint8_t preset_idx)
     {
         using namespace joypad;
         using enum joypad_input;
@@ -225,6 +225,12 @@ namespace not_chciken
         {
             trigger_input<select>(engine);
         }
+    }
+
+    void trigger_preset(engine::base_engine_ptr& engine)
+    {
+        using namespace joypad;
+        using enum joypad_input;
 
         // Trigger audio
         trigger_input<a>(engine);
@@ -248,8 +254,9 @@ namespace not_chciken
         auto cartridge = required(cartridge::load_rom_file(test_rom));
         auto engine = required(create_engine(cartridge, lcd, audio, serial));
 
-        trigger_preset(engine, preset_idx);
+        select_preset(engine, preset_idx);
         audio.open();
+        trigger_preset(engine);
 
         const auto num_ticks = static_cast<std::uint32_t>((expected_duration / frame_duration) * num_ticks_per_frame);
         engine->tick(num_ticks);

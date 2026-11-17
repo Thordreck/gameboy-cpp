@@ -21,4 +21,5 @@ export import :dft;
 export import :fft;
 export import :signals;
 export import :minblep;
+export import :minblep_filter;
 export import :utils;

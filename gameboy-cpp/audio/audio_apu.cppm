@@ -17,12 +17,18 @@ import :div_apu;
 import :panning;
 import :amplifier;
 import :normalization;
+import :minblep_filter;
 
 namespace audio
 {
     export class audio_processing_unit
     {
     public:
+        audio_processing_unit()
+        {
+            channel_1.set_active(true);
+        }
+
         // Global
         [[nodiscard]] bool is_enabled() const { return enabled; }
         void set_enabled(const bool value)
@@ -398,8 +404,11 @@ namespace audio
             const analog_sample analog_ch3 = channels_dac[2].convert(digital_ch3);
             const analog_sample analog_ch4 = channels_dac[3].convert(digital_ch4);
 
+            // Aliasing filtering
+            const analog_sample filtered_ch1 { ch1_minblep_filter.apply(analog_ch1.data()) };
+
             // Stereo
-            const stereo<analog_sample> stereo_analog_ch1 = channels_panning[0].apply(analog_ch1);
+            const stereo<analog_sample> stereo_analog_ch1 = channels_panning[0].apply(filtered_ch1);
             const stereo<analog_sample> stereo_analog_ch2 = channels_panning[1].apply(analog_ch2);
             const stereo<analog_sample> stereo_analog_ch3 = channels_panning[2].apply(analog_ch3);
             const stereo<analog_sample> stereo_analog_ch4 = channels_panning[3].apply(analog_ch4);
@@ -412,9 +421,11 @@ namespace audio
             const auto normalized = normalize<num_apu_channels>(amplified);
             const bool is_any_dac_enabled = std::ranges::any_of(channels_dac, [] (auto& dac) { return dac.is_enabled(); });
 
-            return is_any_dac_enabled
+            const auto result = is_any_dac_enabled
                 ? high_pass_filter.apply(normalized, compute_high_pass_filter_charge_factor(sample_rate))
                 : stereo<analog_sample> {};
+
+            return result;
         }
 
         void reset()
@@ -446,6 +457,10 @@ namespace audio
         channel_array_t<panning> channels_panning {};
         channel_array_t<dac> channels_dac {};
         stereo_high_pass_filter high_pass_filter {};
+
+        // TODO: rethink this
+        default_minblep_filter ch1_minblep_filter {};
+
     };
 
 }

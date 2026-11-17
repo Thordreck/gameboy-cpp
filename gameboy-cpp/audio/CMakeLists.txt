@@ -30,6 +30,7 @@ target_sources(audio PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_signals.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_utils.cppm
         ${CMAKE_CURRENT_SOURCE_DIR}/audio_minblep.cppm
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio_minblep_filter.cppm
 )
 if(BUILD_TESTING)
     add_executable(audio_tests)
