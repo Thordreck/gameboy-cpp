@@ -687,10 +687,10 @@ namespace
 		const auto max_fft_value = std::ranges::max(spectrum);
 
 		const auto freqs
-			= std::views::iota(0, spectrum.size())
+			= std::views::iota(0uz, spectrum.size())
 			| std::views::transform([nfft, oversampling] (const auto i) { return (i / static_cast<double>(nfft)) * oversampling; });
 
-		constexpr int x_ticks_chunk_size { 10 };
+		constexpr size_t x_ticks_chunk_size { 10 };
 
 		const auto x_ticks
 			= std::views::enumerate(spectrum)

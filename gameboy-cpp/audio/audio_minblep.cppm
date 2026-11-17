@@ -8,12 +8,18 @@ import :signals;
 
 namespace audio
 {
+    export template <size_t ZeroCrossings, size_t OverSampling>
+    constexpr size_t min_blep_length { ZeroCrossings * 2 * OverSampling + 1 };
+
+    export template <std::floating_point SampleType, size_t ZeroCrossings, size_t OverSampling>
+    using min_blep_t = std::array<SampleType, min_blep_length<ZeroCrossings, OverSampling>>;
+
     // Adapted from: https://www.experimentalscene.com/articles/minbleps.php
     export template <std::floating_point SampleType, size_t ZeroCrossings, size_t OverSampling>
     requires (ZeroCrossings > 0) && (OverSampling > 0)
     constexpr [[nodiscard]] auto min_blep() noexcept
     {
-        constexpr size_t table_length { ZeroCrossings * 2 * OverSampling + 1 };
+        constexpr size_t table_length { min_blep_length<ZeroCrossings, OverSampling> };
         constexpr size_t full_table_length { std::bit_ceil(table_length) };
 
         std::array<SampleType, full_table_length> full_table {};
