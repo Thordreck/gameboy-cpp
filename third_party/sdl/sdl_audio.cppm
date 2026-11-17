@@ -225,38 +225,63 @@ namespace sdl
     }
 
     export template<AudioSample SampleType>
-    using channel_span = std::mdspan<SampleType, std::dextents<std::size_t, 1>, std::layout_stride>;
+    class channel_span
+    {
+    public:
+        channel_span(SampleType* data, const size_t size, const size_t num_channels, const size_t channel_idx)
+            : data_ { data }
+            , size_ { size }
+            , num_channels_ { num_channels }
+            , channel_idx_ { channel_idx }
+        {}
+
+        [[nodiscard]] SampleType* data() const { return data_ + channel_idx_; }
+        [[nodiscard]] size_t size() const { return size_; }
+        [[nodiscard]] size_t stride() const { return num_channels_; }
+
+        auto samples() const
+        {
+            return std::span(data_, size_)
+                | std::views::drop(channel_idx_)
+                | std::views::stride(num_channels_);
+        }
+
+        auto deinterleaved() const
+        {
+            return samples() | std::ranges::to<std::vector>();
+        }
+
+    private:
+        SampleType* data_;
+        size_t size_;
+        size_t num_channels_;
+        size_t channel_idx_;
+    };
 
     export template<AudioSample SampleType>
     class audio_data
     {
     public:
-        std::span<SampleType> samples() { return { data.get(), length }; }
-        std::span<const SampleType> samples() const { return { data.get(), length }; }
+        [[nodiscard]] std::span<SampleType> samples() { return { data.get(), length }; }
+        [[nodiscard]] std::span<const SampleType> samples() const { return { data.get(), length }; }
 
-        channel_span<SampleType> channel(const std::size_t n)
+        [[nodiscard]] channel_span<SampleType> channel(const std::size_t n)
         {
-            std::extents shape { length / spec.channels };
-            std::array stride { spec.channels };
-
-            return { data.get() + n, { shape, stride } };
+            return { data.get(), length, spec.channels, n };
         }
 
-        channel_span<const SampleType> channel(const std::size_t n) const
+        [[nodiscard]] channel_span<const SampleType> channel(const std::size_t n) const
         {
-            std::extents shape { length / spec.channels };
-            std::array stride { spec.channels };
-
-            return { data.get() + n, { shape, stride } };
+            return { data.get(), length, spec.channels, n };
         }
 
-        channel_span<SampleType> left() { return channel(0); }
-        channel_span<const SampleType> left() const { return channel(0); }
+        [[nodiscard]] channel_span<SampleType> left() { return channel(0); }
+        [[nodiscard]] channel_span<const SampleType> left() const { return channel(0); }
 
-        channel_span<SampleType> right() { return channel(1); }
-        channel_span<const SampleType> right() const { return channel(1); }
+        [[nodiscard]] channel_span<SampleType> right() { return channel(1); }
+        [[nodiscard]] channel_span<const SampleType> right() const { return channel(1); }
 
-        audio_spec specs() const { return spec; }
+        [[nodiscard]] audio_spec specs() const { return spec; }
 
     private:
         audio_data(SampleType* data, const std::size_t length, const SDL_AudioSpec& spec)
