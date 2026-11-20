@@ -45,8 +45,20 @@ namespace emulator
         { device.muted() } -> std::convertible_to<bool>;
     };
 
+    export template<typename T>
+    concept SynchronizationPoint = requires(T& device, const std::stop_token& ct)
+    {
+        { device.sync(ct) } -> std::same_as<void>;
+        { device.ticks() } -> std::convertible_to<std::uint32_t>;
+    };
+
     export template<typename T, typename Sample>
-    concept AudioOutputDevice = audio::AudioSink<T, Sample> && AudioDevice<T> && Muteable<T> && WithVolume<T>;
+    concept AudioOutputDevice
+        = audio::AudioSink<T, Sample>
+        && AudioDevice<T>
+        && Muteable<T>
+        && WithVolume<T>
+        && SynchronizationPoint<T>;
 
     export template<typename T>
     concept RendererTarget = requires(T& device)

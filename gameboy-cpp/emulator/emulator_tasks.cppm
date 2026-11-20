@@ -18,20 +18,21 @@ namespace emulator
         engine.tick(num_ticks_per_frame);
     }
 
-    export void engine_tick_thread(engine::Engine auto& engine, const std::stop_token& ct)
+    export void engine_tick_thread(
+        engine::Engine auto& engine,
+        SynchronizationPoint auto& synchronizer,
+        const std::stop_token& ct)
     {
         PROFILER_THREAD("Engine Thread");
 
         while (!ct.stop_requested())
         {
-            PROFILER_SCOPE("Engine Frame");
+            PROFILER_SCOPE("Engine Sync Frame");
 
-            using namespace engine;
-            utils::execute_for([&engine] { run_frame(engine); }
-                               , frame_duration
-                               , [](const auto& d) { utils::sleep_precise(d); });
+            synchronizer.sync(ct);
+            engine.tick(synchronizer.ticks());
         }
-    };
+    }
 
     export void update_joypad_state(engine::Engine auto& engine, JoypadSource auto& source)
     {

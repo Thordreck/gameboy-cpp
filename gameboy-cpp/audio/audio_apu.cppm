@@ -458,9 +458,7 @@ namespace audio
         channel_array_t<dac> channels_dac {};
         stereo_high_pass_filter high_pass_filter {};
 
-        // TODO: rethink this
         default_minblep_filter ch1_minblep_filter {};
-
     };
 
 }

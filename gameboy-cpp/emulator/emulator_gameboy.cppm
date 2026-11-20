@@ -62,7 +62,7 @@ namespace emulator
                 audio_output.resume();
                 framebuffer_renderer.start_rendering_frames();
 
-                tick_thread = std::jthread { [this] (const auto& ct) { engine_tick_thread(*engine, ct); } };
+                tick_thread = std::jthread { [this] (const auto& ct) { engine_tick_thread(*engine, audio_output, ct); } };
                 joypad_thread = std::jthread { [this] (const auto& ct) { engine_joypad_thread(*engine, joypad_source, ct); } };
             }
         }

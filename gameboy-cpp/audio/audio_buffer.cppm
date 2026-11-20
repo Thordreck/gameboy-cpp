@@ -21,6 +21,7 @@ namespace audio
             : audio_buffer(sample_rate * channels * std::chrono::duration_cast<std::chrono::duration<float>>(duration).count())
         {}
 
+        [[nodiscard]] size_t capacity() const { return buffer.capacity(); }
         [[nodiscard]] size_t read_available() const { return buffer.read_available(); }
         [[nodiscard]] size_t write_available() const { return buffer.write_available(); }
 

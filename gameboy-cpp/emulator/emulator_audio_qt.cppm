@@ -28,8 +28,8 @@ namespace emulator
             update_audio_config();
 
             sink = std::make_unique<QAudioSink>(format);
-            buffer = std::make_unique<audio::audio_buffer<float>>(500ms, sample_rate(), channel_count());
-            sink->start([this] (const QSpan<float> output) { audio_callback(*this->buffer, output); } );
+            buffer = std::make_unique<audio::audio_buffer<float>>(16ms * 3, sample_rate(), channel_count());
+            sink->start([this] (const QSpan<float> output) { audio_callback(output); } );
 
             (utils::assert)(sink->error() == QtAudio::Error::NoError, "Could not open output audio device");
 
@@ -128,6 +128,25 @@ namespace emulator
             }
         }
 
+        void sync(const std::stop_token& ct)
+        {
+            const std::stop_callback cancellation { ct, [this]{ notify_synchronization(); }};
+            emulator_sync.wait(emulator_sync.load());
+        }
+
+        [[nodiscard]] std::uint32_t ticks() const
+        {
+            const auto target_samples = static_cast<size_t>(0.5 * buffer->capacity());
+            const auto current_samples = buffer->read_available();
+
+            const auto samples_needed = current_samples < target_samples ? target_samples - current_samples : 0u;
+
+            constexpr std::uint32_t engine_clock_rate { 4194304 };
+            const auto ticks_per_sample = engine_clock_rate / (sample_rate() * 2.0);
+
+            return samples_needed * ticks_per_sample;
+        }
+
     private:
         void update_audio_config()
         {
@@ -139,14 +158,27 @@ namespace emulator
             (utils::assert)(default_device.isFormatSupported(format), "Audio format not supported");
         }
 
-        static void audio_callback(audio::audio_buffer<float>& buffer, QSpan<float> output)
+        void notify_synchronization()
         {
-            const std::size_t samples_read = buffer.read(output);
+            emulator_sync.fetch_add(1u);
+            emulator_sync.notify_one();
+        }
+
+        void audio_callback(QSpan<float> output)
+        {
+            const std::size_t samples_read = buffer->read(output);
             const std::size_t remaining_start = std::min(static_cast<std::size_t>(output.size()), samples_read);
             const auto remaining_slice = output.subspan(remaining_start);
 
             std::memset(remaining_slice.data(), 0, remaining_slice.size());
-        };
+
+            const bool needs_more_samples = buffer->read_available() <= 0.1f * buffer->capacity();
+
+            if (needs_more_samples)
+            {
+                notify_synchronization();
+            }
+        }
 
         QAudioFormat format;
         std::unique_ptr<QAudioSink> sink { nullptr };
@@ -154,6 +186,8 @@ namespace emulator
 
         bool is_muted { false };
         qreal muted_volume {};
+
+        std::atomic<std::uint8_t> emulator_sync { };
     };
 
 }
