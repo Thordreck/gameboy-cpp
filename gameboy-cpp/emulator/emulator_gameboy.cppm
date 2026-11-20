@@ -52,7 +52,7 @@ namespace emulator
 
         [[nodiscard]] cartridge::header cartridge() const { return rom.value().header; }
         [[nodiscard]] engine::memory_view memory() const { return engine->memory(); }
-        [[nodiscard]] bool is_running() const { return tick_thread.has_value(); }
+        [[nodiscard]] bool is_running() const { return emulation_thread.has_value(); }
         [[nodiscard]] bool has_rom() const { return engine != nullptr; }
 
         void resume()
@@ -62,15 +62,13 @@ namespace emulator
                 audio_output.resume();
                 framebuffer_renderer.start_rendering_frames();
 
-                tick_thread = std::jthread { [this] (const auto& ct) { engine_tick_thread(*engine, audio_output, ct); } };
-                joypad_thread = std::jthread { [this] (const auto& ct) { engine_joypad_thread(*engine, joypad_source, ct); } };
+                emulation_thread = std::jthread { [this] (const auto& ct) { run_emulation(*engine, audio_output, joypad_source, ct); } };
             }
         }
 
         void pause()
         {
-            tick_thread.reset();
-            joypad_thread.reset();
+            emulation_thread.reset();
             audio_output.suspend();
         }
 
@@ -84,10 +82,7 @@ namespace emulator
             rom.reset();
         }
 
-        void step(const std::uint32_t ticks)
-        {
-            engine->tick(ticks);
-        }
+        void step(const std::uint32_t ticks) { engine->tick(ticks); }
 
         [[nodiscard]] float volume() const { return audio_output.volume(); }
         void set_volume(const volume_t volume) { audio_output.set_volume(volume); }
@@ -104,8 +99,7 @@ namespace emulator
         FramebufferRenderer& framebuffer_renderer;
         Serial& serial;
 
-        std::optional<std::jthread> tick_thread {};
-        std::optional<std::jthread> joypad_thread {};
+        std::optional<std::jthread> emulation_thread {};
     };
 
 }

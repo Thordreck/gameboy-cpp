@@ -18,9 +18,15 @@ namespace emulator
         engine.tick(num_ticks_per_frame);
     }
 
-    export void engine_tick_thread(
+    export void update_joypad_state(engine::Engine auto& engine, JoypadSource auto& source)
+    {
+        engine.update_joypad_state(source.read());
+    }
+
+    export void run_emulation(
         engine::Engine auto& engine,
         SynchronizationPoint auto& synchronizer,
+        JoypadSource auto& joypad,
         const std::stop_token& ct)
     {
         PROFILER_THREAD("Engine Thread");
@@ -30,28 +36,10 @@ namespace emulator
             PROFILER_SCOPE("Engine Sync Frame");
 
             synchronizer.sync(ct);
+
+            update_joypad_state(engine, joypad);
             engine.tick(synchronizer.ticks());
         }
     }
-
-    export void update_joypad_state(engine::Engine auto& engine, JoypadSource auto& source)
-    {
-        engine.update_joypad_state(source.read());
-    }
-
-    export void engine_joypad_thread(engine::Engine auto& engine, JoypadSource auto& source, const std::stop_token& ct)
-    {
-        PROFILER_THREAD("Joypad Thread");
-
-        while (!ct.stop_requested())
-        {
-            PROFILER_SCOPE("Joypad Update");
-
-            using namespace std::chrono_literals;
-            utils::execute_for([&] { update_joypad_state(engine, source); }
-                               , 16ms
-                               , [](const auto& d) { std::this_thread::sleep_for(d); });
-        }
-    };
 
 }
